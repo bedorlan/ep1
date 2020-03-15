@@ -5,7 +5,7 @@ using UnityEngine;
 
 public class PlayerBehaviour : MonoBehaviour
 {
-    const float VELOCITY_RUNNING = 5.0f;
+    const float VELOCITY_RUNNING = 10f;
 
     private new Rigidbody2D rigidbody;
     private Animator animator;
@@ -60,7 +60,7 @@ public class PlayerBehaviour : MonoBehaviour
 
     private void flipIfNeeded()
     {
-        var facingLeft = transform.localScale.x > 0;
+        var facingLeft = IsFacingLeft();
         if (rigidbody.velocity.x > 0 && facingLeft
             || rigidbody.velocity.x < 0 && !facingLeft)
         {
@@ -68,5 +68,10 @@ public class PlayerBehaviour : MonoBehaviour
             flipped.x *= -1;
             transform.localScale = flipped;
         }
+    }
+
+    public bool IsFacingLeft()
+    {
+        return transform.localScale.x > 0;
     }
 }

@@ -1,0 +1,23 @@
+﻿using System.Collections;
+using System.Collections.Generic;
+using UnityEngine;
+
+public class FollowPlayer : MonoBehaviour
+{
+    public GameObject objectToFollow;
+
+    private const float speed = 2f;
+    private const float offsetSideOfView = 7f;
+
+    void Update()
+    {
+        var player = objectToFollow.GetComponent<PlayerBehaviour>();
+        var desiredCameraPosition = objectToFollow.transform.position.x;
+        desiredCameraPosition += player.IsFacingLeft() ? offsetSideOfView * -1 : offsetSideOfView;
+
+        var interpolation = speed * Time.deltaTime;
+        var newCameraPosition = transform.position;
+        newCameraPosition.x = Mathf.Lerp(transform.position.x, desiredCameraPosition, interpolation);
+        transform.position = newCameraPosition;
+    }
+}
