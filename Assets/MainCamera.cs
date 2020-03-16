@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-public class FollowPlayer : MonoBehaviour
+public class MainCamera : MonoBehaviour
 {
     public GameObject objectToFollow;
 
@@ -11,6 +11,8 @@ public class FollowPlayer : MonoBehaviour
 
     void Update()
     {
+        if (!objectToFollow) return;
+
         var player = objectToFollow.GetComponent<PlayerBehaviour>();
         var desiredCameraPosition = objectToFollow.transform.position.x;
         desiredCameraPosition += player.IsFacingLeft() ? offsetSideOfView * -1 : offsetSideOfView;

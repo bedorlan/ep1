@@ -3,32 +3,28 @@ import * as net from 'net'
 const PORT = 7777
 
 enum Codes {
-  noop = 0,
-  start = 1,
-  newPlayerDestination = 2,
-}
-
-type Packet = {
-  [Codes.noop]: [Codes.noop]
-  [Codes.start]: [Codes.start]
-  [Codes.newPlayerDestination]: [Codes.newPlayerDestination, number]
+  noop = 0, // [0]
+  start = 1, // [1, playerNumber: int]
+  newPlayerDestination = 2, // [2, positionX: float]
 }
 
 const server = net.createServer()
+let waitingQueue: net.Socket[] = []
 
-const tuple: net.Socket[] = []
 server.on('connection', (socket) => {
-  tuple.push(socket)
-  if (tuple.length < 2) return
+  waitingQueue.push(socket)
+  socket.on('close', dropSocket(socket))
+  socket.on('error', dropSocket(socket))
+  if (waitingQueue.length < 2) return
 
-  const [p1, p2] = tuple
+  const [p1, p2] = waitingQueue
   p1.pipe(p2)
   p2.pipe(p1)
 
-  p1.write(toTelepathyMsg(`[${Codes.start}]`))
-  p2.write(toTelepathyMsg(`[${Codes.start}]`))
+  p1.write(toTelepathyMsg(`[${Codes.start}, 0]`))
+  p2.write(toTelepathyMsg(`[${Codes.start}, 1]`))
 
-  tuple.length = 0
+  waitingQueue = []
 })
 
 server.on('listening', () => {
@@ -46,4 +42,11 @@ function toTelepathyMsg(data: string) {
   encodedData[3] = (dataLength & 0xff) >> 0
 
   return encodedData
+}
+
+function dropSocket(socket) {
+  return (err) => {
+    if (err) console.error(err)
+    waitingQueue = waitingQueue.filter((it) => it !== socket)
+  }
 }
