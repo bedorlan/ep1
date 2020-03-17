@@ -416,7 +416,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   playerPrefab: {fileID: 5626897693916246249, guid: 27e69419a021744e9a1f245d85701c28,
     type: 3}
-  voterPrefab: {fileID: 8864236331962504795, guid: a3815414bc39b42ec8f6a2dbdd78c25c,
+  voterPrefab: {fileID: 2201240699575442311, guid: da89b24872e454bc39e02cbb62057b2e,
     type: 3}
   camera: {fileID: 519420028}
 --- !u!4 &1658275971
