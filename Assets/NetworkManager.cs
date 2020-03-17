@@ -83,7 +83,6 @@ public class NetworkManager : MonoBehaviour
     private void ProcessRemoteMsg(byte[] data)
     {
         var asciiData = Encoding.ASCII.GetString(data);
-        Debug.Log("NewMessage=" + asciiData);
 
         var supportedJson = string.Format("{{\"items\":{0}}}", asciiData);
         var jsonData = JsonUtility.FromJson<SupportedJsonType>(supportedJson).items;
