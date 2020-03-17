@@ -9,13 +9,17 @@ enum Codes
     noop = 0, // [0]
     start = 1, // [1, playerNumber: int]
     newPlayerDestination = 2, // [2, positionX: float]
+    newVoters = 3, // [3, ...positionX: float]
 }
 
 public class NetworkManager : MonoBehaviour
 {
+    const float FLOOR_LEVEL_Y = -4f;
+
     public static NetworkManager singleton;
 
     public GameObject playerPrefab;
+    public GameObject voterPrefab;
     public new GameObject camera;
 
     private Telepathy.Client client;
@@ -39,7 +43,8 @@ public class NetworkManager : MonoBehaviour
 
         codesMap = new Dictionary<Codes, Action<List<String>>> {
             { Codes.start, StartGame },
-            { Codes.newPlayerDestination, OnRemoteNewDestination }
+            { Codes.newPlayerDestination, OnRemoteNewDestination },
+            { Codes.newVoters, OnNewVoters }
         };
     }
 
@@ -110,13 +115,29 @@ public class NetworkManager : MonoBehaviour
     public void NewLocalPlayerDestination(float newDestinationX)
     {
         var msg = string.Format("[{0}, {1}]", (int)Codes.newPlayerDestination, newDestinationX);
-        client.Send(Encoding.ASCII.GetBytes(msg));
+        SendNetworkMsg(msg);
+    }
+
+    private void SendNetworkMsg(string msg)
+    {
+        client.Send(Encoding.ASCII.GetBytes(msg + "\n"));
     }
 
     private void OnRemoteNewDestination(List<string> data)
     {
         var newDestination = float.Parse(data[1]);
         remotePlayer.GetComponent<PlayerBehaviour>().NewDestination(newDestination);
+    }
+
+    private void OnNewVoters(List<string> data)
+    {
+        data.RemoveAt(0);
+        foreach (var voter in data)
+        {
+            var voterPositionX = float.Parse(voter);
+            var newVoter = Instantiate(voterPrefab);
+            newVoter.transform.position = new Vector3(voterPositionX, FLOOR_LEVEL_Y + .1f, 0f);
+        }
     }
 
     void OnApplicationQuit()
