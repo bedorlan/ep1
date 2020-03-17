@@ -4,7 +4,7 @@
   "main": "index.ts",
   "private": true,
   "dependencies": {
-    "ts-node": "^8.6.2"
+    "typescript": "^3.8.3"
   },
   "devDependencies": {
     "ts-node-dev": "^1.0.0-pre.44"

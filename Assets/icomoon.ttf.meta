@@ -1,5 +1,5 @@
 fileFormatVersion: 2
-guid: 5268d377cab18415095bfa3044827708
+guid: be3d52b7e804244dbb709a40c9e8aa37
 TrueTypeFontImporter:
   externalObjects: {}
   serializedVersion: 4
@@ -8,9 +8,9 @@ TrueTypeFontImporter:
   characterSpacing: 0
   characterPadding: 1
   includeFontData: 1
-  fontName: Flaticon
+  fontName: icomoon
   fontNames:
-  - Flaticon
+  - icomoon
   fallbackFontReferences: []
   customCharacters: 
   fontRenderingMode: 0
