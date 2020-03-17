@@ -13,6 +13,5 @@ public class VoterBehaviour : MonoBehaviour
         {
             GetComponent<TextMeshPro>().text = WOMAN_CODE.ToString();
         }
-        
     }
 }
