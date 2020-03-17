@@ -17,9 +17,8 @@ public class MainCamera : MonoBehaviour
         var desiredCameraPosition = objectToFollow.transform.position.x;
         desiredCameraPosition += player.IsFacingLeft() ? offsetSideOfView * -1 : offsetSideOfView;
 
-        var interpolation = speed * Time.deltaTime;
         var newCameraPosition = transform.position;
-        newCameraPosition.x = Mathf.Lerp(transform.position.x, desiredCameraPosition, interpolation);
+        newCameraPosition.x = Mathf.Lerp(transform.position.x, desiredCameraPosition, speed * Time.deltaTime);
         transform.position = newCameraPosition;
     }
 }
