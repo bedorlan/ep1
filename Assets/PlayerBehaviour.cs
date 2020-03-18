@@ -48,13 +48,11 @@ public class PlayerBehaviour : MonoBehaviour
         if (currentTarget == null) return;
         if (Math.Abs(currentTarget.position.x - transform.position.x) > 10) return;
 
-        StartCoroutine("Fire");
+        StartCoroutine(Fire());
     }
 
     IEnumerator Fire()
     {
-        const float FIRE_ANIM_DURATION = .5F;
-
         busy = true;
         animator.SetBool("firing", true);
         stop();
@@ -63,10 +61,14 @@ public class PlayerBehaviour : MonoBehaviour
         {
             Flip();
         }
+
+        // wait for animation to raise hands
+        yield return new WaitForSeconds(.15f);
         FireProjectile();
         currentTarget = null;
-        yield return new WaitForSeconds(FIRE_ANIM_DURATION);
 
+        // wait for animation to finish
+        yield return new WaitForSeconds(.35f);
         animator.SetBool("firing", false);
         busy = false;
     }
