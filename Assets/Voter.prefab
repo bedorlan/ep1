@@ -15,6 +15,7 @@ GameObject:
   - component: {fileID: 6149583926477587878}
   - component: {fileID: 114684048135132414}
   - component: {fileID: 114334050358983688}
+  - component: {fileID: 3866860326449999301}
   m_Layer: 0
   m_Name: Voter
   m_TagString: Untagged
@@ -229,3 +230,29 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 9a1061d75cd184e3bbd79e06a5627afa, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+--- !u!61 &3866860326449999301
+BoxCollider2D:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2201240699575442311}
+  m_Enabled: 1
+  m_Density: 1
+  m_Material: {fileID: 0}
+  m_IsTrigger: 1
+  m_UsedByEffector: 0
+  m_UsedByComposite: 0
+  m_Offset: {x: 0.0000500381, y: 0.000000029802322}
+  m_SpriteTilingProperty:
+    border: {x: 0, y: 0, z: 0, w: 0}
+    pivot: {x: 0, y: 0}
+    oldSize: {x: 0, y: 0}
+    newSize: {x: 0, y: 0}
+    adaptiveTilingThreshold: 0
+    drawMode: 0
+    adaptiveTiling: 0
+  m_AutoTiling: 0
+  serializedVersion: 2
+  m_Size: {x: 0.62255436, y: 1.1130435}
+  m_EdgeRadius: 0

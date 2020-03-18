@@ -125,7 +125,7 @@ public class NetworkManager : MonoBehaviour
     private void OnRemoteNewDestination(List<string> data)
     {
         var newDestination = float.Parse(data[1]);
-        remotePlayer.GetComponent<PlayerBehaviour>().NewDestination(newDestination);
+        remotePlayer.GetComponent<PlayerBehaviour>().Remote_NewDestination(newDestination);
     }
 
     private void OnNewVoters(List<string> data)
@@ -137,6 +137,11 @@ public class NetworkManager : MonoBehaviour
             var newVoter = Instantiate(voterPrefab);
             newVoter.transform.position = new Vector3(voterPositionX, FLOOR_LEVEL_Y + .1f, 0f);
         }
+    }
+
+    public void VoterClicked(VoterBehaviour voter)
+    {
+        localPlayer.GetComponent<PlayerBehaviour>().ChaseVoter(voter);
     }
 
     void OnApplicationQuit()

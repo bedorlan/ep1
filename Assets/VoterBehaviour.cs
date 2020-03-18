@@ -14,4 +14,9 @@ public class VoterBehaviour : MonoBehaviour
             GetComponent<TextMeshPro>().text = WOMAN_CODE.ToString();
         }
     }
+
+    private void OnMouseDown()
+    {
+        NetworkManager.singleton.VoterClicked(this);
+    }
 }

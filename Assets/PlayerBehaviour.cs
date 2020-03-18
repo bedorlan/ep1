@@ -12,6 +12,8 @@ public class PlayerBehaviour : MonoBehaviour
     private new Rigidbody2D rigidbody;
     private Animator animator;
     private float currentDestination;
+    private Transform currentTarget;
+    private bool busy = false;
 
     private readonly Dictionary<int, Color> playerColors = new Dictionary<int, Color> {
         {0, new Color(1, .5f, .5f) },
@@ -28,12 +30,43 @@ public class PlayerBehaviour : MonoBehaviour
 
     void Update()
     {
+        if (busy) return;
+
         if (isLocal)
         {
             readInputs();
         }
 
+        fireCurrentTarget();
         moveToCurrentDestination();
+    }
+
+    private void fireCurrentTarget()
+    {
+        if (currentTarget == null) return;
+        if (Math.Abs(currentTarget.position.x - transform.position.x) > 10) return;
+
+        StartCoroutine("Fire");
+    }
+
+    IEnumerator Fire()
+    {
+        const float FIRE_ANIM_DURATION = .5F;
+
+        busy = true;
+        animator.SetBool("firing", true);
+        stop();
+        var targetAtMyRight = currentTarget.position.x > transform.position.x;
+        if (IsFacingLeft() && targetAtMyRight || !IsFacingLeft() && !targetAtMyRight)
+        {
+            Flip();
+        }
+        // fire!
+        currentTarget = null;
+        yield return new WaitForSeconds(FIRE_ANIM_DURATION);
+
+        animator.SetBool("firing", false);
+        busy = false;
     }
 
     private void readInputs()
@@ -52,8 +85,7 @@ public class PlayerBehaviour : MonoBehaviour
         var distanceToDestination = Math.Abs(currentDestination - transform.position.x);
         if (distanceToDestination < 0.25f)
         {
-            currentDestination = 0;
-            setVelocityX(0);
+            stop();
             return;
         }
 
@@ -61,6 +93,12 @@ public class PlayerBehaviour : MonoBehaviour
         if (currentDestination < transform.position.x)
             newVelocityX *= -1;
         setVelocityX(newVelocityX);
+    }
+
+    private void stop()
+    {
+        currentDestination = 0f;
+        setVelocityX(0);
     }
 
     private void setVelocityX(float x)
@@ -119,9 +157,15 @@ public class PlayerBehaviour : MonoBehaviour
         return transform.localScale.x > 0;
     }
 
-    public void NewDestination(float newDestination)
+    public void Remote_NewDestination(float newDestination)
     {
         currentDestination = newDestination;
         moveToCurrentDestination();
+    }
+
+    public void ChaseVoter(VoterBehaviour voter)
+    {
+        currentTarget = voter.transform;
+        // the method readInputs will set the currentDestination
     }
 }
