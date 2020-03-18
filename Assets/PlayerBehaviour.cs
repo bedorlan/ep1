@@ -13,6 +13,13 @@ public class PlayerBehaviour : MonoBehaviour
     private Animator animator;
     private float currentDestination;
 
+    private readonly Dictionary<int, Color> playerColors = new Dictionary<int, Color> {
+        {0, new Color(1, .5f, .5f) },
+        {1, new Color(.5f, .5f, 1) },
+        {2, new Color(.5f, 1, .5f) },
+        {3, new Color(1, 1, 0) },
+    };
+
     void Start()
     {
         rigidbody = GetComponent<Rigidbody2D>();
@@ -100,6 +107,11 @@ public class PlayerBehaviour : MonoBehaviour
             newPosition.x = 2.5f;
         }
         transform.position = newPosition;
+
+        foreach (var child in GetComponentsInChildren<SpriteRenderer>())
+        {
+            child.color = playerColors[playerNumber];
+        }
     }
 
     public bool IsFacingLeft()
