@@ -7,6 +7,8 @@ public class PlayerBehaviour : MonoBehaviour
 {
     const float VELOCITY_RUNNING = 10f;
 
+    public GameObject tamalPrefab;
+
     private int playerNumber;
     private bool isLocal;
     private new Rigidbody2D rigidbody;
@@ -61,12 +63,25 @@ public class PlayerBehaviour : MonoBehaviour
         {
             Flip();
         }
-        // fire!
+        FireProjectile();
         currentTarget = null;
         yield return new WaitForSeconds(FIRE_ANIM_DURATION);
 
         animator.SetBool("firing", false);
         busy = false;
+    }
+
+    void FireProjectile()
+    {
+        var projectile = Instantiate(tamalPrefab);
+        var position = transform.position;
+        var direction = IsFacingLeft() ? -1 : 1;
+        position.x += 0f * direction;
+        position.y += 3f;
+        projectile.transform.position = position;
+        var velocity = new Vector3(9f, 4f, 0f);
+        velocity.x *= direction;
+        projectile.GetComponent<Rigidbody2D>().velocity = velocity;
     }
 
     private void readInputs()
