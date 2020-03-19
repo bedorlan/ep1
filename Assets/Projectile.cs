@@ -7,6 +7,8 @@ public class Projectile : MonoBehaviour
     public float projectileVelocity;
     public float initialPositionOffsetY = 3f;
 
+    private PlayerBehaviour owner;
+
     public Vector3 AimAtTarget(Transform origin, Transform currentTarget)
     {
         var distanceX = Mathf.Abs(origin.position.x - currentTarget.position.x);
@@ -23,6 +25,8 @@ public class Projectile : MonoBehaviour
 
     public void FireProjectile(Transform from, Vector3 velocity, bool toTheLeft)
     {
+        owner = from.GetComponent<PlayerBehaviour>();
+
         var projectile = Instantiate(gameObject);
         var position = from.position;
         position.y += initialPositionOffsetY;
@@ -50,5 +54,12 @@ public class Projectile : MonoBehaviour
         var x1 = (-b + Mathf.Sqrt(b * b - 4 * a * c)) / (2 * a);
         var x2 = (-b - Mathf.Sqrt(b * b - 4 * a * c)) / (2 * a);
         return (x1, x2);
+    }
+
+    public void OnTriggerEnter2D(Collider2D other)
+    {
+        var voter = other.gameObject.GetComponent<VoterBehaviour>();
+        if (voter == null) return;
+        Debug.Log("hit!");
     }
 }
