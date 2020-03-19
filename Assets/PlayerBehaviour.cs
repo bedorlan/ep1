@@ -46,12 +46,14 @@ public class PlayerBehaviour : MonoBehaviour
     private void fireCurrentTarget()
     {
         if (currentTarget == null) return;
-        if (Math.Abs(currentTarget.position.x - transform.position.x) > 10) return;
 
-        StartCoroutine(Fire());
+        var direction = tamalPrefab.GetComponent<Projectile>().AimAtTarget(transform, currentTarget.transform);
+        if (direction == Vector3.zero) return;
+
+        StartCoroutine(Fire(direction));
     }
 
-    IEnumerator Fire()
+    IEnumerator Fire(Vector3 direction)
     {
         busy = true;
         animator.SetBool("firing", true);
@@ -64,26 +66,13 @@ public class PlayerBehaviour : MonoBehaviour
 
         // wait for animation to raise hands
         yield return new WaitForSeconds(.15f);
-        FireProjectile();
+        tamalPrefab.GetComponent<Projectile>().FireProjectile(transform, direction, IsFacingLeft());
         currentTarget = null;
 
         // wait for animation to finish
         yield return new WaitForSeconds(.35f);
         animator.SetBool("firing", false);
         busy = false;
-    }
-
-    void FireProjectile()
-    {
-        var projectile = Instantiate(tamalPrefab);
-        var position = transform.position;
-        var direction = IsFacingLeft() ? -1 : 1;
-        position.x += 0f * direction;
-        position.y += 3f;
-        projectile.transform.position = position;
-        var velocity = new Vector3(9f, 4f, 0f);
-        velocity.x *= direction;
-        projectile.GetComponent<Rigidbody2D>().velocity = velocity;
     }
 
     private void readInputs()
