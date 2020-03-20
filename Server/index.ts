@@ -1,4 +1,5 @@
 import * as net from 'net'
+import * as Event from 'events'
 
 const PORT = 7777
 
@@ -6,7 +7,7 @@ enum Codes {
   noop = 0, // [0]
   start = 1, // [1, playerNumber: int]
   newPlayerDestination = 2, // [2, positionX: float]
-  newVoters = 3, // [3, ...positionX: float]
+  newVoters = 3, // [3, ...voters: [id: number, positionX: number]]
 }
 
 const server = net.createServer()
@@ -36,13 +37,11 @@ server.on('listening', () => {
 server.listen(PORT)
 
 const MAP_WIDTH = 200
-const VOTERS_TOTAL = 2000
-const VOTERS_PER_SECOND = 4
 
 class Match {
   private p1: net.Socket
   private p2: net.Socket
-  private createVotersInterval: NodeJS.Timeout
+  private votersCentral = new VotersCentral()
 
   constructor(players: net.Socket[]) {
     this.p1 = players[0]
@@ -56,24 +55,48 @@ class Match {
     this.p1.pipe(this.p2)
     this.p2.pipe(this.p1)
 
-    this.createVotersInterval = setInterval(() => {
-      this.CreateVoters()
-    }, 1000)
+    this.votersCentral.on('newVotersPack', this.SendVotersPack.bind(this))
+    this.votersCentral.Start()
   }
 
-  private CreateVoters() {
-    const voters = GenerateVotersPack()
-    const msg = [Codes.newVoters, ...voters]
+  private SendVotersPack(pack: [number, number][]) {
+    const msg = [Codes.newVoters, ...pack]
     sendTo(this.p1, msg)
     sendTo(this.p2, msg)
   }
 }
 
-function GenerateVotersPack() {
-  return new Array(VOTERS_PER_SECOND).fill(undefined).map(GenerateVoter)
+const VOTERS_PER_SECOND = 4
+
+class VotersCentral extends Event {
+  public Start() {
+    this.newVotersTimer = setInterval(this.GenerateVotersPack.bind(this), 1000)
+  }
+
+  public Stop() {
+    clearInterval(this.newVotersTimer)
+    this.newVotersTimer = null
+  }
+
+  private newVotersTimer: NodeJS.Timeout
+
+  private voterSeq = 0
+  // the id is the index, the position the value
+  private voters: number[] = []
+
+  private GenerateVotersPack() {
+    const votersToSend: [number, number][] = []
+    for (let i = 0; i < VOTERS_PER_SECOND; ++i) {
+      const positionX = GenerateVoterPositionX()
+      this.voters.push(positionX)
+      votersToSend.push([this.voterSeq, positionX])
+      ++this.voterSeq
+    }
+    this.emit('newVotersPack', votersToSend)
+  }
 }
 
-function GenerateVoter() {
+function GenerateVoterPositionX() {
   const forVoterRegion = Math.random()
   const forVoterPosition = Math.random()
   let voterPosition: number

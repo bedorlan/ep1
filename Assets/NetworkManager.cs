@@ -23,7 +23,7 @@ public class NetworkManager : MonoBehaviour
     public new GameObject camera;
 
     private Telepathy.Client client;
-    private Dictionary<Codes, Action<List<String>>> codesMap;
+    private Dictionary<Codes, Action<SimpleJSON.JSONNode>> codesMap;
     private int playerNumber;
 
     private GameObject localPlayer;
@@ -41,7 +41,7 @@ public class NetworkManager : MonoBehaviour
         Telepathy.Logger.LogWarning = Debug.LogWarning;
         Telepathy.Logger.LogError = Debug.LogError;
 
-        codesMap = new Dictionary<Codes, Action<List<String>>> {
+        codesMap = new Dictionary<Codes, Action<SimpleJSON.JSONNode>> {
             { Codes.start, StartGame },
             { Codes.newPlayerDestination, OnRemoteNewDestination },
             { Codes.newVoters, OnNewVoters }
@@ -74,19 +74,12 @@ public class NetworkManager : MonoBehaviour
         }
     }
 
-    class SupportedJsonType
-    {
-        public List<string> items;
-    }
-
 
     private void ProcessRemoteMsg(byte[] data)
     {
         var asciiData = Encoding.ASCII.GetString(data);
-
-        var supportedJson = string.Format("{{\"items\":{0}}}", asciiData);
-        var jsonData = JsonUtility.FromJson<SupportedJsonType>(supportedJson).items;
-        Codes code = (Codes)int.Parse(jsonData[0]);
+        var jsonData = SimpleJSON.JSON.Parse(asciiData);
+        Codes code = (Codes)jsonData[0].AsInt;
         if (!codesMap.ContainsKey(code))
         {
             Debug.LogError("unknown message=" + asciiData);
@@ -94,9 +87,9 @@ public class NetworkManager : MonoBehaviour
         codesMap[code].Invoke(jsonData);
     }
 
-    private void StartGame(List<string> data)
+    private void StartGame(SimpleJSON.JSONNode data)
     {
-        playerNumber = int.Parse(data[1]);
+        playerNumber = data[1].AsInt;
         Debug.Log("myPlayer=" + playerNumber);
 
         localPlayer = Instantiate(playerPrefab);
@@ -122,19 +115,22 @@ public class NetworkManager : MonoBehaviour
         client.Send(Encoding.ASCII.GetBytes(msg + "\n"));
     }
 
-    private void OnRemoteNewDestination(List<string> data)
+    private void OnRemoteNewDestination(SimpleJSON.JSONNode data)
     {
-        var newDestination = float.Parse(data[1]);
+        var newDestination = data[1].AsFloat;
         remotePlayer.GetComponent<PlayerBehaviour>().Remote_NewDestination(newDestination);
     }
 
-    private void OnNewVoters(List<string> data)
+    private void OnNewVoters(SimpleJSON.JSONNode data)
     {
-        data.RemoveAt(0);
-        foreach (var voter in data)
+        data.Remove(0);
+        foreach (var voter in data.Values)
         {
-            var voterPositionX = float.Parse(voter);
+            var voterId = voter[0].AsInt;
+            var voterPositionX = voter[1].AsFloat;
+
             var newVoter = Instantiate(voterPrefab);
+            newVoter.GetComponent<VoterBehaviour>().SetId(voterId);
             newVoter.transform.position = new Vector3(voterPositionX, FLOOR_LEVEL_Y + .1f, 0f);
         }
     }
