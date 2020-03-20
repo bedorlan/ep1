@@ -9,6 +9,7 @@ public class VoterBehaviour : MonoBehaviour
     const char WOMAN_CODE = '\ue900';
 
     private int voterId;
+    private int playerOwner;
 
     void Start()
     {
@@ -18,13 +19,19 @@ public class VoterBehaviour : MonoBehaviour
         }
     }
 
+    public void SetId(int voterId)
+    {
+        this.voterId = voterId;
+    }
+
     private void OnMouseDown()
     {
         NetworkManager.singleton.VoterClicked(this);
     }
 
-    public void SetId(int voterId)
+    internal void ConvertTo(int playerOwner)
     {
-        this.voterId = voterId;
+        this.playerOwner = playerOwner;
+        GetComponent<TextMeshPro>().color = Common.playerColors[playerOwner];
     }
 }

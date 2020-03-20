@@ -7,7 +7,7 @@ public class Projectile : MonoBehaviour
     public float projectileVelocity;
     public float initialPositionOffsetY = 3f;
 
-    private PlayerBehaviour owner;
+    private int playerOwner;
 
     public Vector3 AimAtTarget(Transform origin, Transform currentTarget)
     {
@@ -23,18 +23,17 @@ public class Projectile : MonoBehaviour
         return velocityVector;
     }
 
-    public void FireProjectile(Transform from, Vector3 velocity, bool toTheLeft)
+    public void FireProjectile(int playerNumber, Transform player, Vector3 velocity, bool toTheLeft)
     {
-        owner = from.GetComponent<PlayerBehaviour>();
+        playerOwner = playerNumber;
 
-        var projectile = Instantiate(gameObject);
-        var position = from.position;
+        var position = player.position;
         position.y += initialPositionOffsetY;
-        projectile.transform.position = position;
+        transform.position = position;
 
         var direction = toTheLeft ? -1 : 1;
         velocity.x *= direction;
-        projectile.GetComponent<Rigidbody2D>().velocity = velocity;
+        GetComponent<Rigidbody2D>().velocity = velocity;
     }
 
     float CalcAngle(float v, float x, float y)
@@ -60,6 +59,6 @@ public class Projectile : MonoBehaviour
     {
         var voter = other.gameObject.GetComponent<VoterBehaviour>();
         if (voter == null) return;
-        Debug.Log("hit!");
+        voter.ConvertTo(playerOwner);
     }
 }

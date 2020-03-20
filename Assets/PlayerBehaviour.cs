@@ -17,13 +17,6 @@ public class PlayerBehaviour : MonoBehaviour
     private Transform currentTarget;
     private bool busy = false;
 
-    private readonly Dictionary<int, Color> playerColors = new Dictionary<int, Color> {
-        {0, new Color(1, .5f, .5f) },
-        {1, new Color(.5f, .5f, 1) },
-        {2, new Color(.5f, 1, .5f) },
-        {3, new Color(1, 1, 0) },
-    };
-
     void Start()
     {
         rigidbody = GetComponent<Rigidbody2D>();
@@ -66,7 +59,8 @@ public class PlayerBehaviour : MonoBehaviour
 
         // wait for animation to raise hands
         yield return new WaitForSeconds(.15f);
-        tamalPrefab.GetComponent<Projectile>().FireProjectile(transform, direction, IsFacingLeft());
+        var newProjectile = Instantiate(tamalPrefab);
+        newProjectile.GetComponent<Projectile>().FireProjectile(playerNumber, transform, direction, IsFacingLeft());
         currentTarget = null;
 
         // wait for animation to finish
@@ -154,7 +148,7 @@ public class PlayerBehaviour : MonoBehaviour
 
         foreach (var child in GetComponentsInChildren<SpriteRenderer>())
         {
-            child.color = playerColors[playerNumber];
+            child.color = Common.playerColors[playerNumber];
         }
     }
 
