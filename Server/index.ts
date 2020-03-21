@@ -63,7 +63,7 @@ class Match {
       player.on('error', this.Stop.bind(this))
 
       createInterface({ input: player }).on('line', (raw) => {
-        const msg = JSON.parse(raw.slice(4))
+        const msg = getTelepathyMsg(raw)
         if (this.latencyCentral.OnMessage(index, msg)) return
 
         otherPlayers.forEach((other) => {
@@ -156,6 +156,13 @@ class LatencyCentral {
     this.latencyMeasureInterval = undefined
   }
 
+  private measureLatency() {
+    this.players.forEach((player) => {
+      sendTo(player, [Codes.measureLatency])
+    })
+    this.timers.fill(Date.now())
+  }
+
   OnMessage(player: number, msg: any[]) {
     if (msg[0] !== Codes.measureLatency) return false
 
@@ -169,17 +176,14 @@ class LatencyCentral {
     console.log('player latency', player, theLatency)
     return true
   }
-
-  private measureLatency() {
-    this.players.forEach((player) => {
-      sendTo(player, [Codes.measureLatency])
-    })
-    this.timers.fill(Date.now())
-  }
 }
 
 function sendTo(socket: net.Socket, msg: any[]) {
   socket.write(toTelepathyMsg(JSON.stringify(msg) + '\n'))
+}
+
+function getTelepathyMsg(data: string) {
+  return JSON.parse(data.slice(4))
 }
 
 function toTelepathyMsg(data: string) {
