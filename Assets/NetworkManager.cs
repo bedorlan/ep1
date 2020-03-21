@@ -9,8 +9,8 @@ enum Codes
 {
     noop = 0, // [0]
     start = 1, // [1, playerNumber: int]
-    newPlayerDestination = 2, // [2, positionX: float]
-    newVoters = 3, // [3, ...voters: [id: number, positionX: number]]
+    newPlayerDestination = 2, // [2, positionX: float, timeToReach: int]
+    newVoters = 3, // [3, ...voters: [id: int, positionX: float]]
     measureLatency = 4, // [4]
 }
 
@@ -107,9 +107,10 @@ public class NetworkManager : MonoBehaviour
             remotePlayer.GetComponent<Collider2D>());
     }
 
-    public void NewLocalPlayerDestination(float newDestinationX)
+    public void NewLocalPlayerDestination(float newDestinationX, float timeToReach)
     {
-        var msg = string.Format("[{0}, {1}]", (int)Codes.newPlayerDestination, newDestinationX);
+        var timeToReachMillis = (int)Mathf.Round(timeToReach * 1000);
+        var msg = string.Format("[{0}, {1}, {2}]", (int)Codes.newPlayerDestination, newDestinationX, timeToReachMillis);
         SendNetworkMsg(msg);
     }
 
@@ -118,10 +119,11 @@ public class NetworkManager : MonoBehaviour
         client.Send(Encoding.ASCII.GetBytes(msg + "\n"));
     }
 
-    private void OnRemoteNewDestination(SimpleJSON.JSONNode data)
+    private void OnRemoteNewDestination(JSONNode data)
     {
         var newDestination = data[1].AsFloat;
-        remotePlayer.GetComponent<PlayerBehaviour>().Remote_NewDestination(newDestination);
+        var timeToReach = data[2].AsInt / 1000f;
+        remotePlayer.GetComponent<PlayerBehaviour>().Remote_NewDestination(newDestination, timeToReach);
     }
 
     private void OnNewVoters(SimpleJSON.JSONNode data)

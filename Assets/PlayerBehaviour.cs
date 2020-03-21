@@ -33,7 +33,7 @@ public class PlayerBehaviour : MonoBehaviour
         }
 
         fireCurrentTarget();
-        moveToCurrentDestination();
+        stopWhenArriveToDestination();
     }
 
     private void fireCurrentTarget()
@@ -71,28 +71,43 @@ public class PlayerBehaviour : MonoBehaviour
 
     private void readInputs()
     {
-        if (Input.GetMouseButtonDown(0))
-        {
-            currentDestination = Camera.main.ScreenToWorldPoint(Input.mousePosition).x;
-            NetworkManager.singleton.NewLocalPlayerDestination(currentDestination);
-        }
+        if (!Input.GetMouseButtonDown(0)) return;
+
+        currentDestination = Camera.main.ScreenToWorldPoint(Input.mousePosition).x;
+        moveToCurrentDestination(float.MaxValue);
+
+        var distance = Mathf.Abs(currentDestination - transform.position.x);
+        var timeToReach = distance / VELOCITY_RUNNING;
+        NetworkManager.singleton.NewLocalPlayerDestination(currentDestination, timeToReach);
     }
 
-    private void moveToCurrentDestination()
+    private void moveToCurrentDestination(float timeToReach)
     {
-        if (currentDestination == 0f) return;
+        if (timeToReach < 0)
+        {
+            stop();
 
+            var justGoThere = transform.position;
+            justGoThere.x = currentDestination;
+            transform.position = justGoThere;
+            return;
+        }
+
+        var distance = Mathf.Abs(transform.position.x - currentDestination);
+        var velocityToReach = distance / timeToReach;
+
+        var newVelocityX = Mathf.Max(VELOCITY_RUNNING, velocityToReach);
+        if (currentDestination < transform.position.x) newVelocityX *= -1;
+        setVelocityX(newVelocityX);
+    }
+
+    private void stopWhenArriveToDestination()
+    {
         var distanceToDestination = Math.Abs(currentDestination - transform.position.x);
         if (distanceToDestination < 0.25f)
         {
             stop();
-            return;
         }
-
-        var newVelocityX = VELOCITY_RUNNING;
-        if (currentDestination < transform.position.x)
-            newVelocityX *= -1;
-        setVelocityX(newVelocityX);
     }
 
     private void stop()
@@ -157,10 +172,10 @@ public class PlayerBehaviour : MonoBehaviour
         return transform.localScale.x > 0;
     }
 
-    public void Remote_NewDestination(float newDestination)
+    public void Remote_NewDestination(float newDestination, float timeToReach)
     {
         currentDestination = newDestination;
-        moveToCurrentDestination();
+        moveToCurrentDestination(timeToReach);
     }
 
     public void ChaseVoter(VoterBehaviour voter)

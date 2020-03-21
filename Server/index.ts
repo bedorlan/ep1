@@ -6,8 +6,8 @@ const PORT = 7777
 enum Codes {
   noop = 0, // [0]
   start = 1, // [1, playerNumber: int]
-  newPlayerDestination = 2, // [2, positionX: float]
-  newVoters = 3, // [3, ...voters: [id: number, positionX: number]]
+  newPlayerDestination = 2, // [2, positionX: float, timeToReach: int]
+  newVoters = 3, // [3, ...voters: [id: int, positionX: float]]
   measureLatency = 4, // [4]
 }
 
@@ -56,26 +56,32 @@ class Match {
     this.latencyCentral.Start()
     this.votersCentral.Start()
 
-    this.players.forEach((player, index) => {
-      const otherPlayers = this.players.filter((other) => other !== player)
+    const codesMap: { [code in Codes]?: (player: number, msg: any[]) => void } = {
+      [Codes.measureLatency]: this.latencyCentral.OnLatencyResponse,
+      [Codes.newPlayerDestination]: this.latencyCentral.OnNewPlayerDestination,
+    } as const
 
-      player.on('close', this.Stop.bind(this))
-      player.on('error', this.Stop.bind(this))
+    this.players.forEach((player, index) => {
+      // const otherPlayers = this.players.filter((other) => other !== player)
+
+      player.on('close', this.Stop)
+      player.on('error', this.Stop)
 
       createInterface({ input: player }).on('line', (raw) => {
         const msg = getTelepathyMsg(raw)
-        if (this.latencyCentral.OnMessage(index, msg)) return
+        const code = msg[0] as Codes
+        if (!(code in codesMap)) {
+          console.error('unmapped code', code)
+        }
 
-        otherPlayers.forEach((other) => {
-          other.write(raw)
-        })
+        codesMap[code]!(index, msg)
       })
     })
 
     console.log('new match started!')
   }
 
-  private Stop() {
+  private readonly Stop = () => {
     this.players.forEach((player) => player.end())
     this.latencyCentral.Stop()
     this.votersCentral.Stop()
@@ -94,7 +100,7 @@ class VotersCentral {
   constructor(private players: net.Socket[]) {}
 
   public Start() {
-    this.newVotersInterval = setInterval(this.SendVotersPack.bind(this), 1000)
+    this.newVotersInterval = setInterval(this.SendVotersPack, 1000)
   }
 
   public Stop() {
@@ -102,7 +108,7 @@ class VotersCentral {
     this.newVotersInterval = undefined
   }
 
-  private SendVotersPack() {
+  private readonly SendVotersPack = () => {
     const votersToSend: [number, number][] = []
     for (let i = 0; i < VOTERS_PER_SECOND; ++i) {
       const positionX = GenerateVoterPositionX()
@@ -147,8 +153,8 @@ class LatencyCentral {
   }
 
   Start() {
-    this.latencyMeasureInterval = setInterval(this.measureLatency.bind(this), 5000)
-    this.measureLatency()
+    this.latencyMeasureInterval = setInterval(this.measureLatency, 5000)
+    // this.measureLatency()
   }
 
   Stop() {
@@ -156,16 +162,14 @@ class LatencyCentral {
     this.latencyMeasureInterval = undefined
   }
 
-  private measureLatency() {
+  private readonly measureLatency = () => {
     this.players.forEach((player) => {
       sendTo(player, [Codes.measureLatency])
     })
     this.timers.fill(Date.now())
   }
 
-  OnMessage(player: number, msg: any[]) {
-    if (msg[0] !== Codes.measureLatency) return false
-
+  readonly OnLatencyResponse = (player: number, msg: any[]) => {
     const startTime = this.timers[player]
     if (!startTime) return
 
@@ -174,7 +178,16 @@ class LatencyCentral {
     const oldLatency = this.playersLatency[player] || newLatency
     const theLatency = (this.playersLatency[player] = Math.round(oldLatency * 0.66 + newLatency * 0.34))
     console.log('player latency', player, theLatency)
-    return true
+  }
+
+  readonly OnNewPlayerDestination = (player: number, msg: any[]) => {
+    const [code, positionX, timeToReach] = msg
+    this.players.forEach((other, otherIndex) => {
+      if (otherIndex === player) return
+      const latency = this.playersLatency[player] + this.playersLatency[otherIndex]
+      const newMsg = [code, positionX, timeToReach - latency]
+      sendTo(other, newMsg)
+    })
   }
 }
 
