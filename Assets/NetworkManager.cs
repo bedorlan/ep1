@@ -9,9 +9,10 @@ enum Codes
 {
     noop = 0, // [0]
     start = 1, // [1, playerNumber: int]
-    newPlayerDestination = 2, // [2, positionX: float, timeToReach: int]
+    newPlayerDestination = 2, // [2, positionX: float, timeWhenReach: long]
     newVoters = 3, // [3, ...voters: [id: int, positionX: float]]
     measureLatency = 4, // [4]
+    guessTime = 5 // to server: [5, guessedTime: int], from server: [5, deltaGuess: int]
 }
 
 public class NetworkManager : MonoBehaviour
@@ -25,7 +26,7 @@ public class NetworkManager : MonoBehaviour
     public new GameObject camera;
 
     private Telepathy.Client client;
-    private Dictionary<Codes, Action<SimpleJSON.JSONNode>> codesMap;
+    private Dictionary<Codes, Action<JSONNode>> codesMap;
     private int playerNumber;
 
     private GameObject localPlayer;
@@ -43,11 +44,12 @@ public class NetworkManager : MonoBehaviour
         Telepathy.Logger.LogWarning = Debug.LogWarning;
         Telepathy.Logger.LogError = Debug.LogError;
 
-        codesMap = new Dictionary<Codes, Action<SimpleJSON.JSONNode>> {
+        codesMap = new Dictionary<Codes, Action<JSONNode>> {
             { Codes.start, StartGame },
             { Codes.newPlayerDestination, OnRemoteNewDestination },
             { Codes.newVoters, OnNewVoters },
-            { Codes.measureLatency, OnMeasureLatency }
+            { Codes.measureLatency, OnMeasureLatency },
+            { Codes.guessTime, OnGuessTime }
         };
     }
 
@@ -66,6 +68,7 @@ public class NetworkManager : MonoBehaviour
             {
                 case Telepathy.EventType.Connected:
                     Debug.Log("Connected");
+                    guessServerTime();
                     break;
                 case Telepathy.EventType.Data:
                     ProcessRemoteMsg(msg.data);
@@ -76,7 +79,6 @@ public class NetworkManager : MonoBehaviour
             }
         }
     }
-
 
     private void ProcessRemoteMsg(byte[] data)
     {
@@ -110,23 +112,20 @@ public class NetworkManager : MonoBehaviour
     public void NewLocalPlayerDestination(float newDestinationX, float timeToReach)
     {
         var timeToReachMillis = (int)Mathf.Round(timeToReach * 1000);
-        var msg = string.Format("[{0}, {1}, {2}]", (int)Codes.newPlayerDestination, newDestinationX, timeToReachMillis);
+        var timeWhenReach = unixMillis() + timeToReachMillis + serverDelta;
+        var msg = string.Format("[{0}, {1}, {2}]", (int)Codes.newPlayerDestination, newDestinationX, timeWhenReach);
         SendNetworkMsg(msg);
-    }
-
-    private void SendNetworkMsg(string msg)
-    {
-        client.Send(Encoding.ASCII.GetBytes(msg + "\n"));
     }
 
     private void OnRemoteNewDestination(JSONNode data)
     {
         var newDestination = data[1].AsFloat;
-        var timeToReach = data[2].AsInt / 1000f;
+        var timeWhenReach = data[2].AsLong;
+        var timeToReach = (timeWhenReach - unixMillis() - serverDelta) / 1000f;
         remotePlayer.GetComponent<PlayerBehaviour>().Remote_NewDestination(newDestination, timeToReach);
     }
 
-    private void OnNewVoters(SimpleJSON.JSONNode data)
+    private void OnNewVoters(JSONNode data)
     {
         data.Remove(0);
         foreach (var voter in data.Values)
@@ -146,9 +145,55 @@ public class NetworkManager : MonoBehaviour
         SendNetworkMsg(msg);
     }
 
+    private long timer = -1;
+    private int minServerLatency = int.MaxValue;
+    private int serverDelta = 0;
+
+    private void guessServerTime()
+    {
+        var now = timer = unixMillis();
+        var msg = string.Format("[{0}, {1}]", (int)Codes.guessTime, now);
+        SendNetworkMsg(msg);
+    }
+
+    private void OnGuessTime(JSONNode data)
+    {
+        var newDelta = data[1].AsInt;
+        StartCoroutine(CalcDelta(newDelta));
+    }
+
+    private IEnumerator CalcDelta(int newDelta)
+    {
+        if (timer == -1) yield break;
+
+        var newLatency = (int)(unixMillis() - timer);
+        timer = -1;
+        if (newLatency < minServerLatency)
+        {
+            serverDelta = newDelta - (newLatency / 2);
+            minServerLatency = newLatency;
+            Debug.LogFormat("serverDelta={0} minServerLatency={1}", serverDelta, minServerLatency);
+        }
+
+        if (minServerLatency <= 40) yield break;
+
+        yield return new WaitForSeconds(1f);
+        guessServerTime();
+    }
+
     public void VoterClicked(VoterBehaviour voter)
     {
         localPlayer.GetComponent<PlayerBehaviour>().ChaseVoter(voter);
+    }
+
+    private long unixMillis()
+    {
+        return DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+    }
+
+    private void SendNetworkMsg(string msg)
+    {
+        client.Send(Encoding.ASCII.GetBytes(msg + "\n"));
     }
 
     void OnApplicationQuit()

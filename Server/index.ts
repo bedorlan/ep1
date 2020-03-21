@@ -1,4 +1,5 @@
 import * as net from 'net'
+import { PassThrough, Readable, Writable } from 'stream'
 import { createInterface } from 'readline'
 
 const PORT = 7777
@@ -6,33 +7,63 @@ const PORT = 7777
 enum Codes {
   noop = 0, // [0]
   start = 1, // [1, playerNumber: int]
-  newPlayerDestination = 2, // [2, positionX: float, timeToReach: int]
+  newPlayerDestination = 2, // [2, positionX: float, timeWhenReach: long]
   newVoters = 3, // [3, ...voters: [id: int, positionX: float]]
   measureLatency = 4, // [4]
+  guessTime = 5, // to server: [5, guessedTime: int], from server: [5, deltaGuess: int]
 }
 
 const server = net.createServer()
-let waitingQueue: net.Socket[] = []
+
+type Duplex = { in: Readable; out: Writable }
+let waitingQueue: Duplex[] = []
 
 server.on('connection', (socket) => {
-  waitingQueue.push(socket)
-  socket.on('close', dropSocket(socket))
-  socket.on('error', dropSocket(socket))
+  const duplex = { in: new PassThrough(), out: new PassThrough() }
+  // duplex.out.pipe(socket)
+  // TODO: remove the latency!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+  duplex.out.on('data', (data) => {
+    setTimeout(() => {
+      socket.write(data)
+    }, 250)
+  })
+
+  createInterface(socket).on('line', (raw) => {
+    const code = Number.parseInt(raw.charAt(5))
+    if (code !== Codes.guessTime) {
+      duplex.in.write(raw + '\n')
+      return
+    }
+
+    onGuessTime(duplex, getTelepathyMsg(raw))
+  })
+
+  waitingQueue.push(duplex)
+  socket.on('close', dropStream(duplex))
+  socket.on('error', dropStream(duplex))
   if (waitingQueue.length < 2) return
 
   new Match(waitingQueue).Start()
   waitingQueue = []
 })
 
-function dropSocket(socket: net.Socket) {
+function dropStream(duplex: Duplex) {
   return (err: any) => {
     if (err) console.error(err)
-    waitingQueue = waitingQueue.filter((it) => it !== socket)
+    duplex.in.destroy()
+    duplex.out.end()
+    waitingQueue = waitingQueue.filter((it) => it !== duplex)
   }
 }
 
+function onGuessTime(player: Duplex, msg: any[]) {
+  const playerGuess = msg[1] as number
+  const offset = Date.now() - playerGuess
+  sendTo(player, [Codes.guessTime, offset])
+}
+
 server.on('listening', () => {
-  console.log(`listening on port ${PORT}`)
+  console.info(`listening on port ${PORT}`)
 })
 
 server.listen(PORT)
@@ -41,11 +72,9 @@ const MAP_WIDTH = 200
 
 class Match {
   private votersCentral: VotersCentral
-  private latencyCentral: LatencyCentral
 
-  constructor(private players: net.Socket[]) {
+  constructor(private players: Duplex[]) {
     this.votersCentral = new VotersCentral(players)
-    this.latencyCentral = new LatencyCentral(players)
   }
 
   Start() {
@@ -53,37 +82,44 @@ class Match {
       sendTo(player, [Codes.start, index])
     })
 
-    this.latencyCentral.Start()
     this.votersCentral.Start()
 
     const codesMap: { [code in Codes]?: (player: number, msg: any[]) => void } = {
-      [Codes.measureLatency]: this.latencyCentral.OnLatencyResponse,
-      [Codes.newPlayerDestination]: this.latencyCentral.OnNewPlayerDestination,
+      [Codes.newPlayerDestination]: this.resendToOthers,
     } as const
 
     this.players.forEach((player, index) => {
-      // const otherPlayers = this.players.filter((other) => other !== player)
+      player.in.on('close', this.Stop)
+      player.in.on('error', this.Stop)
 
-      player.on('close', this.Stop)
-      player.on('error', this.Stop)
-
-      createInterface({ input: player }).on('line', (raw) => {
+      createInterface(player.in).on('line', (raw) => {
         const msg = getTelepathyMsg(raw)
         const code = msg[0] as Codes
         if (!(code in codesMap)) {
           console.error('unmapped code', code)
+          return
         }
 
         codesMap[code]!(index, msg)
       })
     })
 
-    console.log('new match started!')
+    console.info('new match started!')
+  }
+
+  private readonly resendToOthers = (player: number, msg: any[]) => {
+    this.players
+      .filter((_, index) => index !== player)
+      .forEach((other) => {
+        sendTo(other, msg)
+      })
   }
 
   private readonly Stop = () => {
-    this.players.forEach((player) => player.end())
-    this.latencyCentral.Stop()
+    this.players.forEach((player) => {
+      player.in.destroy()
+      player.out.end()
+    })
     this.votersCentral.Stop()
   }
 }
@@ -97,7 +133,7 @@ class VotersCentral {
   private voters: number[] = []
   private voterSeq = 0
 
-  constructor(private players: net.Socket[]) {}
+  constructor(private players: Duplex[]) {}
 
   public Start() {
     this.newVotersInterval = setInterval(this.SendVotersPack, 1000)
@@ -142,57 +178,12 @@ function GenerateVoterPositionX() {
   return (voterPosition - 0.5) * MAP_WIDTH
 }
 
-class LatencyCentral {
-  private playersLatency: number[]
-  private timers: Array<number | undefined>
-  private latencyMeasureInterval?: NodeJS.Timeout
-
-  constructor(private players: net.Socket[]) {
-    this.playersLatency = Array(players.length).fill(0)
-    this.timers = Array(players.length).fill(undefined)
+function sendTo(duplex: Duplex, msg: any[]) {
+  if (!duplex.out.writable) {
+    console.error('unable to send msg', msg)
+    return
   }
-
-  Start() {
-    this.latencyMeasureInterval = setInterval(this.measureLatency, 5000)
-    // this.measureLatency()
-  }
-
-  Stop() {
-    if (this.latencyMeasureInterval) clearInterval(this.latencyMeasureInterval)
-    this.latencyMeasureInterval = undefined
-  }
-
-  private readonly measureLatency = () => {
-    this.players.forEach((player) => {
-      sendTo(player, [Codes.measureLatency])
-    })
-    this.timers.fill(Date.now())
-  }
-
-  readonly OnLatencyResponse = (player: number, msg: any[]) => {
-    const startTime = this.timers[player]
-    if (!startTime) return
-
-    this.timers[player] = undefined
-    const newLatency = Math.round((Date.now() - startTime) / 2)
-    const oldLatency = this.playersLatency[player] || newLatency
-    const theLatency = (this.playersLatency[player] = Math.round(oldLatency * 0.66 + newLatency * 0.34))
-    console.log('player latency', player, theLatency)
-  }
-
-  readonly OnNewPlayerDestination = (player: number, msg: any[]) => {
-    const [code, positionX, timeToReach] = msg
-    this.players.forEach((other, otherIndex) => {
-      if (otherIndex === player) return
-      const latency = this.playersLatency[player] + this.playersLatency[otherIndex]
-      const newMsg = [code, positionX, timeToReach - latency]
-      sendTo(other, newMsg)
-    })
-  }
-}
-
-function sendTo(socket: net.Socket, msg: any[]) {
-  socket.write(toTelepathyMsg(JSON.stringify(msg) + '\n'))
+  duplex.out.write(toTelepathyMsg(JSON.stringify(msg) + '\n'))
 }
 
 function getTelepathyMsg(data: string) {

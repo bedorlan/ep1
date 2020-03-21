@@ -85,11 +85,7 @@ public class PlayerBehaviour : MonoBehaviour
     {
         if (timeToReach < 0)
         {
-            stop();
-
-            var justGoThere = transform.position;
-            justGoThere.x = currentDestination;
-            transform.position = justGoThere;
+            teletransport();
             return;
         }
 
@@ -101,10 +97,27 @@ public class PlayerBehaviour : MonoBehaviour
         setVelocityX(newVelocityX);
     }
 
+    private void teletransport()
+    {
+        var toTheRight = currentDestination > transform.position.x;
+        if (toTheRight && IsFacingLeft() || !toTheRight && !IsFacingLeft())
+        {
+            Flip();
+        }
+
+        var justGoThere = transform.position;
+        justGoThere.x = currentDestination;
+        transform.position = justGoThere;
+
+        stop();
+    }
+
     private void stopWhenArriveToDestination()
     {
-        var distanceToDestination = Math.Abs(currentDestination - transform.position.x);
-        if (distanceToDestination < 0.25f)
+        var distanceToDestination = currentDestination - transform.position.x;
+        var direction = Mathf.Sign(rigidbody.velocity.x);
+        if (direction > 0 && distanceToDestination <= 0
+            || direction < 0 && distanceToDestination >= 0)
         {
             stop();
         }
