@@ -9,7 +9,6 @@ enum Codes {
   start = 1, // [1, playerNumber: int]
   newPlayerDestination = 2, // [2, positionX: float, timeWhenReach: long]
   newVoters = 3, // [3, ...voters: [id: int, positionX: float]]
-  measureLatency = 4, // [4]
   guessTime = 5, // to server: [5, guessedTime: int], from server: [5, deltaGuess: int]
 }
 

@@ -11,7 +11,6 @@ enum Codes
     start = 1, // [1, playerNumber: int]
     newPlayerDestination = 2, // [2, positionX: float, timeWhenReach: long]
     newVoters = 3, // [3, ...voters: [id: int, positionX: float]]
-    measureLatency = 4, // [4]
     guessTime = 5 // to server: [5, guessedTime: int], from server: [5, deltaGuess: int]
 }
 
@@ -48,7 +47,6 @@ public class NetworkManager : MonoBehaviour
             { Codes.start, StartGame },
             { Codes.newPlayerDestination, OnRemoteNewDestination },
             { Codes.newVoters, OnNewVoters },
-            { Codes.measureLatency, OnMeasureLatency },
             { Codes.guessTime, OnGuessTime }
         };
     }
@@ -137,12 +135,6 @@ public class NetworkManager : MonoBehaviour
             newVoter.GetComponent<VoterBehaviour>().SetId(voterId);
             newVoter.transform.position = new Vector3(voterPositionX, FLOOR_LEVEL_Y + .1f, 0f);
         }
-    }
-
-    private void OnMeasureLatency(JSONNode data)
-    {
-        var msg = string.Format("[{0}]", (int)Codes.measureLatency);
-        SendNetworkMsg(msg);
     }
 
     private long timer = -1;
