@@ -60,5 +60,7 @@ public class Projectile : MonoBehaviour
         var voter = other.gameObject.GetComponent<VoterBehaviour>();
         if (voter == null) return;
         voter.ConvertTo(playerOwner);
+
+        Destroy(gameObject);
     }
 }

@@ -1,5 +1,5 @@
 import * as net from 'net'
-import * as Event from 'events'
+import { createInterface } from 'readline'
 
 const PORT = 7777
 
@@ -8,6 +8,7 @@ enum Codes {
   start = 1, // [1, playerNumber: int]
   newPlayerDestination = 2, // [2, positionX: float]
   newVoters = 3, // [3, ...voters: [id: number, positionX: number]]
+  measureLatency = 4, // [4]
 }
 
 const server = net.createServer()
@@ -23,8 +24,8 @@ server.on('connection', (socket) => {
   waitingQueue = []
 })
 
-function dropSocket(socket) {
-  return (err) => {
+function dropSocket(socket: net.Socket) {
+  return (err: any) => {
     if (err) console.error(err)
     waitingQueue = waitingQueue.filter((it) => it !== socket)
   }
@@ -39,52 +40,69 @@ server.listen(PORT)
 const MAP_WIDTH = 200
 
 class Match {
-  private p1: net.Socket
-  private p2: net.Socket
-  private votersCentral = new VotersCentral()
+  private votersCentral: VotersCentral
+  private latencyCentral: LatencyCentral
 
-  constructor(players: net.Socket[]) {
-    this.p1 = players[0]
-    this.p2 = players[1]
+  constructor(private players: net.Socket[]) {
+    this.votersCentral = new VotersCentral(players)
+    this.latencyCentral = new LatencyCentral(players)
   }
 
   Start() {
-    sendTo(this.p1, [Codes.start, 0])
-    sendTo(this.p2, [Codes.start, 1])
+    this.players.forEach((player, index) => {
+      sendTo(player, [Codes.start, index])
+    })
 
-    this.p1.pipe(this.p2)
-    this.p2.pipe(this.p1)
-
-    this.votersCentral.on('newVotersPack', this.SendVotersPack.bind(this))
+    this.latencyCentral.Start()
     this.votersCentral.Start()
+
+    this.players.forEach((player, index) => {
+      const otherPlayers = this.players.filter((other) => other !== player)
+
+      player.on('close', this.Stop.bind(this))
+      player.on('error', this.Stop.bind(this))
+
+      createInterface({ input: player }).on('line', (raw) => {
+        const msg = JSON.parse(raw.slice(4))
+        if (this.latencyCentral.OnMessage(index, msg)) return
+
+        otherPlayers.forEach((other) => {
+          other.write(raw)
+        })
+      })
+    })
+
+    console.log('new match started!')
   }
 
-  private SendVotersPack(pack: [number, number][]) {
-    const msg = [Codes.newVoters, ...pack]
-    sendTo(this.p1, msg)
-    sendTo(this.p2, msg)
+  private Stop() {
+    this.players.forEach((player) => player.end())
+    this.latencyCentral.Stop()
+    this.votersCentral.Stop()
   }
 }
 
 const VOTERS_PER_SECOND = 4
 
-class VotersCentral extends Event {
+class VotersCentral {
+  private newVotersInterval?: NodeJS.Timeout
+
+  // the id is the index, the position the value
+  private voters: number[] = []
+  private voterSeq = 0
+
+  constructor(private players: net.Socket[]) {}
+
   public Start() {
-    this.newVotersTimer = setInterval(this.GenerateVotersPack.bind(this), 1000)
+    this.newVotersInterval = setInterval(this.SendVotersPack.bind(this), 1000)
   }
 
   public Stop() {
-    clearInterval(this.newVotersTimer)
-    this.newVotersTimer = null
+    if (this.newVotersInterval) clearInterval(this.newVotersInterval)
+    this.newVotersInterval = undefined
   }
 
-  private newVotersTimer: NodeJS.Timeout
-
-  private voterSeq = 0
-  // the id is the index, the position the value
-  private voters: number[] = []
-
-  private GenerateVotersPack() {
+  private SendVotersPack() {
     const votersToSend: [number, number][] = []
     for (let i = 0; i < VOTERS_PER_SECOND; ++i) {
       const positionX = GenerateVoterPositionX()
@@ -92,7 +110,11 @@ class VotersCentral extends Event {
       votersToSend.push([this.voterSeq, positionX])
       ++this.voterSeq
     }
-    this.emit('newVotersPack', votersToSend)
+
+    const msg = [Codes.newVoters, ...votersToSend]
+    this.players.forEach((player) => {
+      sendTo(player, msg)
+    })
   }
 }
 
@@ -114,7 +136,49 @@ function GenerateVoterPositionX() {
   return (voterPosition - 0.5) * MAP_WIDTH
 }
 
-function sendTo(socket: net.Socket, msg) {
+class LatencyCentral {
+  private playersLatency: number[]
+  private timers: Array<number | undefined>
+  private latencyMeasureInterval?: NodeJS.Timeout
+
+  constructor(private players: net.Socket[]) {
+    this.playersLatency = Array(players.length).fill(0)
+    this.timers = Array(players.length).fill(undefined)
+  }
+
+  Start() {
+    this.latencyMeasureInterval = setInterval(this.measureLatency.bind(this), 5000)
+    this.measureLatency()
+  }
+
+  Stop() {
+    if (this.latencyMeasureInterval) clearInterval(this.latencyMeasureInterval)
+    this.latencyMeasureInterval = undefined
+  }
+
+  OnMessage(player: number, msg: any[]) {
+    if (msg[0] !== Codes.measureLatency) return false
+
+    const startTime = this.timers[player]
+    if (!startTime) return
+
+    this.timers[player] = undefined
+    const newLatency = Math.round((Date.now() - startTime) / 2)
+    const oldLatency = this.playersLatency[player] || newLatency
+    const theLatency = (this.playersLatency[player] = Math.round(oldLatency * 0.66 + newLatency * 0.34))
+    console.log('player latency', player, theLatency)
+    return true
+  }
+
+  private measureLatency() {
+    this.players.forEach((player) => {
+      sendTo(player, [Codes.measureLatency])
+    })
+    this.timers.fill(Date.now())
+  }
+}
+
+function sendTo(socket: net.Socket, msg: any[]) {
   socket.write(toTelepathyMsg(JSON.stringify(msg) + '\n'))
 }
 

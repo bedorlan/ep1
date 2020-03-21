@@ -2,6 +2,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.Text;
+using SimpleJSON;
 using UnityEngine;
 
 enum Codes
@@ -9,7 +10,8 @@ enum Codes
     noop = 0, // [0]
     start = 1, // [1, playerNumber: int]
     newPlayerDestination = 2, // [2, positionX: float]
-    newVoters = 3, // [3, ...positionX: float]
+    newVoters = 3, // [3, ...voters: [id: number, positionX: number]]
+    measureLatency = 4, // [4]
 }
 
 public class NetworkManager : MonoBehaviour
@@ -44,7 +46,8 @@ public class NetworkManager : MonoBehaviour
         codesMap = new Dictionary<Codes, Action<SimpleJSON.JSONNode>> {
             { Codes.start, StartGame },
             { Codes.newPlayerDestination, OnRemoteNewDestination },
-            { Codes.newVoters, OnNewVoters }
+            { Codes.newVoters, OnNewVoters },
+            { Codes.measureLatency, OnMeasureLatency }
         };
     }
 
@@ -133,6 +136,12 @@ public class NetworkManager : MonoBehaviour
             newVoter.GetComponent<VoterBehaviour>().SetId(voterId);
             newVoter.transform.position = new Vector3(voterPositionX, FLOOR_LEVEL_Y + .1f, 0f);
         }
+    }
+
+    private void OnMeasureLatency(JSONNode data)
+    {
+        var msg = string.Format("[{0}]", (int)Codes.measureLatency);
+        SendNetworkMsg(msg);
     }
 
     public void VoterClicked(VoterBehaviour voter)
