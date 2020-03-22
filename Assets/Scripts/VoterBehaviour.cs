@@ -63,11 +63,9 @@ public class VoterBehaviour : MonoBehaviour
     {
         enabled = false;
 
-        AudioSource audioSource = GetComponent<AudioSource>();
-        audioSource.clip = whenClaimedClip;
-        audioSource.Play();
-
+        GetComponent<AudioSource>().PlayOneShot(whenClaimedClip);
         yield return new WaitForSeconds(whenClaimedClip.length);
+
         Destroy(gameObject);
     }
 }
