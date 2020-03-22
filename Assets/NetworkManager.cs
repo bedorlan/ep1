@@ -11,7 +11,8 @@ enum Codes
     start = 1, // [1, playerNumber: int]
     newPlayerDestination = 2, // [2, positionX: float, timeWhenReach: long]
     newVoters = 3, // [3, ...voters: [id: int, positionX: float]]
-    guessTime = 5 // to server: [5, guessedTime: int], from server: [5, deltaGuess: int]
+    guessTime = 5, // to server: [5, guessedTime: int], from server: [5, deltaGuess: int]
+    projectileFired = 6 // [6, player: int, destinationVector: [x, y: floats], timeWhenReach: long]
 }
 
 public class NetworkManager : MonoBehaviour
@@ -47,7 +48,8 @@ public class NetworkManager : MonoBehaviour
             { Codes.start, StartGame },
             { Codes.newPlayerDestination, OnRemoteNewDestination },
             { Codes.newVoters, OnNewVoters },
-            { Codes.guessTime, OnGuessTime }
+            { Codes.guessTime, OnGuessTime },
+            { Codes.projectileFired, OnProjectileFired }
         };
     }
 
@@ -78,6 +80,8 @@ public class NetworkManager : MonoBehaviour
         }
     }
 
+    #region remote events
+
     private void ProcessRemoteMsg(byte[] data)
     {
         var asciiData = Encoding.ASCII.GetString(data);
@@ -90,7 +94,7 @@ public class NetworkManager : MonoBehaviour
         codesMap[code].Invoke(jsonData);
     }
 
-    private void StartGame(SimpleJSON.JSONNode data)
+    private void StartGame(JSONNode data)
     {
         playerNumber = data[1].AsInt;
         Debug.Log("myPlayer=" + playerNumber);
@@ -107,19 +111,11 @@ public class NetworkManager : MonoBehaviour
             remotePlayer.GetComponent<Collider2D>());
     }
 
-    public void NewLocalPlayerDestination(float newDestinationX, float timeToReach)
-    {
-        var timeToReachMillis = (int)Mathf.Round(timeToReach * 1000);
-        var timeWhenReach = unixMillis() + timeToReachMillis + serverDelta;
-        var msg = string.Format("[{0}, {1}, {2}]", (int)Codes.newPlayerDestination, newDestinationX, timeWhenReach);
-        SendNetworkMsg(msg);
-    }
-
     private void OnRemoteNewDestination(JSONNode data)
     {
         var newDestination = data[1].AsFloat;
         var timeWhenReach = data[2].AsLong;
-        var timeToReach = (timeWhenReach - unixMillis() - serverDelta) / 1000f;
+        var timeToReach = timeWhenReach2timeToReach(timeWhenReach);
         remotePlayer.GetComponent<PlayerBehaviour>().Remote_NewDestination(newDestination, timeToReach);
     }
 
@@ -136,6 +132,16 @@ public class NetworkManager : MonoBehaviour
             newVoter.transform.position = new Vector3(voterPositionX, FLOOR_LEVEL_Y + .1f, 0f);
         }
     }
+
+    private void OnProjectileFired(JSONNode data)
+    {
+        var destination = new Vector3(data[2].AsArray[0].AsFloat, data[2].AsArray[1].AsFloat, 0f);
+        var timeWhenReach = data[3].AsLong;
+        var timeToReach = timeWhenReach2timeToReach(timeWhenReach);
+        remotePlayer.GetComponent<PlayerBehaviour>().Remote_FireProjectile(destination, timeToReach);
+    }
+
+    #endregion
 
     private long timer = -1;
     private int minServerLatency = int.MaxValue;
@@ -173,14 +179,61 @@ public class NetworkManager : MonoBehaviour
         guessServerTime();
     }
 
+    #region local events
+
+    public void BackgroundClicked(Vector3 position)
+    {
+        var playerBehaviour = localPlayer.GetComponent<PlayerBehaviour>();
+        playerBehaviour?.OnNewDestination(position.x);
+    }
+
+    public void NewLocalPlayerDestination(float newDestinationX, float timeToReach)
+    {
+        var timeWhenReach = timeToReach2timeWhenReach(timeToReach);
+        var msg = string.Format("[{0}, {1}, {2}]", (int)Codes.newPlayerDestination, newDestinationX, timeWhenReach);
+        SendNetworkMsg(msg);
+    }
+
     public void VoterClicked(VoterBehaviour voter)
     {
         localPlayer.GetComponent<PlayerBehaviour>().ChaseVoter(voter);
     }
 
+    public void ProjectileFired(int playerOwner, Vector3 destination, float timeToReach)
+    {
+        Debug.LogFormat("playerOwner={0},destination={1},timeToReach={2}", playerOwner, destination, timeToReach);
+        var destinationMsg = vector2msg(destination);
+        var timeWhenReach = timeToReach2timeWhenReach(timeToReach);
+        var msg = string.Format(
+            "[{0}, {1}, {2}, {3}]",
+            (int)Codes.projectileFired,
+            playerNumber,
+            destinationMsg,
+            timeWhenReach);
+        SendNetworkMsg(msg);
+    }
+
+    #endregion
+
     private long unixMillis()
     {
         return DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+    }
+
+    private long timeToReach2timeWhenReach(float timeToReach)
+    {
+        var timeToReachMillis = (int)Mathf.Round(timeToReach * 1000);
+        return unixMillis() + timeToReachMillis + serverDelta;
+    }
+
+    private float timeWhenReach2timeToReach(long timeWhenReach)
+    {
+        return (timeWhenReach - unixMillis() - serverDelta) / 1000f;
+    }
+
+    private string vector2msg(Vector3 vector)
+    {
+        return string.Format("[{0}, {1}]", vector.x, vector.y);
     }
 
     private void SendNetworkMsg(string msg)

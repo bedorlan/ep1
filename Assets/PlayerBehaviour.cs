@@ -6,6 +6,7 @@ using UnityEngine;
 public class PlayerBehaviour : MonoBehaviour
 {
     const float VELOCITY_RUNNING = 10f;
+    const float TIME_ANIMATION_PRE_FIRE = .15f;
 
     public GameObject tamalPrefab;
 
@@ -14,8 +15,8 @@ public class PlayerBehaviour : MonoBehaviour
     private new Rigidbody2D rigidbody;
     private Animator animator;
     private float currentDestination;
-    private Transform currentTarget;
-    private bool busy = false;
+    private Vector3 currentTarget;
+    private bool isBusy = false;
 
     void Start()
     {
@@ -25,60 +26,67 @@ public class PlayerBehaviour : MonoBehaviour
 
     void Update()
     {
-        if (busy) return;
+        if (isLocal && isBusy) return;
 
         if (isLocal)
         {
-            readInputs();
+            tryFireAtCurrentTarget();
         }
 
-        fireCurrentTarget();
         stopWhenArriveToDestination();
     }
 
-    private void fireCurrentTarget()
+    private void tryFireAtCurrentTarget()
     {
-        if (currentTarget == null) return;
+        if (currentTarget == Vector3.zero) return;
 
-        var direction = tamalPrefab.GetComponent<Projectile>().AimAtTarget(transform, currentTarget.transform);
-        if (direction == Vector3.zero) return;
+        var velocity = tamalPrefab.GetComponent<Projectile>().AimAtTarget(transform, currentTarget, 0f);
+        if (velocity == Vector3.zero) return;
 
-        StartCoroutine(Fire(direction));
+        Debug.Log("shootingDistance=" + Mathf.Abs(currentTarget.x - transform.position.x));
+        StartCoroutine(Fire(velocity, false));
     }
 
-    IEnumerator Fire(Vector3 direction)
+    IEnumerator Fire(Vector3 velocity, bool immediate)
     {
-        busy = true;
+        if (immediate)
+        {
+            // shit! too late. what should we do?
+            // teleport the projectile!
+            yield break;
+        }
+
+        if (isLocal)
+        {
+            var distance = Mathf.Abs(transform.position.x - currentTarget.x);
+            var timeToReach = TIME_ANIMATION_PRE_FIRE + (distance / Mathf.Abs(velocity.x));
+            NetworkManager.singleton.ProjectileFired(playerNumber, currentTarget, timeToReach);
+        }
+
+        isBusy = true;
         animator.SetBool("firing", true);
         stop();
-        var targetAtMyRight = currentTarget.position.x > transform.position.x;
+
+        var targetAtMyRight = currentTarget.x > transform.position.x;
         if (IsFacingLeft() && targetAtMyRight || !IsFacingLeft() && !targetAtMyRight)
         {
             Flip();
         }
 
         // wait for animation to raise hands
-        yield return new WaitForSeconds(.15f);
+        yield return new WaitForSeconds(TIME_ANIMATION_PRE_FIRE);
         var newProjectile = Instantiate(tamalPrefab);
-        newProjectile.GetComponent<Projectile>().FireProjectile(playerNumber, transform, direction, IsFacingLeft());
-        currentTarget = null;
+        newProjectile.GetComponent<Projectile>().FireProjectile(
+            playerNumber,
+            transform,
+            velocity,
+            IsFacingLeft());
+        currentTarget = Vector3.zero;
 
         // wait for animation to finish
         yield return new WaitForSeconds(.35f);
         animator.SetBool("firing", false);
-        busy = false;
-    }
-
-    private void readInputs()
-    {
-        if (!Input.GetMouseButtonDown(0)) return;
-
-        currentDestination = Camera.main.ScreenToWorldPoint(Input.mousePosition).x;
-        moveToCurrentDestination(float.MaxValue);
-
-        var distance = Mathf.Abs(currentDestination - transform.position.x);
-        var timeToReach = distance / VELOCITY_RUNNING;
-        NetworkManager.singleton.NewLocalPlayerDestination(currentDestination, timeToReach);
+        isBusy = false;
     }
 
     private void moveToCurrentDestination(float timeToReach)
@@ -185,15 +193,54 @@ public class PlayerBehaviour : MonoBehaviour
         return transform.localScale.x > 0;
     }
 
+    public void OnNewDestination(float positionX)
+    {
+        if (isLocal && isBusy) return;
+
+        currentDestination = positionX;
+        moveToCurrentDestination(float.MaxValue);
+
+        var distance = Mathf.Abs(currentDestination - transform.position.x);
+        var timeToReach = distance / VELOCITY_RUNNING;
+        NetworkManager.singleton.NewLocalPlayerDestination(currentDestination, timeToReach);
+    }
+
     public void Remote_NewDestination(float newDestination, float timeToReach)
     {
         currentDestination = newDestination;
         moveToCurrentDestination(timeToReach);
     }
 
+    public void Remote_FireProjectile(Vector3 destination, float timeToReach)
+    {
+        currentTarget = destination;
+        timeToReach -= TIME_ANIMATION_PRE_FIRE;
+
+        Vector3 velocity = Vector3.zero;
+        var immediate = timeToReach <= 0;
+        if (!immediate)
+        {
+            var distance = Mathf.Abs(transform.position.x - destination.x);
+            var minVelocity = distance / timeToReach;
+            velocity = tamalPrefab.GetComponent<Projectile>().AimAtTarget(transform, currentTarget, minVelocity);
+        }
+
+        StartCoroutine(Fire(velocity, immediate));
+    }
+
     public void ChaseVoter(VoterBehaviour voter)
     {
-        currentTarget = voter.transform;
-        // the method readInputs will set the currentDestination
+        if (isLocal && isBusy) return;
+        currentTarget = voter.transform.position;
+
+        var offsetY = transform.position.y - currentTarget.y;
+        var maxReach = tamalPrefab.GetComponent<Projectile>().CalcMaxReach(offsetY);
+        var distance = Mathf.Abs(currentTarget.x - transform.position.x);
+        var distanceToMove = distance - maxReach;
+        if (distanceToMove <= 0) return;
+
+        distanceToMove *= Mathf.Sign(currentTarget.x - transform.position.x);
+        var newPositionToFire = transform.position.x + distanceToMove;
+        OnNewDestination(newPositionToFire);
     }
 }

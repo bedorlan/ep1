@@ -1,4 +1,5 @@
-﻿using System.Collections;
+﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -9,21 +10,26 @@ public class Projectile : MonoBehaviour
 
     private int playerOwner;
 
-    public Vector3 AimAtTarget(Transform origin, Transform currentTarget)
+    public Vector3 AimAtTarget(Transform origin, Vector3 currentTarget, float minVelocity)
     {
-        var distanceX = Mathf.Abs(origin.position.x - currentTarget.position.x);
-        var distanceY = currentTarget.position.y - origin.position.y - initialPositionOffsetY;
-        var shootingAngle = CalcAngle(projectileVelocity, distanceX, distanceY);
+        var velocity = Mathf.Max(projectileVelocity, minVelocity);
+        var distanceX = Mathf.Abs(origin.position.x - currentTarget.x);
+        var distanceY = currentTarget.y - origin.position.y - initialPositionOffsetY;
+        var shootingAngle = CalcAngle(velocity, distanceX, distanceY);
         if (float.IsNaN(shootingAngle)) return Vector3.zero;
 
-        var velocityX = projectileVelocity * Mathf.Cos(shootingAngle);
-        var velocityY = projectileVelocity * Mathf.Sin(shootingAngle);
+        var velocityX = velocity * Mathf.Cos(shootingAngle);
+        var velocityY = velocity * Mathf.Sin(shootingAngle);
         var velocityVector = new Vector3(velocityX, velocityY, 0f);
 
         return velocityVector;
     }
 
-    public void FireProjectile(int playerNumber, Transform player, Vector3 velocity, bool toTheLeft)
+    public void FireProjectile(
+        int playerNumber,
+        Transform player,
+        Vector3 velocity,
+        bool toTheLeft)
     {
         playerOwner = playerNumber;
 
@@ -46,6 +52,14 @@ public class Projectile : MonoBehaviour
         var angle1 = Mathf.Atan(x1);
         var angle2 = Mathf.Atan(x2);
         return Mathf.Min(angle1, angle2);
+    }
+
+    public float CalcMaxReach(float offsetY)
+    {
+        var v = projectileVelocity;
+        var g = Mathf.Abs(Physics2D.gravity.y);
+        var y = offsetY + initialPositionOffsetY;
+        return (v / g) * Mathf.Sqrt(v * v + 2 * g * y);
     }
 
     (float x1, float x2) Quadratic(float a, float b, float c)

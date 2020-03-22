@@ -10,6 +10,7 @@ enum Codes {
   newPlayerDestination = 2, // [2, positionX: float, timeWhenReach: long]
   newVoters = 3, // [3, ...voters: [id: int, positionX: float]]
   guessTime = 5, // to server: [5, guessedTime: int], from server: [5, deltaGuess: int]
+  projectileFired = 6, // [6, player: int, destinationVector: [x, y: floats], timeWhenReach: long]
 }
 
 const server = net.createServer()
@@ -85,6 +86,7 @@ class Match {
 
     const codesMap: { [code in Codes]?: (player: number, msg: any[]) => void } = {
       [Codes.newPlayerDestination]: this.resendToOthers,
+      [Codes.projectileFired]: this.resendToOthers,
     } as const
 
     this.players.forEach((player, index) => {
