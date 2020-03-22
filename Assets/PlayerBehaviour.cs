@@ -43,7 +43,6 @@ public class PlayerBehaviour : MonoBehaviour
         var velocity = tamalPrefab.GetComponent<Projectile>().AimAtTarget(transform, currentTarget, 0f);
         if (velocity == Vector3.zero) return;
 
-        Debug.Log("shootingDistance=" + Mathf.Abs(currentTarget.x - transform.position.x));
         StartCoroutine(Fire(velocity, false));
     }
 

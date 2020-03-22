@@ -201,7 +201,6 @@ public class NetworkManager : MonoBehaviour
 
     public void ProjectileFired(int playerOwner, Vector3 destination, float timeToReach)
     {
-        Debug.LogFormat("playerOwner={0},destination={1},timeToReach={2}", playerOwner, destination, timeToReach);
         var destinationMsg = vector2msg(destination);
         var timeWhenReach = timeToReach2timeWhenReach(timeToReach);
         var msg = string.Format(

@@ -7,6 +7,7 @@ public class Projectile : MonoBehaviour
 {
     public float projectileVelocity;
     public float initialPositionOffsetY = 3f;
+    public GameObject endAnimationPrefab;
 
     private int playerOwner;
 
@@ -74,6 +75,9 @@ public class Projectile : MonoBehaviour
         var voter = other.gameObject.GetComponent<VoterBehaviour>();
         if (voter == null) return;
         voter.ConvertTo(playerOwner);
+
+        var endAnimation = Instantiate(endAnimationPrefab);
+        endAnimation.transform.position = other.transform.position;
 
         Destroy(gameObject);
     }
