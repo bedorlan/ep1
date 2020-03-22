@@ -1,4 +1,5 @@
-﻿using System.Collections;
+﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -11,6 +12,7 @@ public class Jumper : MonoBehaviour
 
     private float groundY;
     private float x = 0f;
+    private bool lastJump = false;
 
     void Start()
     {
@@ -19,6 +21,12 @@ public class Jumper : MonoBehaviour
 
     private void Update()
     {
+        if (x == 0f && lastJump)
+        {
+            enabled = false;
+            return;
+        }
+
         x += Time.deltaTime;
         var y = groundY;
         if (x < X_MAX)
@@ -38,5 +46,10 @@ public class Jumper : MonoBehaviour
     private float JumpFunction(float x)
     {
         return JUMP_HIGH - Mathf.Pow(x - Mathf.Sqrt(JUMP_HIGH), 2) + groundY;
+    }
+
+    public void LastJump()
+    {
+        lastJump = true;
     }
 }

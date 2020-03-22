@@ -9,7 +9,7 @@ public class VoterBehaviour : MonoBehaviour
     const char WOMAN_CODE = '\ue900';
 
     private int voterId;
-    private int playerOwner;
+    private int playerOwner = -1;
 
     void Start()
     {
@@ -29,9 +29,21 @@ public class VoterBehaviour : MonoBehaviour
         NetworkManager.singleton.VoterClicked(this);
     }
 
-    internal void ConvertTo(int playerOwner)
+    public void RequestConvertTo(int playerOwner, bool isLocal)
     {
-        this.playerOwner = playerOwner;
+        if (this.playerOwner == playerOwner) return;
+
+        GetComponent<TextMeshPro>().color = Color.gray;
+        GetComponent<Jumper>().LastJump();
+
+        if (!isLocal) return;
+        NetworkManager.singleton.RequestConvertVoter(playerOwner, voterId);
+    }
+
+    public void ConvertTo(int player)
+    {
+        this.playerOwner = player;
         GetComponent<TextMeshPro>().color = Common.playerColors[playerOwner];
+        GetComponent<Jumper>().LastJump();
     }
 }

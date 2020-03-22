@@ -53,6 +53,7 @@ public class PlayerBehaviour : MonoBehaviour
             var immediateProjectile = Instantiate(tamalPrefab);
             immediateProjectile.GetComponent<Projectile>().FireProjectileImmediate(
                 playerNumber,
+                isLocal,
                 currentTarget);
             currentTarget = Vector3.zero;
             yield break;
@@ -80,6 +81,7 @@ public class PlayerBehaviour : MonoBehaviour
         var newProjectile = Instantiate(tamalPrefab);
         newProjectile.GetComponent<Projectile>().FireProjectile(
             playerNumber,
+            isLocal,
             transform,
             velocity,
             IsFacingLeft());

@@ -10,6 +10,8 @@ enum Codes {
   newVoters = 3, // [3, ...voters: [id: int, positionX: float]]
   guessTime = 5, // to server: [5, guessedTime: int], from server: [5, deltaGuess: int]
   projectileFired = 6, // [6, player: int, destinationVector: [x, y: floats], timeWhenReach: long]
+  requestConvertVoter = 7, // [(7), (voterId: int), (player: int), (time: long)]
+  voterConverted = 8, // [(8), (voterId: int), (player: int)]
 }
 
 const server = net.createServer()
@@ -95,6 +97,7 @@ class Match {
     const codesMap: { [code in Codes]?: (player: number, msg: any[]) => void } = {
       [Codes.newPlayerDestination]: this.resendToOthers,
       [Codes.projectileFired]: this.resendToOthers,
+      [Codes.requestConvertVoter]: this.votersCentral.RequestConvertVoter,
     } as const
 
     this.players.forEach((player, index) => {
@@ -133,11 +136,18 @@ class Match {
   }
 }
 
+interface Voter {
+  positionX: number
+  lastHitTime: number
+  player: number
+  claimed: boolean
+}
+
 class VotersCentral {
   private newVotersInterval?: NodeJS.Timeout
 
   // the id is the index, the position the value
-  private voters: number[] = []
+  private voters: Voter[] = []
   private voterSeq = 0
 
   constructor(private players: Duplex[]) {}
@@ -156,7 +166,8 @@ class VotersCentral {
     const votersToSend: [number, number][] = []
     for (let i = 0; i < VOTERS_PER_SECOND; ++i) {
       const positionX = GenerateVoterPositionX()
-      this.voters.push(positionX)
+      const voter = { positionX, lastHitTime: 0, player: -1, claimed: false }
+      this.voters.push(voter)
       votersToSend.push([this.voterSeq, positionX])
       ++this.voterSeq
     }
@@ -164,6 +175,21 @@ class VotersCentral {
     const msg = [Codes.newVoters, ...votersToSend]
     this.players.forEach((player) => {
       sendTo(player, msg)
+    })
+  }
+
+  public readonly RequestConvertVoter = (player: number, msg: any[]) => {
+    const [_1, voterId, _2, time] = msg
+    const voter = this.voters[voterId]
+    if (voter.claimed) return
+    if (voter.lastHitTime > time) return
+
+    voter.player = player
+    voter.lastHitTime = time
+
+    const reply = [Codes.voterConverted, voterId, player]
+    this.players.forEach((it) => {
+      sendTo(it, reply)
     })
   }
 }

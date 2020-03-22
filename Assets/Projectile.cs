@@ -9,6 +9,7 @@ public class Projectile : MonoBehaviour
     public float initialPositionOffsetY = 3f;
     public GameObject endAnimationPrefab;
 
+    private bool isLocal;
     private int playerOwner;
 
     public Vector3 AimAtTarget(Transform origin, Vector3 currentTarget, float minVelocity)
@@ -37,11 +38,13 @@ public class Projectile : MonoBehaviour
 
     public void FireProjectile(
         int playerNumber,
+        bool isLocal,
         Transform player,
         Vector3 velocity,
         bool toTheLeft)
     {
         playerOwner = playerNumber;
+        this.isLocal = isLocal;
 
         var position = player.position;
         position.y += initialPositionOffsetY;
@@ -52,9 +55,10 @@ public class Projectile : MonoBehaviour
         GetComponent<Rigidbody2D>().velocity = velocity;
     }
 
-    public void FireProjectileImmediate(int playerNumber, Vector3 currentTarget)
+    public void FireProjectileImmediate(int playerNumber, bool isLocal, Vector3 currentTarget)
     {
         playerOwner = playerNumber;
+        this.isLocal = isLocal;
         transform.position = currentTarget;
     }
 
@@ -68,7 +72,7 @@ public class Projectile : MonoBehaviour
     {
         var voter = other.gameObject.GetComponent<VoterBehaviour>();
         if (voter == null) return;
-        voter.ConvertTo(playerOwner);
+        voter.RequestConvertTo(playerOwner, isLocal);
 
         var endAnimation = Instantiate(endAnimationPrefab);
         endAnimation.transform.position = other.transform.position;

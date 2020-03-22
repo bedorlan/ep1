@@ -12,7 +12,9 @@ enum Codes
     newPlayerDestination = 2, // [2, positionX: float, timeWhenReach: long]
     newVoters = 3, // [3, ...voters: [id: int, positionX: float]]
     guessTime = 5, // to server: [5, guessedTime: int], from server: [5, deltaGuess: int]
-    projectileFired = 6 // [6, player: int, destinationVector: [x, y: floats], timeWhenReach: long]
+    projectileFired = 6, // [6, player: int, destinationVector: [x, y: floats], timeWhenReach: long]
+    requestConvertVoter = 7, // [(7), (voterId: int), (player: int), (time: long)]
+    voterConverted = 8, // [(8), (voterId: int), (player: int)]
 }
 
 public class NetworkManager : MonoBehaviour
@@ -49,7 +51,8 @@ public class NetworkManager : MonoBehaviour
             { Codes.newPlayerDestination, OnRemoteNewDestination },
             { Codes.newVoters, OnNewVoters },
             { Codes.guessTime, OnGuessTime },
-            { Codes.projectileFired, OnProjectileFired }
+            { Codes.projectileFired, OnProjectileFired },
+            { Codes.voterConverted, OnVoterConverted }
         };
     }
 
@@ -119,6 +122,8 @@ public class NetworkManager : MonoBehaviour
         remotePlayer.GetComponent<PlayerBehaviour>().Remote_NewDestination(newDestination, timeToReach);
     }
 
+    private Dictionary<int, GameObject> votersMap = new Dictionary<int, GameObject>();
+
     private void OnNewVoters(JSONNode data)
     {
         data.Remove(0);
@@ -130,6 +135,8 @@ public class NetworkManager : MonoBehaviour
             var newVoter = Instantiate(voterPrefab);
             newVoter.GetComponent<VoterBehaviour>().SetId(voterId);
             newVoter.transform.position = new Vector3(voterPositionX, FLOOR_LEVEL_Y + .1f, 0f);
+
+            votersMap.Add(voterId, newVoter);
         }
     }
 
@@ -139,6 +146,14 @@ public class NetworkManager : MonoBehaviour
         var timeWhenReach = data[3].AsLong;
         var timeToReach = timeWhenReach2timeToReach(timeWhenReach);
         remotePlayer.GetComponent<PlayerBehaviour>().Remote_FireProjectile(destination, timeToReach);
+    }
+
+    private void OnVoterConverted(JSONNode data)
+    {
+        var voterId = data[1].AsInt;
+        var player = data[2].AsInt;
+        var voter = votersMap[voterId];
+        voter.GetComponent<VoterBehaviour>().ConvertTo(player);
     }
 
     #endregion
@@ -209,6 +224,18 @@ public class NetworkManager : MonoBehaviour
             playerNumber,
             destinationMsg,
             timeWhenReach);
+        SendNetworkMsg(msg);
+    }
+
+    public void RequestConvertVoter(int playerOwner, int voterId)
+    {
+        var time = timeToReach2timeWhenReach(0);
+        var msg = string.Format(
+            "[{0}, {1}, {2}, {3}]",
+            (int)Codes.requestConvertVoter,
+            voterId,
+            playerOwner,
+            time);
         SendNetworkMsg(msg);
     }
 
