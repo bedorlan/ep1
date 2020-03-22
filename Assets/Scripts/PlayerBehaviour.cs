@@ -242,4 +242,14 @@ public class PlayerBehaviour : MonoBehaviour
         var newPositionToFire = transform.position.x + distanceToMove;
         OnNewDestination(newPositionToFire);
     }
+
+    private void OnTriggerStay2D(Collider2D collision)
+    {
+        if (!isLocal) return;
+
+        var voter = collision.GetComponent<VoterBehaviour>();
+        if (!voter) return;
+
+        voter.TryClaim(playerNumber);
+    }
 }

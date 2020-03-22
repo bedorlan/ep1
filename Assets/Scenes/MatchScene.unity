@@ -463,6 +463,7 @@ MonoBehaviour:
   voterPrefab: {fileID: 2201240699575442311, guid: da89b24872e454bc39e02cbb62057b2e,
     type: 3}
   camera: {fileID: 519420028}
+  background: {fileID: 1228029951}
 --- !u!4 &1658275971
 Transform:
   m_ObjectHideFlags: 0

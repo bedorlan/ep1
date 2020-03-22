@@ -13,8 +13,11 @@ enum Codes
     newVoters = 3, // [3, ...voters: [id: int, positionX: float]]
     guessTime = 5, // to server: [5, guessedTime: int], from server: [5, deltaGuess: int]
     projectileFired = 6, // [6, player: int, destinationVector: [x, y: floats], timeWhenReach: long]
-    requestConvertVoter = 7, // [(7), (voterId: int), (player: int), (time: long)]
+    tryConvertVoter = 7, // [(7), (voterId: int), (player: int), (time: long)]
     voterConverted = 8, // [(8), (voterId: int), (player: int)]
+    tryClaimVoter = 9, // [(9), (voterId: int)]
+    voterClaimed = 10, // [(10), (voterId: int), (player: int)]
+    // if code == 50 .. be careful: ctrl + f Codes.guessTime on server
 }
 
 public class NetworkManager : MonoBehaviour
@@ -26,6 +29,7 @@ public class NetworkManager : MonoBehaviour
     public GameObject playerPrefab;
     public GameObject voterPrefab;
     public new GameObject camera;
+    public GameObject background;
 
     private Telepathy.Client client;
     private Dictionary<Codes, Action<JSONNode>> codesMap;
@@ -52,7 +56,8 @@ public class NetworkManager : MonoBehaviour
             { Codes.newVoters, OnNewVoters },
             { Codes.guessTime, OnGuessTime },
             { Codes.projectileFired, OnProjectileFired },
-            { Codes.voterConverted, OnVoterConverted }
+            { Codes.voterConverted, OnVoterConverted },
+            { Codes.voterClaimed, OnVoterClaimed },
         };
     }
 
@@ -109,9 +114,7 @@ public class NetworkManager : MonoBehaviour
         remotePlayer = Instantiate(playerPrefab);
         remotePlayer.GetComponent<PlayerBehaviour>().Initialize(playerNumber == 0 ? 1 : 0, false);
 
-        Physics2D.IgnoreCollision(
-            localPlayer.GetComponent<Collider2D>(),
-            remotePlayer.GetComponent<Collider2D>());
+        ignoreCollisions();
     }
 
     private void OnRemoteNewDestination(JSONNode data)
@@ -156,7 +159,22 @@ public class NetworkManager : MonoBehaviour
         voter.GetComponent<VoterBehaviour>().ConvertTo(player);
     }
 
+    private void OnVoterClaimed(JSONNode data)
+    {
+        var voterId = data[1].AsInt;
+        var player = data[2].AsInt;
+        var voter = votersMap[voterId];
+        voter.GetComponent<VoterBehaviour>().ClaimedBy(player);
+    }
+
     #endregion
+
+    private void ignoreCollisions()
+    {
+        Physics2D.IgnoreCollision(localPlayer.GetComponent<Collider2D>(), background.GetComponent<Collider2D>());
+        Physics2D.IgnoreCollision(remotePlayer.GetComponent<Collider2D>(), background.GetComponent<Collider2D>());
+        Physics2D.IgnoreCollision(localPlayer.GetComponent<Collider2D>(), remotePlayer.GetComponent<Collider2D>());
+    }
 
     private long timer = -1;
     private int minServerLatency = int.MaxValue;
@@ -227,15 +245,24 @@ public class NetworkManager : MonoBehaviour
         SendNetworkMsg(msg);
     }
 
-    public void RequestConvertVoter(int playerOwner, int voterId)
+    public void TryConvertVoter(int playerOwner, int voterId)
     {
         var time = timeToReach2timeWhenReach(0);
         var msg = string.Format(
             "[{0}, {1}, {2}, {3}]",
-            (int)Codes.requestConvertVoter,
+            (int)Codes.tryConvertVoter,
             voterId,
             playerOwner,
             time);
+        SendNetworkMsg(msg);
+    }
+
+    internal void TryClaimVoter(int voterId)
+    {
+        var msg = string.Format(
+            "[{0}, {1}]",
+            (int)Codes.tryClaimVoter,
+            voterId);
         SendNetworkMsg(msg);
     }
 

@@ -29,7 +29,7 @@ public class VoterBehaviour : MonoBehaviour
         NetworkManager.singleton.VoterClicked(this);
     }
 
-    public void RequestConvertTo(int playerOwner, bool isLocal)
+    public void TryConvertTo(int playerOwner, bool isLocal)
     {
         if (this.playerOwner == playerOwner) return;
 
@@ -37,7 +37,7 @@ public class VoterBehaviour : MonoBehaviour
         GetComponent<Jumper>().LastJump();
 
         if (!isLocal) return;
-        NetworkManager.singleton.RequestConvertVoter(playerOwner, voterId);
+        NetworkManager.singleton.TryConvertVoter(playerOwner, voterId);
     }
 
     public void ConvertTo(int player)
@@ -45,5 +45,15 @@ public class VoterBehaviour : MonoBehaviour
         this.playerOwner = player;
         GetComponent<TextMeshPro>().color = Common.playerColors[playerOwner];
         GetComponent<Jumper>().LastJump();
+    }
+
+    public void TryClaim(int playerNumber)
+    {
+        NetworkManager.singleton.TryClaimVoter(voterId);
+    }
+
+    internal void ClaimedBy(int player)
+    {
+        Destroy(gameObject);
     }
 }

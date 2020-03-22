@@ -10,8 +10,11 @@ enum Codes {
   newVoters = 3, // [3, ...voters: [id: int, positionX: float]]
   guessTime = 5, // to server: [5, guessedTime: int], from server: [5, deltaGuess: int]
   projectileFired = 6, // [6, player: int, destinationVector: [x, y: floats], timeWhenReach: long]
-  requestConvertVoter = 7, // [(7), (voterId: int), (player: int), (time: long)]
+  tryConvertVoter = 7, // [(7), (voterId: int), (player: int), (time: long)]
   voterConverted = 8, // [(8), (voterId: int), (player: int)]
+  tryClaimVoter = 9, // [(9), (voterId: int)]
+  voterClaimed = 10, // [(10), (voterId: int), (player: int)]
+  // if code == 50 .. be careful: ctrl + f Codes.guessTime on server
 }
 
 const server = net.createServer()
@@ -97,7 +100,8 @@ class Match {
     const codesMap: { [code in Codes]?: (player: number, msg: any[]) => void } = {
       [Codes.newPlayerDestination]: this.resendToOthers,
       [Codes.projectileFired]: this.resendToOthers,
-      [Codes.requestConvertVoter]: this.votersCentral.RequestConvertVoter,
+      [Codes.tryConvertVoter]: this.votersCentral.TryConvertVoter,
+      [Codes.tryClaimVoter]: this.votersCentral.TryClaimVoter,
     } as const
 
     this.players.forEach((player, index) => {
@@ -178,8 +182,8 @@ class VotersCentral {
     })
   }
 
-  public readonly RequestConvertVoter = (player: number, msg: any[]) => {
-    const [_1, voterId, _2, time] = msg
+  public readonly TryConvertVoter = (player: number, msg: any[]) => {
+    const [code, voterId, _, time] = msg
     const voter = this.voters[voterId]
     if (voter.claimed) return
     if (voter.lastHitTime > time) return
@@ -188,6 +192,21 @@ class VotersCentral {
     voter.lastHitTime = time
 
     const reply = [Codes.voterConverted, voterId, player]
+    this.players.forEach((it) => {
+      sendTo(it, reply)
+    })
+  }
+
+  public readonly TryClaimVoter = (player: number, msg: any[]) => {
+    const [code, voterId] = msg
+    const voter = this.voters[voterId]
+    if (voter.claimed) return
+    if (voter.player !== player) return
+
+    voter.player = player
+    voter.claimed = true
+
+    const reply = [Codes.voterClaimed, voterId, player]
     this.players.forEach((it) => {
       sendTo(it, reply)
     })

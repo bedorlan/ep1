@@ -72,7 +72,7 @@ public class Projectile : MonoBehaviour
     {
         var voter = other.gameObject.GetComponent<VoterBehaviour>();
         if (voter == null) return;
-        voter.RequestConvertTo(playerOwner, isLocal);
+        voter.TryConvertTo(playerOwner, isLocal);
 
         var endAnimation = Instantiate(endAnimationPrefab);
         endAnimation.transform.position = other.transform.position;
