@@ -31,6 +31,9 @@ public class NetworkManager : MonoBehaviour
     public new GameObject camera;
     public GameObject background;
 
+    public event Action OnMatchReady;
+    public event Action OnMatchEnd;
+
     private Telepathy.Client client;
     private Dictionary<Codes, Action<JSONNode>> codesMap;
     private int playerNumber;
@@ -65,6 +68,11 @@ public class NetworkManager : MonoBehaviour
     {
         client = new Telepathy.Client();
         client.Connect("localhost", 7777);
+
+        if (OnMatchReady?.GetInvocationList().Length > 0)
+        {
+            camera.SetActive(false);
+        }
     }
 
     void Update()
@@ -83,6 +91,8 @@ public class NetworkManager : MonoBehaviour
                     break;
                 case Telepathy.EventType.Disconnected:
                     Debug.Log("Disconnected");
+                    camera.SetActive(false);
+                    OnMatchEnd?.Invoke();
                     break;
             }
         }
@@ -93,7 +103,7 @@ public class NetworkManager : MonoBehaviour
     private void ProcessRemoteMsg(byte[] data)
     {
         var asciiData = Encoding.ASCII.GetString(data);
-        var jsonData = SimpleJSON.JSON.Parse(asciiData);
+        var jsonData = JSON.Parse(asciiData);
         Codes code = (Codes)jsonData[0].AsInt;
         if (!codesMap.ContainsKey(code))
         {
@@ -115,6 +125,9 @@ public class NetworkManager : MonoBehaviour
         remotePlayer.GetComponent<PlayerBehaviour>().Initialize(playerNumber == 0 ? 1 : 0, false);
 
         ignoreCollisions();
+
+        OnMatchReady?.Invoke();
+        camera.SetActive(true);
     }
 
     private void OnRemoteNewDestination(JSONNode data)
