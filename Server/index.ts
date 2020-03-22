@@ -3,8 +3,6 @@ import * as net from 'net'
 import { createInterface } from 'readline'
 import { PassThrough, Readable, Writable } from 'stream'
 
-const PORT = 7777
-
 enum Codes {
   noop = 0, // [0]
   start = 1, // [1, playerNumber: int]
@@ -70,13 +68,13 @@ function onGuessTime(player: Duplex, msg: any[]) {
   sendTo(player, [Codes.guessTime, offset])
 }
 
+const PORT = 7777
+
 server.on('listening', () => {
   console.info(`listening on port ${PORT}`)
 })
 
 server.listen(PORT)
-
-const MAP_WIDTH = 200
 
 class Match {
   private players: Duplex[]
@@ -135,8 +133,6 @@ class Match {
   }
 }
 
-const VOTERS_PER_SECOND = 4
-
 class VotersCentral {
   private newVotersInterval?: NodeJS.Timeout
 
@@ -156,6 +152,7 @@ class VotersCentral {
   }
 
   private readonly SendVotersPack = () => {
+    const VOTERS_PER_SECOND = 4
     const votersToSend: [number, number][] = []
     for (let i = 0; i < VOTERS_PER_SECOND; ++i) {
       const positionX = GenerateVoterPositionX()
@@ -186,6 +183,7 @@ function GenerateVoterPositionX() {
   } else {
     voterPosition = forVoterPosition * 0.15 + 0.85
   }
+  const MAP_WIDTH = 200
   return (voterPosition - 0.5) * MAP_WIDTH
 }
 
