@@ -6,6 +6,8 @@ using UnityEngine;
 
 public class VoterBehaviour : MonoBehaviour
 {
+    public AudioClip whenClaimedClip;
+
     const char WOMAN_CODE = '\ue900';
 
     private int voterId;
@@ -54,6 +56,18 @@ public class VoterBehaviour : MonoBehaviour
 
     internal void ClaimedBy(int player)
     {
+        StartCoroutine(die());
+    }
+
+    internal IEnumerator die()
+    {
+        enabled = false;
+
+        AudioSource audioSource = GetComponent<AudioSource>();
+        audioSource.clip = whenClaimedClip;
+        audioSource.Play();
+
+        yield return new WaitForSeconds(whenClaimedClip.length);
         Destroy(gameObject);
     }
 }
