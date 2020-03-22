@@ -36,6 +36,32 @@ public class PlayerBehaviour : MonoBehaviour
         stopWhenArriveToDestination();
     }
 
+
+    public void Initialize(int playerNumber, bool isLocal)
+    {
+        var PLAYER_INITIAL_POSITION = new Vector3(0, -4.197335f, 0);
+
+        this.playerNumber = playerNumber;
+        this.isLocal = isLocal;
+
+        var newPosition = PLAYER_INITIAL_POSITION;
+        if (playerNumber == 0)
+        {
+            newPosition.x = -2.5f;
+            Flip();
+        }
+        else if (playerNumber == 1)
+        {
+            newPosition.x = 2.5f;
+        }
+        transform.position = newPosition;
+
+        foreach (var child in GetComponentsInChildren<SpriteRenderer>())
+        {
+            child.color = Common.playerColors[playerNumber];
+        }
+    }
+
     private void tryFireAtCurrentTarget()
     {
         if (currentTarget == Vector3.zero) return;
@@ -165,31 +191,6 @@ public class PlayerBehaviour : MonoBehaviour
         var flipped = transform.localScale;
         flipped.x *= -1;
         transform.localScale = flipped;
-    }
-
-    private readonly Vector3 playerInitialPosition = new Vector3(0, -4.197335f, 0);
-
-    public void Initialize(int playerNumber, bool isLocal)
-    {
-        this.playerNumber = playerNumber;
-        this.isLocal = isLocal;
-
-        var newPosition = playerInitialPosition;
-        if (playerNumber == 0)
-        {
-            newPosition.x = -2.5f;
-            Flip();
-        }
-        else if (playerNumber == 1)
-        {
-            newPosition.x = 2.5f;
-        }
-        transform.position = newPosition;
-
-        foreach (var child in GetComponentsInChildren<SpriteRenderer>())
-        {
-            child.color = Common.playerColors[playerNumber];
-        }
     }
 
     public bool IsFacingLeft()
