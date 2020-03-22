@@ -50,8 +50,9 @@ public class PlayerBehaviour : MonoBehaviour
     {
         if (immediate)
         {
-            // shit! too late. what should we do?
-            // teleport the projectile!
+            var immediateProjectile = Instantiate(tamalPrefab);
+            immediateProjectile.transform.position = currentTarget;
+            currentTarget = Vector3.zero;
             yield break;
         }
 
