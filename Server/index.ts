@@ -43,27 +43,24 @@ server.on('connection', (socket) => {
   })
 
   waitingQueue.push(duplex)
-  socket.on('close', dropStream(duplex))
-  socket.on('error', dropStream(duplex))
+  waitingQueue = waitingQueue.filter((it) => !it.socket.destroyed && it.socket.readable && it.socket.writable)
   if (waitingQueue.length < 2) return
 
-  socket.on('close', closeEverything.bind(null, waitingQueue))
-  socket.on('error', closeEverything.bind(null, waitingQueue))
+  waitingQueue.forEach(({ socket }) => {
+    socket.once('close', destroyAll.bind(null, waitingQueue))
+    socket.once('error', destroyAll.bind(null, waitingQueue))
+  })
+
   new Match(waitingQueue).Start()
   waitingQueue = []
 })
 
-function dropStream(duplex: { socket: net.Socket }) {
-  return (err: any) => {
-    if (err) console.error(err)
-    duplex.socket.end()
-    waitingQueue = waitingQueue.filter((it) => it !== duplex)
-  }
-}
-
-function closeEverything(sockets: { socket: net.Socket }[]) {
-  sockets.forEach(({ socket }) => {
-    socket.end()
+function destroyAll(duplexes: (Duplex & { socket: net.Socket })[]) {
+  duplexes.forEach((duplex) => {
+    if (duplex.socket.destroyed) return
+    duplex.socket.destroy()
+    duplex.in.destroy()
+    duplex.out.destroy()
   })
 }
 
