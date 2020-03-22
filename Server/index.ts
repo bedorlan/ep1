@@ -1,6 +1,7 @@
+import * as lodash from 'lodash'
 import * as net from 'net'
-import { PassThrough, Readable, Writable } from 'stream'
 import { createInterface } from 'readline'
+import { PassThrough, Readable, Writable } from 'stream'
 
 const PORT = 7777
 
@@ -20,8 +21,8 @@ let waitingQueue: (Duplex & { socket: net.Socket })[] = []
 
 server.on('connection', (socket) => {
   const duplex = { socket, in: new PassThrough(), out: new PassThrough() }
-  // duplex.out.pipe(socket)
   // TODO: remove the latency!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+  // duplex.out.pipe(socket)
   duplex.out.on('data', (data) => {
     setTimeout(() => {
       socket.write(data)
@@ -78,9 +79,11 @@ server.listen(PORT)
 const MAP_WIDTH = 200
 
 class Match {
+  private players: Duplex[]
   private votersCentral: VotersCentral
 
-  constructor(private players: Duplex[]) {
+  constructor(players: Duplex[]) {
+    this.players = lodash.shuffle(players)
     this.votersCentral = new VotersCentral(players)
   }
 

@@ -51,7 +51,9 @@ public class PlayerBehaviour : MonoBehaviour
         if (immediate)
         {
             var immediateProjectile = Instantiate(tamalPrefab);
-            immediateProjectile.transform.position = currentTarget;
+            immediateProjectile.GetComponent<Projectile>().FireProjectileImmediate(
+                playerNumber,
+                currentTarget);
             currentTarget = Vector3.zero;
             yield break;
         }
@@ -216,14 +218,8 @@ public class PlayerBehaviour : MonoBehaviour
         currentTarget = destination;
         timeToReach -= TIME_ANIMATION_PRE_FIRE;
 
-        Vector3 velocity = Vector3.zero;
+        var velocity = tamalPrefab.GetComponent<Projectile>().AimAtTargetAnyVelocity(transform, currentTarget);
         var immediate = timeToReach <= 0;
-        if (!immediate)
-        {
-            var distance = Mathf.Abs(transform.position.x - destination.x);
-            var minVelocity = distance / timeToReach;
-            velocity = tamalPrefab.GetComponent<Projectile>().AimAtTarget(transform, currentTarget, minVelocity);
-        }
 
         StartCoroutine(Fire(velocity, immediate));
     }
@@ -234,7 +230,7 @@ public class PlayerBehaviour : MonoBehaviour
         currentTarget = voter.transform.position;
 
         var offsetY = transform.position.y - currentTarget.y;
-        var maxReach = tamalPrefab.GetComponent<Projectile>().CalcMaxReach(offsetY);
+        var maxReach = tamalPrefab.GetComponent<Projectile>().CalcMaxReach(offsetY) - .1f;
         var distance = Mathf.Abs(currentTarget.x - transform.position.x);
         var distanceToMove = distance - maxReach;
         if (distanceToMove <= 0) return;
