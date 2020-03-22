@@ -16,10 +16,10 @@ enum Codes {
 const server = net.createServer()
 
 type Duplex = { in: Readable; out: Writable }
-let waitingQueue: Duplex[] = []
+let waitingQueue: (Duplex & { socket: net.Socket })[] = []
 
 server.on('connection', (socket) => {
-  const duplex = { in: new PassThrough(), out: new PassThrough() }
+  const duplex = { socket, in: new PassThrough(), out: new PassThrough() }
   // duplex.out.pipe(socket)
   // TODO: remove the latency!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
   duplex.out.on('data', (data) => {
@@ -43,17 +43,24 @@ server.on('connection', (socket) => {
   socket.on('error', dropStream(duplex))
   if (waitingQueue.length < 2) return
 
+  socket.on('close', closeEverything.bind(null, waitingQueue))
+  socket.on('error', closeEverything.bind(null, waitingQueue))
   new Match(waitingQueue).Start()
   waitingQueue = []
 })
 
-function dropStream(duplex: Duplex) {
+function dropStream(duplex: { socket: net.Socket }) {
   return (err: any) => {
     if (err) console.error(err)
-    duplex.in.destroy()
-    duplex.out.end()
+    duplex.socket.end()
     waitingQueue = waitingQueue.filter((it) => it !== duplex)
   }
+}
+
+function closeEverything(sockets: { socket: net.Socket }[]) {
+  sockets.forEach(({ socket }) => {
+    socket.end()
+  })
 }
 
 function onGuessTime(player: Duplex, msg: any[]) {
