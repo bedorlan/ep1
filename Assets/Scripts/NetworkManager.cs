@@ -67,7 +67,8 @@ public class NetworkManager : MonoBehaviour
     void Start()
     {
         client = new Telepathy.Client();
-        client.Connect("localhost", 7777);
+        // client.Connect("localhost", 7777);
+        client.Connect("3.223.135.88", 80);
 
         if (OnMatchReady?.GetInvocationList().Length > 0)
         {
