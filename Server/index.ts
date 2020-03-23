@@ -125,7 +125,6 @@ class Match {
 
       player.in.on('data', (msg) => {
         const code = msg[0] as Codes
-        console.log({ code, msg })
         if (!(code in codesMap)) {
           console.error('unmapped code', code)
           return
