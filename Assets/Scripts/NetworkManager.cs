@@ -67,8 +67,8 @@ public class NetworkManager : MonoBehaviour
     void Start()
     {
         client = new Telepathy.Client();
-        // client.Connect("localhost", 7777);
-        client.Connect("3.223.135.88", 80);
+        client.Connect("localhost", 7777);
+        //client.Connect("3.223.135.88", 80);
 
         if (OnMatchReady?.GetInvocationList().Length > 0)
         {
@@ -151,7 +151,7 @@ public class NetworkManager : MonoBehaviour
 
             var newVoter = Instantiate(voterPrefab);
             newVoter.GetComponent<VoterBehaviour>().SetId(voterId);
-            newVoter.transform.position = new Vector3(voterPositionX, FLOOR_LEVEL_Y + .1f, 0f);
+            newVoter.transform.position = new Vector3(voterPositionX, FLOOR_LEVEL_Y + .3f, 0f);
 
             votersMap.Add(voterId, newVoter);
         }
