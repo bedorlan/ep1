@@ -23,24 +23,42 @@ type Duplex = { in: Readable; out: Writable }
 let waitingQueue: (Duplex & { socket: net.Socket })[] = []
 
 server.on('connection', (socket) => {
-  const duplex = { socket, in: new PassThrough(), out: new PassThrough() }
-  // TODO: remove the latency!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-  // duplex.out.pipe(socket)
-  duplex.out.on('data', (data) => {
-    setTimeout(() => {
-      socket.write(data)
-    }, 250)
-  })
+  const duplex = { socket, in: new PassThrough({ objectMode: true }), out: new PassThrough({ objectMode: true }) }
 
   createInterface(socket).on('line', (raw) => {
-    const code = Number.parseInt(raw.charAt(5))
-    if (code !== Codes.guessTime) {
-      duplex.in.write(raw + '\n')
+    let msg: any[]
+    try {
+      const char = raw.charAt(4)
+      if (char !== '[') {
+        throw 'invalid raw'
+      }
+
+      msg = getTelepathyMsg(raw)
+    } catch (err) {
+      console.error(err)
+      socket.destroy()
       return
     }
 
-    onGuessTime(duplex, getTelepathyMsg(raw))
+    const code = msg[0]
+    if (code === Codes.guessTime) {
+      onGuessTime(duplex, msg)
+      return
+    }
+
+    duplex.in.write(msg)
   })
+
+  duplex.out.on('data', (obj) => {
+    const msg = toTelepathyMsg(JSON.stringify(obj) + '\n')
+    socket.write(msg)
+  })
+  // TODO: remove the latency!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+  // duplex.out.on('data', (data) => {
+  //   setTimeout(() => {
+  //     socket.write(data)
+  //   }, 250)
+  // })
 
   waitingQueue.push(duplex)
   waitingQueue = waitingQueue.filter((it) => !it.socket.destroyed && it.socket.readable && it.socket.writable)
@@ -105,9 +123,9 @@ class Match {
       player.in.on('close', this.Stop)
       player.in.on('error', this.Stop)
 
-      createInterface(player.in).on('line', (raw) => {
-        const msg = getTelepathyMsg(raw)
+      player.in.on('data', (msg) => {
         const code = msg[0] as Codes
+        console.log({ code, msg })
         if (!(code in codesMap)) {
           console.error('unmapped code', code)
           return
@@ -234,7 +252,7 @@ function sendTo(duplex: Duplex, msg: any[]) {
     console.error('unable to send msg', msg)
     return
   }
-  duplex.out.write(toTelepathyMsg(JSON.stringify(msg) + '\n'))
+  duplex.out.write(msg)
 }
 
 function getTelepathyMsg(data: string) {
