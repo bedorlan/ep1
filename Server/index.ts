@@ -70,7 +70,7 @@ function onGuessTime(player: Duplex, msg: any[]) {
   sendTo(player, [Codes.guessTime, offset])
 }
 
-const PORT = 7777
+const PORT = process.env.PORT || 7777
 
 server.on('listening', () => {
   console.info(`listening on port ${PORT}`)
