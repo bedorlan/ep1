@@ -180,9 +180,9 @@ class VotersCentral {
   }
 
   private readonly SendVotersPack = () => {
-    const VOTERS_PER_SECOND = 4
+    const votesPerSecond = Math.ceil(this.players.length / 2)
     const votersToSend: [number, number][] = []
-    for (let i = 0; i < VOTERS_PER_SECOND; ++i) {
+    for (let i = 0; i < votesPerSecond; ++i) {
       const positionX = GenerateVoterPositionX()
       const voter = { positionX, lastHitTime: 0, player: -1, claimed: false }
       this.voters.push(voter)
