@@ -1,7 +1,6 @@
 {
   "name": "ep1_server",
   "version": "0.0.0",
-  "main": "index.ts",
   "private": true,
   "engines": {
     "node": "12.x"
