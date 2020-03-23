@@ -121,7 +121,7 @@ public class PlayerBehaviour : MonoBehaviour
 
     private void moveToCurrentDestination(float timeToReach)
     {
-        if (timeToReach < 0)
+        if (timeToReach <= 0)
         {
             teletransport();
             return;
