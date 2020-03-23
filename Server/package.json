@@ -3,6 +3,9 @@
   "version": "0.0.0",
   "main": "index.ts",
   "private": true,
+  "engines": {
+    "node": "12.x"
+  },
   "dependencies": {
     "@types/lodash": "^4.14.149",
     "lodash": "^4.17.15",
@@ -11,5 +14,9 @@
   },
   "devDependencies": {
     "ts-node-dev": "^1.0.0-pre.44"
+  },
+  "scripts": {
+    "build": "yarn tsc",
+    "start": "PORT=80 node index.js"
   }
 }
