@@ -17,6 +17,6 @@
   },
   "scripts": {
     "build": "yarn tsc",
-    "start": "PORT=80 node index.js"
+    "start": "node index.js"
   }
 }
