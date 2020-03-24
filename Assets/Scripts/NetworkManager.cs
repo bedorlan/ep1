@@ -280,6 +280,13 @@ public class NetworkManager : MonoBehaviour
         SendNetworkMsg(msg);
     }
 
+    internal event Action<GameObject> OnProjectileSelected;
+    internal void ProjectileSelected(GameObject projectile)
+    {
+        localPlayer.GetComponent<PlayerBehaviour>().currentProjectilePrefab = projectile;
+        OnProjectileSelected?.Invoke(projectile);
+    }
+
     #endregion
 
     private long unixMillis()
