@@ -66,7 +66,7 @@ public class PlayerBehaviour : MonoBehaviour
     {
         if (currentTarget == Vector3.zero) return;
 
-        var velocity = tamalPrefab.GetComponent<Projectile>().AimAtTarget(transform, currentTarget, 0f);
+        var velocity = tamalPrefab.GetComponentInChildren<Projectile>().AimAtTarget(transform, currentTarget, 0f);
         if (velocity == Vector3.zero) return;
 
         StartCoroutine(Fire(velocity, false));
@@ -77,7 +77,7 @@ public class PlayerBehaviour : MonoBehaviour
         if (immediate)
         {
             var immediateProjectile = Instantiate(tamalPrefab);
-            immediateProjectile.GetComponent<Projectile>().FireProjectileImmediate(
+            immediateProjectile.GetComponentInChildren<Projectile>().FireProjectileImmediate(
                 playerNumber,
                 isLocal,
                 currentTarget);
@@ -105,7 +105,7 @@ public class PlayerBehaviour : MonoBehaviour
         // wait for animation to raise hands
         yield return new WaitForSeconds(TIME_ANIMATION_PRE_FIRE);
         var newProjectile = Instantiate(tamalPrefab);
-        newProjectile.GetComponent<Projectile>().FireProjectile(
+        newProjectile.GetComponentInChildren<Projectile>().FireProjectile(
             playerNumber,
             isLocal,
             transform,
@@ -221,7 +221,7 @@ public class PlayerBehaviour : MonoBehaviour
         currentTarget = destination;
         timeToReach -= TIME_ANIMATION_PRE_FIRE;
 
-        var velocity = tamalPrefab.GetComponent<Projectile>().AimAtTargetAnyVelocity(transform, currentTarget);
+        var velocity = tamalPrefab.GetComponentInChildren<Projectile>().AimAtTargetAnyVelocity(transform, currentTarget);
         var immediate = timeToReach <= 0;
 
         StartCoroutine(Fire(velocity, immediate));
@@ -233,7 +233,7 @@ public class PlayerBehaviour : MonoBehaviour
         currentTarget = voter.transform.position;
 
         var offsetY = transform.position.y - currentTarget.y;
-        var maxReach = tamalPrefab.GetComponent<Projectile>().CalcMaxReach(offsetY) - .1f;
+        var maxReach = tamalPrefab.GetComponentInChildren<Projectile>().CalcMaxReach(offsetY) - .1f;
         var distance = Mathf.Abs(currentTarget.x - transform.position.x);
         var distanceToMove = distance - maxReach;
         if (distanceToMove <= 0) return;

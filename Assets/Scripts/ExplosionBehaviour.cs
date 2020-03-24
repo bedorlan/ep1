@@ -15,6 +15,6 @@ public class ExplosionBehaviour : MonoBehaviour
     IEnumerator WaitAndDestroy()
     {
         yield return new WaitForSeconds(ANIMATION_DURATION);
-        Destroy(gameObject);
+        Destroy(transform.root.gameObject);
     }
 }

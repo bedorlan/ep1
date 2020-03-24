@@ -7,6 +7,6 @@ public class HellBehaviour : MonoBehaviour
     private void OnTriggerEnter2D(Collider2D collision)
     {
         // the hell!
-        Destroy(collision.gameObject);
+        Destroy(collision.transform.root.gameObject);
     }
 }

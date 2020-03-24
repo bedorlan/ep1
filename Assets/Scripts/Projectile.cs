@@ -9,8 +9,8 @@ public class Projectile : MonoBehaviour
     public float initialPositionOffsetY = 3f;
     public GameObject endAnimationPrefab;
 
-    private bool isLocal;
-    private int playerOwner;
+    internal bool isLocal;
+    internal int playerOwner;
 
     public Vector3 AimAtTarget(Transform origin, Vector3 currentTarget, float minVelocity)
     {
@@ -66,17 +66,5 @@ public class Projectile : MonoBehaviour
     {
         var y = offsetY + initialPositionOffsetY;
         return MyMath.CalcMaxReach(projectileVelocity, y);
-    }
-
-    public void OnTriggerEnter2D(Collider2D other)
-    {
-        var voter = other.gameObject.GetComponent<VoterBehaviour>();
-        if (voter == null) return;
-        voter.TryConvertTo(playerOwner, isLocal);
-
-        var endAnimation = Instantiate(endAnimationPrefab);
-        endAnimation.transform.position = other.transform.position;
-
-        Destroy(gameObject);
     }
 }

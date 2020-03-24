@@ -832,5 +832,5 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 9a3d4a9c154e74376a3bff8e629a7366, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  tamalPrefab: {fileID: 8429717348609787907, guid: 051b97cbefa6240959bfa127876f3d77,
+  tamalPrefab: {fileID: 128448484206180066, guid: 15180484fc0824288a32032a330c3077,
     type: 3}

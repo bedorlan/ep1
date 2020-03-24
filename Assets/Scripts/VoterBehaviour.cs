@@ -19,6 +19,8 @@ public class VoterBehaviour : MonoBehaviour
         {
             GetComponent<TextMeshPro>().text = WOMAN_CODE.ToString();
         }
+
+        GetComponent<Renderer>().sortingLayerName = "Voters";
     }
 
     public void SetId(int voterId)
@@ -66,6 +68,6 @@ public class VoterBehaviour : MonoBehaviour
         GetComponent<AudioSource>().PlayOneShot(whenClaimedClip);
         yield return new WaitForSeconds(whenClaimedClip.length);
 
-        Destroy(gameObject);
+        Destroy(transform.root.gameObject);
     }
 }
