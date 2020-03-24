@@ -8,7 +8,7 @@ public class PlayerBehaviour : MonoBehaviour
     const float VELOCITY_RUNNING = 10f;
     const float TIME_ANIMATION_PRE_FIRE = .15f;
 
-    public GameObject tamalPrefab;
+    public GameObject currentProjectilePrefab;
 
     private int playerNumber;
     private bool isLocal;
@@ -66,7 +66,7 @@ public class PlayerBehaviour : MonoBehaviour
     {
         if (currentTarget == Vector3.zero) return;
 
-        var velocity = tamalPrefab.GetComponentInChildren<Projectile>().AimAtTarget(transform, currentTarget, 0f);
+        var velocity = currentProjectilePrefab.GetComponentInChildren<Projectile>().AimAtTarget(transform, currentTarget, 0f);
         if (velocity == Vector3.zero) return;
 
         StartCoroutine(Fire(velocity, false));
@@ -76,7 +76,7 @@ public class PlayerBehaviour : MonoBehaviour
     {
         if (immediate)
         {
-            var immediateProjectile = Instantiate(tamalPrefab);
+            var immediateProjectile = Instantiate(currentProjectilePrefab);
             immediateProjectile.GetComponentInChildren<Projectile>().FireProjectileImmediate(
                 playerNumber,
                 isLocal,
@@ -104,7 +104,7 @@ public class PlayerBehaviour : MonoBehaviour
 
         // wait for animation to raise hands
         yield return new WaitForSeconds(TIME_ANIMATION_PRE_FIRE);
-        var newProjectile = Instantiate(tamalPrefab);
+        var newProjectile = Instantiate(currentProjectilePrefab);
         newProjectile.GetComponentInChildren<Projectile>().FireProjectile(
             playerNumber,
             isLocal,
@@ -221,7 +221,7 @@ public class PlayerBehaviour : MonoBehaviour
         currentTarget = destination;
         timeToReach -= TIME_ANIMATION_PRE_FIRE;
 
-        var velocity = tamalPrefab.GetComponentInChildren<Projectile>().AimAtTargetAnyVelocity(transform, currentTarget);
+        var velocity = currentProjectilePrefab.GetComponentInChildren<Projectile>().AimAtTargetAnyVelocity(transform, currentTarget);
         var immediate = timeToReach <= 0;
 
         StartCoroutine(Fire(velocity, immediate));
@@ -233,7 +233,7 @@ public class PlayerBehaviour : MonoBehaviour
         currentTarget = voter.transform.position;
 
         var offsetY = transform.position.y - currentTarget.y;
-        var maxReach = tamalPrefab.GetComponentInChildren<Projectile>().CalcMaxReach(offsetY) - .1f;
+        var maxReach = currentProjectilePrefab.GetComponentInChildren<Projectile>().CalcMaxReach(offsetY) - .1f;
         var distance = Mathf.Abs(currentTarget.x - transform.position.x);
         var distanceToMove = distance - maxReach;
         if (distanceToMove <= 0) return;
