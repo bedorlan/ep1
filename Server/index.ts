@@ -9,7 +9,7 @@ enum Codes {
   newPlayerDestination = 2, // [2, positionX: float, timeWhenReach: long]
   newVoters = 3, // [3, ...voters: [id: int, positionX: float]]
   guessTime = 5, // to server: [5, guessedTime: int], from server: [5, deltaGuess: int]
-  projectileFired = 6, // [6, player: int, destinationVector: [x, y: floats], timeWhenReach: long]
+  projectileFired = 6, // [(6), (player: int), (destinationVector: [x, y: floats]), (timeWhenReach: long), (projectileType: int)]
   tryConvertVoter = 7, // [(7), (voterId: int), (player: int), (time: long)]
   voterConverted = 8, // [(8), (voterId: int), (player: int)]
   tryClaimVoter = 9, // [(9), (voterId: int)]
@@ -30,7 +30,7 @@ server.on('connection', (socket) => {
     try {
       const char = raw.charAt(4)
       if (char !== '[') {
-        throw 'invalid raw'
+        throw 'invalid raw' // print the data
       }
 
       msg = getTelepathyMsg(raw)
@@ -49,16 +49,17 @@ server.on('connection', (socket) => {
     duplex.in.write(msg)
   })
 
-  duplex.out.on('data', (obj) => {
-    const msg = toTelepathyMsg(JSON.stringify(obj) + '\n')
-    socket.write(msg)
-  })
-  // TODO: remove the latency!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-  // duplex.out.on('data', (data) => {
-  //   setTimeout(() => {
-  //     socket.write(data)
-  //   }, 250)
+  // duplex.out.on('data', (obj) => {
+  //   const msg = toTelepathyMsg(JSON.stringify(obj) + '\n')
+  //   socket.write(msg)
   // })
+  // TODO: remove the latency!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+  duplex.out.on('data', (obj) => {
+    setTimeout(() => {
+      const msg = toTelepathyMsg(JSON.stringify(obj) + '\n')
+      socket.write(msg)
+    }, 250)
+  })
 
   waitingQueue.push(duplex)
   waitingQueue = waitingQueue.filter((it) => !it.socket.destroyed && it.socket.readable && it.socket.writable)

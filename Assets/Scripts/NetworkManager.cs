@@ -12,7 +12,7 @@ enum Codes
     newPlayerDestination = 2, // [2, positionX: float, timeWhenReach: long]
     newVoters = 3, // [3, ...voters: [id: int, positionX: float]]
     guessTime = 5, // to server: [5, guessedTime: int], from server: [5, deltaGuess: int]
-    projectileFired = 6, // [6, player: int, destinationVector: [x, y: floats], timeWhenReach: long]
+    projectileFired = 6, // [(6), (player: int), (destinationVector: [x, y: floats]), (timeWhenReach: long), (projectileType: int)]
     tryConvertVoter = 7, // [(7), (voterId: int), (player: int), (time: long)]
     voterConverted = 8, // [(8), (voterId: int), (player: int)]
     tryClaimVoter = 9, // [(9), (voterId: int)]
@@ -30,13 +30,11 @@ public class NetworkManager : MonoBehaviour
     public GameObject voterPrefab;
     public new GameObject camera;
     public GameObject background;
+    public List<GameObject> projectilePrefabs;
 
-    public event Action OnMatchReady;
-    public event Action OnMatchEnd;
-
-    private Telepathy.Client client;
-    private Dictionary<Codes, Action<JSONNode>> codesMap;
     private int playerNumber;
+    private Dictionary<Codes, Action<JSONNode>> codesMap;
+    private Dictionary<int, GameObject> projectilesMap;
 
     private GameObject localPlayer;
     private GameObject remotePlayer;
@@ -62,7 +60,18 @@ public class NetworkManager : MonoBehaviour
             { Codes.voterConverted, OnVoterConverted },
             { Codes.voterClaimed, OnVoterClaimed },
         };
+
+        projectilesMap = new Dictionary<int, GameObject>();
+        foreach (var projectilePrefab in projectilePrefabs)
+        {
+            var typeId = projectilePrefab.GetComponentInChildren<Projectile>().projectileTypeId;
+            projectilesMap.Add(typeId, projectilePrefab);
+        }
     }
+
+    private Telepathy.Client client;
+    public event Action OnMatchReady;
+    public event Action OnMatchEnd;
 
     void Start()
     {
@@ -159,10 +168,13 @@ public class NetworkManager : MonoBehaviour
 
     private void OnProjectileFired(JSONNode data)
     {
+        // [(6), (player: int), (destinationVector: [x, y: floats]), (timeWhenReach: long), (projectileType: int)]
         var destination = new Vector3(data[2].AsArray[0].AsFloat, data[2].AsArray[1].AsFloat, 0f);
         var timeWhenReach = data[3].AsLong;
         var timeToReach = timeWhenReach2timeToReach(timeWhenReach);
-        remotePlayer.GetComponent<PlayerBehaviour>().Remote_FireProjectile(destination, timeToReach);
+        var projectileType = data[4].AsInt;
+        var projectile = projectilesMap[projectileType];
+        remotePlayer.GetComponent<PlayerBehaviour>().Remote_FireProjectile(projectile, destination, timeToReach);
     }
 
     private void OnVoterConverted(JSONNode data)
@@ -246,16 +258,18 @@ public class NetworkManager : MonoBehaviour
         localPlayer.GetComponent<PlayerBehaviour>().ChaseVoter(voter);
     }
 
-    public void ProjectileFired(int playerOwner, Vector3 destination, float timeToReach)
+    public void ProjectileFired(int playerOwner, Vector3 destination, float timeToReach, int projectileType)
     {
+        // [(6), (player: int), (destinationVector: [x, y: floats]), (timeWhenReach: long), (projectileType: int)]
         var destinationMsg = vector2msg(destination);
         var timeWhenReach = timeToReach2timeWhenReach(timeToReach);
         var msg = string.Format(
-            "[{0}, {1}, {2}, {3}]",
+            "[{0}, {1}, {2}, {3}, {4}]",
             (int)Codes.projectileFired,
             playerNumber,
             destinationMsg,
-            timeWhenReach);
+            timeWhenReach,
+            projectileType);
         SendNetworkMsg(msg);
     }
 
@@ -283,7 +297,7 @@ public class NetworkManager : MonoBehaviour
     internal event Action<GameObject> OnProjectileSelected;
     internal void ProjectileSelected(GameObject projectile)
     {
-        localPlayer.GetComponent<PlayerBehaviour>().currentProjectilePrefab = projectile;
+        localPlayer.GetComponent<PlayerBehaviour>().ChangeProjectile(projectile);
         OnProjectileSelected?.Invoke(projectile);
     }
 

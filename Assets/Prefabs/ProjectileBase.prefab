@@ -135,3 +135,4 @@ MonoBehaviour:
   initialPositionOffsetY: 3
   endAnimationPrefab: {fileID: 6671613337401892059, guid: 55aecd96d77ef40f1bd3e6fccdc5a4d9,
     type: 3}
+  projectileTypeId: -1

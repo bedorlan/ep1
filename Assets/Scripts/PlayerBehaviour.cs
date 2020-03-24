@@ -8,6 +8,7 @@ public class PlayerBehaviour : MonoBehaviour
     const float VELOCITY_RUNNING = 10f;
     const float TIME_ANIMATION_PRE_FIRE = .15f;
 
+    // privatize this v
     public GameObject currentProjectilePrefab;
 
     private int playerNumber;
@@ -16,7 +17,7 @@ public class PlayerBehaviour : MonoBehaviour
     private Animator animator;
     private float currentDestination;
     private Vector3 currentTarget;
-    private bool isBusy = false;
+    private bool isFiring = false;
 
     void Start()
     {
@@ -26,7 +27,7 @@ public class PlayerBehaviour : MonoBehaviour
 
     void Update()
     {
-        if (isLocal && isBusy) return;
+        if (isLocal && isFiring) return;
 
         if (isLocal)
         {
@@ -69,14 +70,14 @@ public class PlayerBehaviour : MonoBehaviour
         var velocity = currentProjectilePrefab.GetComponentInChildren<Projectile>().AimAtTarget(transform, currentTarget, 0f);
         if (velocity == Vector3.zero) return;
 
-        StartCoroutine(Fire(velocity, false));
+        StartCoroutine(Fire(currentProjectilePrefab, velocity, false));
     }
 
-    IEnumerator Fire(Vector3 velocity, bool immediate)
+    IEnumerator Fire(GameObject projectileToFire, Vector3 velocity, bool immediate)
     {
         if (immediate)
         {
-            var immediateProjectile = Instantiate(currentProjectilePrefab);
+            var immediateProjectile = Instantiate(projectileToFire);
             immediateProjectile.GetComponentInChildren<Projectile>().FireProjectileImmediate(
                 playerNumber,
                 isLocal,
@@ -89,10 +90,11 @@ public class PlayerBehaviour : MonoBehaviour
         {
             var distance = Mathf.Abs(transform.position.x - currentTarget.x);
             var timeToReach = TIME_ANIMATION_PRE_FIRE + (distance / Mathf.Abs(velocity.x));
-            NetworkManager.singleton.ProjectileFired(playerNumber, currentTarget, timeToReach);
+            var projectileType = projectileToFire.GetComponentInChildren<Projectile>().projectileTypeId;
+            NetworkManager.singleton.ProjectileFired(playerNumber, currentTarget, timeToReach, projectileType);
         }
 
-        isBusy = true;
+        isFiring = true;
         animator.SetBool("firing", true);
         stop();
 
@@ -104,7 +106,7 @@ public class PlayerBehaviour : MonoBehaviour
 
         // wait for animation to raise hands
         yield return new WaitForSeconds(TIME_ANIMATION_PRE_FIRE);
-        var newProjectile = Instantiate(currentProjectilePrefab);
+        var newProjectile = Instantiate(projectileToFire);
         newProjectile.GetComponentInChildren<Projectile>().FireProjectile(
             playerNumber,
             isLocal,
@@ -116,7 +118,7 @@ public class PlayerBehaviour : MonoBehaviour
         // wait for animation to finish
         yield return new WaitForSeconds(.35f);
         animator.SetBool("firing", false);
-        isBusy = false;
+        isFiring = false;
     }
 
     private void moveToCurrentDestination(float timeToReach)
@@ -200,7 +202,7 @@ public class PlayerBehaviour : MonoBehaviour
 
     public void OnNewDestination(float positionX)
     {
-        if (isLocal && isBusy) return;
+        if (isLocal && isFiring) return;
 
         currentDestination = positionX;
         moveToCurrentDestination(float.MaxValue);
@@ -216,20 +218,20 @@ public class PlayerBehaviour : MonoBehaviour
         moveToCurrentDestination(timeToReach);
     }
 
-    public void Remote_FireProjectile(Vector3 destination, float timeToReach)
+    public void Remote_FireProjectile(GameObject projectile, Vector3 destination, float timeToReach)
     {
         currentTarget = destination;
         timeToReach -= TIME_ANIMATION_PRE_FIRE;
 
-        var velocity = currentProjectilePrefab.GetComponentInChildren<Projectile>().AimAtTargetAnyVelocity(transform, currentTarget);
+        var velocity = projectile.GetComponentInChildren<Projectile>().AimAtTargetAnyVelocity(transform, currentTarget);
         var immediate = timeToReach <= 0;
 
-        StartCoroutine(Fire(velocity, immediate));
+        StartCoroutine(Fire(projectile, velocity, immediate));
     }
 
     public void ChaseVoter(VoterBehaviour voter)
     {
-        if (isLocal && isBusy) return;
+        if (isLocal && isFiring) return;
         currentTarget = voter.transform.position;
 
         var offsetY = transform.position.y - currentTarget.y;
@@ -251,5 +253,10 @@ public class PlayerBehaviour : MonoBehaviour
         if (!voter) return;
 
         voter.TryClaim(playerNumber);
+    }
+
+    internal void ChangeProjectile(GameObject projectile)
+    {
+        currentProjectilePrefab = projectile;
     }
 }

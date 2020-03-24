@@ -979,6 +979,9 @@ MonoBehaviour:
     type: 3}
   camera: {fileID: 519420028}
   background: {fileID: 1228029951}
+  projectilePrefabs:
+  - {fileID: 5724295151951787797, guid: 051b97cbefa6240959bfa127876f3d77, type: 3}
+  - {fileID: 128448484206180066, guid: 15180484fc0824288a32032a330c3077, type: 3}
 --- !u!4 &1658275971
 Transform:
   m_ObjectHideFlags: 0

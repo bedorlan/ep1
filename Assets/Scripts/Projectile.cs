@@ -8,6 +8,7 @@ public class Projectile : MonoBehaviour
     public float projectileVelocity;
     public float initialPositionOffsetY = 3f;
     public GameObject endAnimationPrefab;
+    public int projectileTypeId;
 
     internal bool isLocal;
     internal int playerOwner;
