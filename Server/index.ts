@@ -25,7 +25,8 @@ let waitingQueue: (Duplex & { socket: net.Socket })[] = []
 server.on('connection', (socket) => {
   const duplex = { socket, in: new PassThrough({ objectMode: true }), out: new PassThrough({ objectMode: true }) }
 
-  createInterface(socket).on('line', (raw) => {
+  const readliner = createInterface({ input: socket, terminal: false })
+  readliner.on('line', (raw) => {
     let msg: any[]
     try {
       const char = raw.charAt(4)
@@ -37,6 +38,9 @@ server.on('connection', (socket) => {
     } catch (err) {
       console.error(err)
       socket.destroy()
+      readliner.removeAllListeners()
+      duplex.in.destroy()
+      duplex.out.destroy()
       return
     }
 
@@ -72,6 +76,7 @@ server.on('connection', (socket) => {
     socket.once('error', destroyAll.bind(null, waitingQueue))
   })
 
+  // TODO: wait until clients say hello
   new Match(waitingQueue).Start()
   waitingQueue = []
 })
