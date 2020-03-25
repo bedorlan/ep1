@@ -65,18 +65,11 @@ public class NetworkManager : MonoBehaviour
         projectilesMap = new Dictionary<int, GameObject>();
         foreach (var projectilePrefab in projectilePrefabs)
         {
-            var typeId = projectilePrefab
-                .GetComponentInChildren<ButtonProjectileBehaviour>()
-                .projectilePrefab
-                .GetComponentInChildren<Projectile>()
-                .projectileTypeId;
-
+            var typeId = projectilePrefab.GetComponentInChildren<ButtonProjectileBehaviour>().GetProjectileTypeId();
             projectilesMap.Add(typeId, projectilePrefab);
         }
 
-        defaultProjectile = projectilesMap[0]
-            .GetComponentInChildren<ButtonProjectileBehaviour>()
-            .projectilePrefab;
+        defaultProjectile = projectilesMap[0].GetComponentInChildren<ButtonProjectileBehaviour>().projectilePrefab;
     }
 
     private Telepathy.Client client;
@@ -185,10 +178,7 @@ public class NetworkManager : MonoBehaviour
         var timeWhenReach = data[3].AsLong;
         var timeToReach = timeWhenReach2timeToReach(timeWhenReach);
         var projectileType = data[4].AsInt;
-        var projectile = projectilesMap[projectileType]
-            .GetComponentInChildren<ButtonProjectileBehaviour>()
-            .projectilePrefab;
-
+        var projectile = projectilesMap[projectileType].GetComponentInChildren<ButtonProjectileBehaviour>().projectilePrefab;
         remotePlayer.GetComponent<PlayerBehaviour>().Remote_FireProjectile(projectile, destination, timeToReach);
     }
 

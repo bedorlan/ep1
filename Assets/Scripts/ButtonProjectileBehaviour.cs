@@ -1,4 +1,5 @@
-﻿using System.Collections;
+﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
@@ -43,5 +44,10 @@ public class ButtonProjectileBehaviour : MonoBehaviour
 
         GetComponentInChildren<Button>().interactable = !isSelected;
         isCoolingDown = false;
+    }
+
+    internal int GetProjectileTypeId()
+    {
+        return projectilePrefab.GetComponentInChildren<Projectile>().projectileTypeId;
     }
 }
