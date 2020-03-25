@@ -35,6 +35,7 @@ public class NetworkManager : MonoBehaviour
     private int playerNumber;
     private Dictionary<Codes, Action<JSONNode>> codesMap;
     private Dictionary<int, GameObject> projectilesMap;
+    private GameObject defaultProjectile;
 
     private GameObject localPlayer;
     private GameObject remotePlayer;
@@ -64,9 +65,18 @@ public class NetworkManager : MonoBehaviour
         projectilesMap = new Dictionary<int, GameObject>();
         foreach (var projectilePrefab in projectilePrefabs)
         {
-            var typeId = projectilePrefab.GetComponentInChildren<Projectile>().projectileTypeId;
+            var typeId = projectilePrefab
+                .GetComponentInChildren<ButtonProjectileBehaviour>()
+                .projectilePrefab
+                .GetComponentInChildren<Projectile>()
+                .projectileTypeId;
+
             projectilesMap.Add(typeId, projectilePrefab);
         }
+
+        defaultProjectile = projectilesMap[0]
+            .GetComponentInChildren<ButtonProjectileBehaviour>()
+            .projectilePrefab;
     }
 
     private Telepathy.Client client;
@@ -138,6 +148,8 @@ public class NetworkManager : MonoBehaviour
 
         OnMatchReady?.Invoke();
         camera.SetActive(true);
+
+        ProjectileSelected(defaultProjectile);
     }
 
     private void OnRemoteNewDestination(JSONNode data)
@@ -173,7 +185,10 @@ public class NetworkManager : MonoBehaviour
         var timeWhenReach = data[3].AsLong;
         var timeToReach = timeWhenReach2timeToReach(timeWhenReach);
         var projectileType = data[4].AsInt;
-        var projectile = projectilesMap[projectileType];
+        var projectile = projectilesMap[projectileType]
+            .GetComponentInChildren<ButtonProjectileBehaviour>()
+            .projectilePrefab;
+
         remotePlayer.GetComponent<PlayerBehaviour>().Remote_FireProjectile(projectile, destination, timeToReach);
     }
 
@@ -271,6 +286,10 @@ public class NetworkManager : MonoBehaviour
             timeWhenReach,
             projectileType);
         SendNetworkMsg(msg);
+
+        var projectile = projectilesMap[projectileType];
+        projectile.GetComponentInChildren<ButtonProjectileBehaviour>().OnYourProjectileFired();
+        ProjectileSelected(defaultProjectile);
     }
 
     public void TryConvertVoter(int playerOwner, int voterId)

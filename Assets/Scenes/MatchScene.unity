@@ -174,6 +174,21 @@ PrefabInstance:
       value: 
       objectReference: {fileID: 21300000, guid: 756b64c2d7d0048b583f9f9dee89f0f2,
         type: 3}
+    - target: {fileID: 955274967464470207, guid: 6a2aa7ed072444749b3f5a9b73601e36,
+        type: 3}
+      propertyPath: m_Color.r
+      value: 0.9245283
+      objectReference: {fileID: 0}
+    - target: {fileID: 955274967464470207, guid: 6a2aa7ed072444749b3f5a9b73601e36,
+        type: 3}
+      propertyPath: m_Color.g
+      value: 0.8591136
+      objectReference: {fileID: 0}
+    - target: {fileID: 955274967464470207, guid: 6a2aa7ed072444749b3f5a9b73601e36,
+        type: 3}
+      propertyPath: m_Color.b
+      value: 0.8591136
+      objectReference: {fileID: 0}
     - target: {fileID: 955274967464470209, guid: 6a2aa7ed072444749b3f5a9b73601e36,
         type: 3}
       propertyPath: m_LocalScale.x
@@ -205,6 +220,11 @@ PrefabInstance:
       value: 
       objectReference: {fileID: 128448484206180066, guid: 15180484fc0824288a32032a330c3077,
         type: 3}
+    - target: {fileID: 955274967738283091, guid: 6a2aa7ed072444749b3f5a9b73601e36,
+        type: 3}
+      propertyPath: cooldown
+      value: 5
+      objectReference: {fileID: 0}
     - target: {fileID: 955274967738283092, guid: 6a2aa7ed072444749b3f5a9b73601e36,
         type: 3}
       propertyPath: m_LocalPosition.x
@@ -314,6 +334,31 @@ PrefabInstance:
         type: 3}
       propertyPath: m_Name
       value: LechonaButton
+      objectReference: {fileID: 0}
+    - target: {fileID: 955274969146916495, guid: 6a2aa7ed072444749b3f5a9b73601e36,
+        type: 3}
+      propertyPath: m_Interactable
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 3502040139452584933, guid: 6a2aa7ed072444749b3f5a9b73601e36,
+        type: 3}
+      propertyPath: m_textInfo.characterCount
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 3502040139452584933, guid: 6a2aa7ed072444749b3f5a9b73601e36,
+        type: 3}
+      propertyPath: m_textInfo.wordCount
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 3502040139452584933, guid: 6a2aa7ed072444749b3f5a9b73601e36,
+        type: 3}
+      propertyPath: m_textInfo.lineCount
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 3502040139452584933, guid: 6a2aa7ed072444749b3f5a9b73601e36,
+        type: 3}
+      propertyPath: m_textInfo.pageCount
+      value: 0
       objectReference: {fileID: 0}
     m_RemovedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 6a2aa7ed072444749b3f5a9b73601e36, type: 3}
@@ -439,6 +484,36 @@ PrefabInstance:
         type: 3}
       propertyPath: m_Name
       value: TamalButton
+      objectReference: {fileID: 0}
+    - target: {fileID: 955274969146916495, guid: 6a2aa7ed072444749b3f5a9b73601e36,
+        type: 3}
+      propertyPath: m_Interactable
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 3502040139452584933, guid: 6a2aa7ed072444749b3f5a9b73601e36,
+        type: 3}
+      propertyPath: m_textInfo.characterCount
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 3502040139452584933, guid: 6a2aa7ed072444749b3f5a9b73601e36,
+        type: 3}
+      propertyPath: m_textInfo.wordCount
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 3502040139452584933, guid: 6a2aa7ed072444749b3f5a9b73601e36,
+        type: 3}
+      propertyPath: m_textInfo.lineCount
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 3502040139452584933, guid: 6a2aa7ed072444749b3f5a9b73601e36,
+        type: 3}
+      propertyPath: m_textInfo.pageCount
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 3502040139452584933, guid: 6a2aa7ed072444749b3f5a9b73601e36,
+        type: 3}
+      propertyPath: m_Enabled
+      value: 0
       objectReference: {fileID: 0}
     m_RemovedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 6a2aa7ed072444749b3f5a9b73601e36, type: 3}
@@ -685,7 +760,7 @@ Canvas:
   m_OverrideSorting: 0
   m_OverridePixelPerfect: 0
   m_SortingBucketNormalizedSize: 0
-  m_AdditionalShaderChannelsFlag: 0
+  m_AdditionalShaderChannelsFlag: 25
   m_SortingLayerID: 0
   m_SortingOrder: 0
   m_TargetDisplay: 0
@@ -944,6 +1019,12 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 6f387452eb1964e50b955ca44c103e06, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+--- !u!1 &1622067846 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 955274967738283093, guid: 6a2aa7ed072444749b3f5a9b73601e36,
+    type: 3}
+  m_PrefabInstance: {fileID: 365495354}
+  m_PrefabAsset: {fileID: 0}
 --- !u!1 &1658275969
 GameObject:
   m_ObjectHideFlags: 0
@@ -980,8 +1061,8 @@ MonoBehaviour:
   camera: {fileID: 519420028}
   background: {fileID: 1228029951}
   projectilePrefabs:
-  - {fileID: 5724295151951787797, guid: 051b97cbefa6240959bfa127876f3d77, type: 3}
-  - {fileID: 128448484206180066, guid: 15180484fc0824288a32032a330c3077, type: 3}
+  - {fileID: 1814158641}
+  - {fileID: 1622067846}
 --- !u!4 &1658275971
 Transform:
   m_ObjectHideFlags: 0
@@ -1107,6 +1188,12 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 17a68ff46fecb49a5808a98abf8a1b6b, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+--- !u!1 &1814158641 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 955274967738283093, guid: 6a2aa7ed072444749b3f5a9b73601e36,
+    type: 3}
+  m_PrefabInstance: {fileID: 435039703}
+  m_PrefabAsset: {fileID: 0}
 --- !u!1001 &8964964368542751002
 PrefabInstance:
   m_ObjectHideFlags: 0
