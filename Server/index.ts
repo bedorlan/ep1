@@ -30,7 +30,7 @@ server.on('connection', (socket) => {
     try {
       const char = raw.charAt(4)
       if (char !== '[') {
-        throw 'invalid raw' // print the data
+        throw 'invalid raw: ' + raw
       }
 
       msg = getTelepathyMsg(raw)
