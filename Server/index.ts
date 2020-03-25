@@ -49,16 +49,18 @@ server.on('connection', (socket) => {
     duplex.in.write(msg)
   })
 
-  // duplex.out.on('data', (obj) => {
-  //   const msg = toTelepathyMsg(JSON.stringify(obj) + '\n')
-  //   socket.write(msg)
-  // })
-  // TODO: remove the latency!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+  const sendMsg = (obj: any) => {
+    const msg = toTelepathyMsg(JSON.stringify(obj) + '\n')
+    socket.write(msg)
+  }
+
   duplex.out.on('data', (obj) => {
-    setTimeout(() => {
-      const msg = toTelepathyMsg(JSON.stringify(obj) + '\n')
-      socket.write(msg)
-    }, 250)
+    if (!process.env.LATENCY) {
+      sendMsg(obj)
+    } else {
+      const latency = Number.parseInt(process.env.LATENCY)
+      setTimeout(sendMsg.bind(null, obj), latency)
+    }
   })
 
   waitingQueue.push(duplex)
