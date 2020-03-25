@@ -79,8 +79,12 @@ public class NetworkManager : MonoBehaviour
     void Start()
     {
         client = new Telepathy.Client();
+
+#if UNITY_EDITOR || !UNITY_ANDROID
         client.Connect("localhost", 7777);
-        //client.Connect("3.223.135.88", 80);
+#else
+        client.Connect("3.223.135.88", 80);
+#endif
 
         if (OnMatchReady?.GetInvocationList().Length > 0)
         {
