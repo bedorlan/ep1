@@ -98,7 +98,12 @@ function safeWaitForHello(socket: net.Socket) {
       if (socket.readableLength < BYTES_TO_READ) return
 
       const data = socket.read(BYTES_TO_READ).toString()
-      const [code] = JSON.parse(data.slice(4))
+      let code: number
+      try {
+        ;[code] = JSON.parse(data.slice(4))
+      } catch (err) {
+        return reject(err + `\ndata=${data}`)
+      }
       if (code !== Codes.hello) return reject('weird data: ' + data)
 
       socket.off('readable', process)
