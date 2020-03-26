@@ -108,6 +108,10 @@ server.on('listening', () => {
   console.info(`listening on port ${PORT}`)
 })
 
+server.on('error', (err) => {
+  console.error('server error:', err)
+})
+
 server.listen(PORT)
 
 class Match {
