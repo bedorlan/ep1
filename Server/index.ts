@@ -74,25 +74,26 @@ server.on('connection', (socket) => {
     sendTo(duplex, [Codes.hello])
 
     waitingQueue.push(duplex)
-    waitingQueue = waitingQueue.filter((it) => !it.socket.destroyed && it.socket.readable && it.socket.writable)
     if (waitingQueue.length < 2) return
-
-    waitingQueue.forEach(({ socket }) => {
-      socket.once('close', destroyAll.bind(null, waitingQueue))
-      socket.once('error', destroyAll.bind(null, waitingQueue))
-    })
 
     new Match(waitingQueue).Start()
     waitingQueue = []
   })
+
+  socket.on('close', socketClosed.bind(null, socket))
+  socket.on('error', socketClosed.bind(null, socket))
 })
 
-function destroyAll(duplexes: (Duplex & { socket: net.Socket })[]) {
-  duplexes.forEach((duplex) => {
-    if (duplex.socket.destroyed) return
-    duplex.socket.destroy()
-    duplex.in.destroy()
-    duplex.out.destroy()
+function socketClosed(socket: net.Socket) {
+  if (!socket.destroyed) socket.destroy()
+
+  waitingQueue = waitingQueue.filter((it) => {
+    const isGood = !it.socket.destroyed && it.socket.readable && it.socket.writable
+    if (isGood) return true
+
+    it.in.destroy()
+    it.out.destroy()
+    return false
   })
 }
 
