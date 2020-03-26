@@ -84,7 +84,8 @@ server.on('connection', (socket) => {
   socket.on('error', socketClosed.bind(null, socket))
 })
 
-function socketClosed(socket: net.Socket) {
+function socketClosed(socket: net.Socket, err: any) {
+  console.error('socket closed', err)
   if (!socket.destroyed) socket.destroy()
 
   waitingQueue = waitingQueue.filter((it) => {
