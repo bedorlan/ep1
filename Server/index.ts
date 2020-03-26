@@ -23,8 +23,18 @@ const server = net.createServer()
 type Duplex = { in: Readable; out: Writable }
 let waitingQueue: (Duplex & { socket: net.Socket })[] = []
 
-server.on('connection', (socket) => {
+server.on('connection', async (socket) => {
+  try {
+    await safeWaitForHello(socket)
+  } catch (err) {
+    console.error(err)
+    socket.destroy()
+    return
+  }
+
   const duplex = { socket, in: new PassThrough({ objectMode: true }), out: new PassThrough({ objectMode: true }) }
+  sendTo(duplex, [Codes.hello])
+  waitingQueue.push(duplex)
 
   const sendMsgFromDuplexToSocket = (obj: any) => {
     if (!socket.writable) return
@@ -45,13 +55,9 @@ server.on('connection', (socket) => {
   readliner.on('line', (raw) => {
     let msg: any[]
     try {
-      const char = raw.charAt(4)
-      if (char !== '[') {
-        throw 'invalid raw: ' + raw
-      }
-
       msg = getTelepathyMsg(raw)
     } catch (err) {
+      // is this needed?
       console.error(err)
       socket.destroy()
       readliner.removeAllListeners()
@@ -66,23 +72,46 @@ server.on('connection', (socket) => {
       return
     }
 
-    if (code !== Codes.hello) {
-      duplex.in.write(msg)
-      return
-    }
-
-    sendTo(duplex, [Codes.hello])
-
-    waitingQueue.push(duplex)
-    if (waitingQueue.length < 2) return
-
-    new Match(waitingQueue).Start()
-    waitingQueue = []
+    duplex.in.write(msg)
   })
 
   socket.on('close', socketClosed.bind(null, socket))
   socket.on('error', socketClosed.bind(null, socket))
+
+  if (waitingQueue.length < 2) return
+
+  waitingQueue.forEach((it) => {
+    it.socket.on('close', matchOver.bind(null, waitingQueue))
+    it.socket.on('error', matchOver.bind(null, waitingQueue))
+  })
+
+  new Match(waitingQueue).Start()
+  waitingQueue = []
 })
+
+function safeWaitForHello(socket: net.Socket) {
+  const BYTES_TO_READ = 9 // Codes.hello: 000?[11]\n
+  return new Promise((resolve, reject) => {
+    socket.on('readable', process)
+
+    function process() {
+      if (socket.readableLength < BYTES_TO_READ) return
+
+      const data = socket.read(BYTES_TO_READ).toString()
+      const [code] = JSON.parse(data.slice(4))
+      if (code !== Codes.hello) return reject('weird data: ' + data)
+
+      socket.off('readable', process)
+      resolve()
+    }
+  })
+}
+
+function onGuessTime(player: Duplex, msg: any[]) {
+  const playerGuess = msg[1] as number
+  const offset = Date.now() - playerGuess
+  sendTo(player, [Codes.guessTime, offset])
+}
 
 function socketClosed(socket: net.Socket, err: any) {
   console.error('socket closed', err)
@@ -98,10 +127,13 @@ function socketClosed(socket: net.Socket, err: any) {
   })
 }
 
-function onGuessTime(player: Duplex, msg: any[]) {
-  const playerGuess = msg[1] as number
-  const offset = Date.now() - playerGuess
-  sendTo(player, [Codes.guessTime, offset])
+function matchOver(players: typeof waitingQueue, err: any) {
+  console.error('match over', err)
+  players.forEach((it) => {
+    if (!it.socket.destroyed) it.socket.destroy()
+    it.in.destroy()
+    it.out.destroy()
+  })
 }
 
 const PORT = process.env.PORT || 7777
@@ -140,6 +172,7 @@ class Match {
     } as const
 
     this.players.forEach((player, index) => {
+      player.in.on('end', this.Stop)
       player.in.on('close', this.Stop)
       player.in.on('error', this.Stop)
 
