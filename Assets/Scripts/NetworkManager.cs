@@ -17,6 +17,7 @@ enum Codes
     voterConverted = 8, // [(8), (voterId: int), (player: int)]
     tryClaimVoter = 9, // [(9), (voterId: int)]
     voterClaimed = 10, // [(10), (voterId: int), (player: int)]
+    hello = 11, // [(11)]
     // if code == 50 .. be careful: ctrl + f Codes.guessTime on server
 }
 
@@ -60,6 +61,7 @@ public class NetworkManager : MonoBehaviour
             { Codes.projectileFired, OnProjectileFired },
             { Codes.voterConverted, OnVoterConverted },
             { Codes.voterClaimed, OnVoterClaimed },
+            { Codes.hello, OnHello },
         };
 
         projectilesMap = new Dictionary<int, GameObject>();
@@ -101,6 +103,7 @@ public class NetworkManager : MonoBehaviour
             {
                 case Telepathy.EventType.Connected:
                     Debug.Log("Connected");
+                    sayHello();
                     guessServerTime();
                     break;
                 case Telepathy.EventType.Data:
@@ -115,6 +118,12 @@ public class NetworkManager : MonoBehaviour
         }
     }
 
+    private void sayHello()
+    {
+        var msg = string.Format("[{0}]", (int)Codes.hello);
+        SendNetworkMsg(msg);
+    }
+
     #region remote events
 
     private void ProcessRemoteMsg(byte[] data)
@@ -127,6 +136,12 @@ public class NetworkManager : MonoBehaviour
             Debug.LogError("unknown message=" + asciiData);
         }
         codesMap[code].Invoke(jsonData);
+    }
+
+    private void OnHello(JSONNode data)
+    {
+        // yay!
+        // should i validate the server somehow?
     }
 
     private void StartGame(JSONNode data)

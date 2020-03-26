@@ -14,6 +14,7 @@ enum Codes {
   voterConverted = 8, // [(8), (voterId: int), (player: int)]
   tryClaimVoter = 9, // [(9), (voterId: int)]
   voterClaimed = 10, // [(10), (voterId: int), (player: int)]
+  hello = 11, // [(11)]
   // if code == 50 .. be careful: ctrl + f Codes.guessTime on server
 }
 
@@ -24,6 +25,21 @@ let waitingQueue: (Duplex & { socket: net.Socket })[] = []
 
 server.on('connection', (socket) => {
   const duplex = { socket, in: new PassThrough({ objectMode: true }), out: new PassThrough({ objectMode: true }) }
+
+  const sendMsgFromDuplexToSocket = (obj: any) => {
+    if (!socket.writable) return
+    const msg = toTelepathyMsg(JSON.stringify(obj) + '\n')
+    socket.write(msg)
+  }
+
+  duplex.out.on('data', (obj) => {
+    if (!process.env.LATENCY) {
+      sendMsgFromDuplexToSocket(obj)
+    } else {
+      const latency = Number.parseInt(process.env.LATENCY)
+      setTimeout(sendMsgFromDuplexToSocket.bind(null, obj), latency)
+    }
+  })
 
   const readliner = createInterface({ input: socket, terminal: false })
   readliner.on('line', (raw) => {
@@ -50,35 +66,25 @@ server.on('connection', (socket) => {
       return
     }
 
-    duplex.in.write(msg)
-  })
-
-  const sendMsg = (obj: any) => {
-    const msg = toTelepathyMsg(JSON.stringify(obj) + '\n')
-    socket.write(msg)
-  }
-
-  duplex.out.on('data', (obj) => {
-    if (!process.env.LATENCY) {
-      sendMsg(obj)
-    } else {
-      const latency = Number.parseInt(process.env.LATENCY)
-      setTimeout(sendMsg.bind(null, obj), latency)
+    if (code !== Codes.hello) {
+      duplex.in.write(msg)
+      return
     }
+
+    sendTo(duplex, [Codes.hello])
+
+    waitingQueue.push(duplex)
+    waitingQueue = waitingQueue.filter((it) => !it.socket.destroyed && it.socket.readable && it.socket.writable)
+    if (waitingQueue.length < 2) return
+
+    waitingQueue.forEach(({ socket }) => {
+      socket.once('close', destroyAll.bind(null, waitingQueue))
+      socket.once('error', destroyAll.bind(null, waitingQueue))
+    })
+
+    new Match(waitingQueue).Start()
+    waitingQueue = []
   })
-
-  waitingQueue.push(duplex)
-  waitingQueue = waitingQueue.filter((it) => !it.socket.destroyed && it.socket.readable && it.socket.writable)
-  if (waitingQueue.length < 2) return
-
-  waitingQueue.forEach(({ socket }) => {
-    socket.once('close', destroyAll.bind(null, waitingQueue))
-    socket.once('error', destroyAll.bind(null, waitingQueue))
-  })
-
-  // TODO: wait until clients say hello
-  new Match(waitingQueue).Start()
-  waitingQueue = []
 })
 
 function destroyAll(duplexes: (Duplex & { socket: net.Socket })[]) {
