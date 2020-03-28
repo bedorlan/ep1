@@ -8,6 +8,7 @@ public class VoterBehaviour : MonoBehaviour
 {
     public AudioClip whenClaimedClip;
 
+    const char MAN_CODE = '\uf1bb';
     const char WOMAN_CODE = '\ue900';
 
     private int voterId;

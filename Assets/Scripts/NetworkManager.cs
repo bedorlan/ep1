@@ -32,6 +32,7 @@ public class NetworkManager : MonoBehaviour
     public new GameObject camera;
     public GameObject background;
     public List<GameObject> projectilePrefabs;
+    public List<GameObject> votesCounters;
 
     private int playerNumber;
     private Dictionary<Codes, Action<JSONNode>> codesMap;
@@ -104,7 +105,6 @@ public class NetworkManager : MonoBehaviour
                 case Telepathy.EventType.Connected:
                     Debug.Log("Connected");
                     sayHello();
-                    guessServerTime();
                     break;
                 case Telepathy.EventType.Data:
                     ProcessRemoteMsg(msg.data);
@@ -142,6 +142,8 @@ public class NetworkManager : MonoBehaviour
     {
         // yay!
         // should i validate the server somehow?
+
+        guessServerTime();
     }
 
     private void StartGame(JSONNode data)
@@ -157,6 +159,11 @@ public class NetworkManager : MonoBehaviour
         remotePlayer.GetComponent<PlayerBehaviour>().Initialize(playerNumber == 0 ? 1 : 0, false);
 
         ignoreCollisions();
+
+        votesCounters[0].GetComponent<VotesCountBehaviour>().SetVotes(0);
+        votesCounters[1].GetComponent<VotesCountBehaviour>().SetVotes(0);
+        votesCounters[2].SetActive(false);
+        votesCounters[3].SetActive(false);
 
         OnMatchReady?.Invoke();
         camera.SetActive(true);
@@ -215,6 +222,8 @@ public class NetworkManager : MonoBehaviour
         var player = data[2].AsInt;
         var voter = votersMap[voterId];
         voter.GetComponent<VoterBehaviour>().ClaimedBy(player);
+
+        votesCounters[player].GetComponent<VotesCountBehaviour>().PlusOneVote();
     }
 
     #endregion
