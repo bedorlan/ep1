@@ -29,4 +29,9 @@ public class VotesCountBehaviour : MonoBehaviour
     {
         SetVotes(++votes);
     }
+
+    internal int GetVotes()
+    {
+        return votes;
+    }
 }

@@ -35,6 +35,7 @@ public class NetworkManager : MonoBehaviour
     public List<GameObject> votesCounters;
 
     private int playerNumber;
+    private bool matchOver = false;
     private Dictionary<Codes, Action<JSONNode>> codesMap;
     private Dictionary<int, GameObject> projectilesMap;
     private GameObject defaultProjectile;
@@ -78,7 +79,7 @@ public class NetworkManager : MonoBehaviour
     private Telepathy.Client client;
     internal event Action<bool> OnConnection;
     internal event Action OnMatchReady;
-    internal event Action OnMatchEnd;
+    internal event Action<bool, bool> OnMatchEnd;
 
     internal void TryConnect()
     {
@@ -107,7 +108,8 @@ public class NetworkManager : MonoBehaviour
                     break;
                 case Telepathy.EventType.Disconnected:
                     Debug.Log("Disconnected");
-                    OnConnection?.Invoke(false);
+                    // si la partida ya empezo: reconectar!
+                    if(!matchOver) OnConnection?.Invoke(false);
                     break;
             }
         }
@@ -337,7 +339,15 @@ public class NetworkManager : MonoBehaviour
 
     internal void TimerOver()
     {
-        Debug.Log("TimerOver!");
+        matchOver = true;
+        client.Disconnect();
+
+        var votes1 = votesCounters[0].GetComponent<VotesCountBehaviour>().GetVotes();
+        var votes2 = votesCounters[1].GetComponent<VotesCountBehaviour>().GetVotes();
+        var winner = votes1 > votes2 ? 0 : 1;
+        var draw = votes1 == votes2;
+        var iWin = winner == playerNumber;
+        OnMatchEnd?.Invoke(draw, iWin);
     }
 
     #endregion

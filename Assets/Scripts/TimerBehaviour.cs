@@ -18,6 +18,7 @@ public class TimerBehaviour : MonoBehaviour
         textComponent = GetComponent<TextMeshProUGUI>();
 
         timeElapsed = matchTime;
+        SetText();
     }
 
     internal void StartTimer()

@@ -65,7 +65,7 @@ public class WaitingForMatchBehaviour : MonoBehaviour
         if (!success)
         {
             statusText.text = "No se pudo conectar al servidor. Revisa tu conexion a internet.";
-            buttonPlayGameObject.GetComponent<Button>().interactable = true;
+            Restart();
             return;
         }
 
@@ -79,14 +79,36 @@ public class WaitingForMatchBehaviour : MonoBehaviour
         camera.SetActive(false);
     }
 
-    private void NetworkManager_OnMatchEnd()
+    private void NetworkManager_OnMatchEnd(bool draw, bool iWin)
     {
         camera.SetActive(true);
-        SceneManager.UnloadSceneAsync(matchScene).completed += MatchScene_unload;
+        string text;
+        if (draw) text = "Empate! a segunda vuelta.";
+        else
+        {
+            if (iWin) text = "Ganador!";
+            else text = "Perdiste.";
+        }
+        statusText.text = text;
+
+        Restart();
     }
 
-    private void MatchScene_unload(AsyncOperation obj)
+    private void Restart()
     {
-        LoadMatch();
+        SceneManager.UnloadSceneAsync(matchScene);
+
+        if (!audioPlayer.isPlaying)
+        {
+            audioPlayer.time = 0;
+            audioPlayer.Play();
+        }
+        if (!videoPlayer.isPlaying)
+        {
+            videoPlayer.time = 0;
+            videoPlayer.Play();
+        }
+        camera.SetActive(true);
+        buttonPlayGameObject.GetComponent<Button>().interactable = true;
     }
 }
