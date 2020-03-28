@@ -8,9 +8,6 @@ public class VoterBehaviour : MonoBehaviour
 {
     public AudioClip whenClaimedClip;
 
-    const char MAN_CODE = '\uf1bb';
-    const char WOMAN_CODE = '\ue900';
-
     private int voterId;
     private int playerOwner = -1;
 
@@ -18,7 +15,7 @@ public class VoterBehaviour : MonoBehaviour
     {
         if (UnityEngine.Random.value <= 0.5093)
         {
-            GetComponent<TextMeshPro>().text = WOMAN_CODE.ToString();
+            GetComponent<TextMeshPro>().text = Common.WOMAN_CODE.ToString();
         }
 
         GetComponent<Renderer>().sortingLayerName = "Voters";

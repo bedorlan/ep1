@@ -169,6 +169,8 @@ public class NetworkManager : MonoBehaviour
         camera.SetActive(true);
 
         ProjectileSelected(defaultProjectile);
+
+        TimerBehaviour.singleton.StartTimer();
     }
 
     private void OnRemoteNewDestination(JSONNode data)
@@ -336,6 +338,11 @@ public class NetworkManager : MonoBehaviour
     {
         localPlayer.GetComponent<PlayerBehaviour>().ChangeProjectile(projectile);
         OnProjectileSelected?.Invoke(projectile);
+    }
+
+    internal void TimerOver()
+    {
+        Debug.Log("TimerOver!");
     }
 
     #endregion

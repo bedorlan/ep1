@@ -139,7 +139,7 @@ MonoBehaviour:
       m_Calls: []
   m_text: "\uF1BB 00000"
   m_isRightToLeft: 0
-  m_fontAsset: {fileID: 11400000, guid: 7b8e3b215b1144856859d048fada9ac5, type: 2}
+  m_fontAsset: {fileID: 11400000, guid: 2da57e28203504e44922c2e9c3101779, type: 2}
   m_sharedMaterial: {fileID: 21332548041658088, guid: 7b8e3b215b1144856859d048fada9ac5,
     type: 2}
   m_fontSharedMaterials: []
@@ -218,7 +218,7 @@ MonoBehaviour:
   m_isUsingLegacyAnimationComponent: 0
   m_isVolumetricText: 0
   m_spriteAnimator: {fileID: 0}
-  m_hasFontAssetChanged: 0
+  m_hasFontAssetChanged: 1
   m_subTextObjects:
   - {fileID: 0}
   - {fileID: 87748359469003578}

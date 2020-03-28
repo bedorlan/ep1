@@ -8,7 +8,6 @@ public class VotesCountBehaviour : MonoBehaviour
 {
     public int playerNumber = 0;
 
-    const char MAN_CODE = '\uf1bb';
     private TextMeshProUGUI textComponent;
     private int votes = 0;
 
@@ -22,7 +21,7 @@ public class VotesCountBehaviour : MonoBehaviour
 
     internal void SetVotes(int votes)
     {
-        var text = string.Format("{0} {1}", MAN_CODE, votes.ToString());
+        var text = string.Format("{0} {1}<size=40%>,000</size>", Common.MAN_CODE, votes.ToString());
         textComponent.text = text;
     }
 
