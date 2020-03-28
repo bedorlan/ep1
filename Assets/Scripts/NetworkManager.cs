@@ -42,6 +42,8 @@ public class NetworkManager : MonoBehaviour
 
     private GameObject localPlayer;
     private GameObject remotePlayer;
+    private List<GameObject> players = new List<GameObject>();
+
 
     void Awake()
     {
@@ -155,6 +157,9 @@ public class NetworkManager : MonoBehaviour
         remotePlayer = Instantiate(playerPrefab);
         remotePlayer.GetComponent<PlayerBehaviour>().Initialize(playerNumber == 0 ? 1 : 0, false);
 
+        players.Add(playerNumber == 0 ? localPlayer : remotePlayer);
+        players.Add(playerNumber == 1 ? localPlayer : remotePlayer);
+
         ignoreCollisions();
 
         votesCounters[0].GetComponent<VotesCountBehaviour>().SetVotes(0);
@@ -221,6 +226,7 @@ public class NetworkManager : MonoBehaviour
         voter.GetComponent<VoterBehaviour>().ClaimedBy(player);
 
         votesCounters[player].GetComponent<VotesCountBehaviour>().PlusOneVote();
+        players[player].GetComponent<PlayerBehaviour>().OnVotesChanges(1);
     }
 
     private void OnDisconnected()

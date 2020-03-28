@@ -834,3 +834,5 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   currentProjectilePrefab: {fileID: 5724295151951787797, guid: 051b97cbefa6240959bfa127876f3d77,
     type: 3}
+  votesChangesIndicatorPrefab: {fileID: 4760397698154483531, guid: 4db95640b673541989f20e9b68764bf5,
+    type: 3}

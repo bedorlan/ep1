@@ -8,8 +8,9 @@ public class PlayerBehaviour : MonoBehaviour
     const float VELOCITY_RUNNING = 10f;
     const float TIME_ANIMATION_PRE_FIRE = .15f;
 
-    // privatize this v
+    // todo: privatize this v
     public GameObject currentProjectilePrefab;
+    public GameObject votesChangesIndicatorPrefab;
 
     private int playerNumber;
     private bool isLocal;
@@ -258,5 +259,12 @@ public class PlayerBehaviour : MonoBehaviour
     internal void ChangeProjectile(GameObject projectile)
     {
         currentProjectilePrefab = projectile;
+    }
+
+    internal void OnVotesChanges(int votes)
+    {
+        var votesIndicator = Instantiate(votesChangesIndicatorPrefab);
+        votesIndicator.transform.position = transform.position;
+        votesIndicator.GetComponent<VotesChangesBehaviour>().Show(votes);
     }
 }
