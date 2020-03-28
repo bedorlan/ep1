@@ -108,8 +108,7 @@ public class NetworkManager : MonoBehaviour
                     break;
                 case Telepathy.EventType.Disconnected:
                     Debug.Log("Disconnected");
-                    // si la partida ya empezo: reconectar!
-                    if(!matchOver) OnConnection?.Invoke(false);
+                    OnDisconnected();
                     break;
             }
         }
@@ -198,7 +197,6 @@ public class NetworkManager : MonoBehaviour
 
     private void OnProjectileFired(JSONNode data)
     {
-        // [(6), (player: int), (destinationVector: [x, y: floats]), (timeWhenReach: long), (projectileType: int)]
         var destination = new Vector3(data[2].AsArray[0].AsFloat, data[2].AsArray[1].AsFloat, 0f);
         var timeWhenReach = data[3].AsLong;
         var timeToReach = timeWhenReach2timeToReach(timeWhenReach);
@@ -223,6 +221,19 @@ public class NetworkManager : MonoBehaviour
         voter.GetComponent<VoterBehaviour>().ClaimedBy(player);
 
         votesCounters[player].GetComponent<VotesCountBehaviour>().PlusOneVote();
+    }
+
+    private void OnDisconnected()
+    {
+        var timeLeft = TimerBehaviour.singleton.GetElapsedTime();
+        if (!matchOver && timeLeft > 5)
+        {
+            // intentar reconectar!
+            OnConnection?.Invoke(false);
+            return;
+        }
+
+        TimerOver();
     }
 
     #endregion

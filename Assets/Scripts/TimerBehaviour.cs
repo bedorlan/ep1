@@ -45,4 +45,9 @@ public class TimerBehaviour : MonoBehaviour
         var text = string.Format("{0} {1}:{2}", Common.CLOCK_CODE, minutes, seconds);
         textComponent.text = text;
     }
+
+    internal int GetElapsedTime()
+    {
+        return timeElapsed;
+    }
 }
