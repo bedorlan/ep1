@@ -76,10 +76,11 @@ public class NetworkManager : MonoBehaviour
     }
 
     private Telepathy.Client client;
-    public event Action OnMatchReady;
-    public event Action OnMatchEnd;
+    internal event Action<bool> OnConnection;
+    internal event Action OnMatchReady;
+    internal event Action OnMatchEnd;
 
-    void Start()
+    internal void TryConnect()
     {
         client = new Telepathy.Client();
 
@@ -88,17 +89,12 @@ public class NetworkManager : MonoBehaviour
 #else
         client.Connect("3.223.135.88", 80);
 #endif
-
-        if (OnMatchReady?.GetInvocationList().Length > 0)
-        {
-            camera.SetActive(false);
-        }
     }
 
     void Update()
     {
         Telepathy.Message msg;
-        while (client.GetNextMessage(out msg))
+        while (client != null && client.GetNextMessage(out msg))
         {
             switch (msg.eventType)
             {
@@ -111,8 +107,7 @@ public class NetworkManager : MonoBehaviour
                     break;
                 case Telepathy.EventType.Disconnected:
                     Debug.Log("Disconnected");
-                    camera.SetActive(false);
-                    OnMatchEnd?.Invoke();
+                    OnConnection?.Invoke(false);
                     break;
             }
         }
@@ -143,6 +138,7 @@ public class NetworkManager : MonoBehaviour
         // yay!
         // should i validate the server somehow?
 
+        OnConnection?.Invoke(true);
         guessServerTime();
     }
 
@@ -167,7 +163,6 @@ public class NetworkManager : MonoBehaviour
 
         OnMatchReady?.Invoke();
         camera.SetActive(true);
-
         ProjectileSelected(defaultProjectile);
 
         TimerBehaviour.singleton.StartTimer();
