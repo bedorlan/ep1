@@ -60,7 +60,7 @@ MeshRenderer:
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: 21332548041658088, guid: 7b8e3b215b1144856859d048fada9ac5, type: 2}
+  - {fileID: 21924623442787962, guid: 2da57e28203504e44922c2e9c3101779, type: 2}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
@@ -117,7 +117,7 @@ MonoBehaviour:
   m_text: "\uF1BB"
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: 2da57e28203504e44922c2e9c3101779, type: 2}
-  m_sharedMaterial: {fileID: 21332548041658088, guid: 7b8e3b215b1144856859d048fada9ac5,
+  m_sharedMaterial: {fileID: 21924623442787962, guid: 2da57e28203504e44922c2e9c3101779,
     type: 2}
   m_fontSharedMaterials: []
   m_fontMaterial: {fileID: 0}
@@ -195,7 +195,7 @@ MonoBehaviour:
   m_isUsingLegacyAnimationComponent: 0
   m_isVolumetricText: 0
   m_spriteAnimator: {fileID: 0}
-  m_hasFontAssetChanged: 1
+  m_hasFontAssetChanged: 0
   m_renderer: {fileID: 6120619778706569720}
   m_subTextObjects:
   - {fileID: 0}
@@ -341,6 +341,6 @@ CircleCollider2D:
   m_IsTrigger: 1
   m_UsedByEffector: 0
   m_UsedByComposite: 0
-  m_Offset: {x: 0, y: 0}
+  m_Offset: {x: 0, y: -0.25}
   serializedVersion: 2
-  m_Radius: 0.8
+  m_Radius: 1.2
