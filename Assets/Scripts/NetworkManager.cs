@@ -77,7 +77,9 @@ public class NetworkManager : MonoBehaviour
         }
 
         defaultProjectile = projectilesMap[0].GetComponentInChildren<ButtonProjectileBehaviour>().projectilePrefab;
+#if !UNITY_EDITOR
         camera.SetActive(false);
+#endif
     }
 
     private Telepathy.Client client;
@@ -124,7 +126,7 @@ public class NetworkManager : MonoBehaviour
         SendNetworkMsg(msg);
     }
 
-    #region remote events
+#region remote events
 
     private void ProcessRemoteMsg(byte[] data)
     {
@@ -253,8 +255,8 @@ public class NetworkManager : MonoBehaviour
 
     private void OnDisconnected()
     {
-        var timeLeft = TimerBehaviour.singleton.GetElapsedTime();
-        if (!matchOver && timeLeft <= 5)
+        var timeLeft = TimerBehaviour.singleton.GetTimeLeft();
+        if (!matchOver && timeLeft > 5)
         {
             // intentar reconectar!
             OnConnection?.Invoke(false);
@@ -264,7 +266,7 @@ public class NetworkManager : MonoBehaviour
         TimerOver();
     }
 
-    #endregion
+#endregion
 
     private void ignoreCollisions()
     {
@@ -316,7 +318,7 @@ public class NetworkManager : MonoBehaviour
         guessServerTime();
     }
 
-    #region local events
+#region local events
 
     public void BackgroundClicked(Vector3 position)
     {
@@ -422,7 +424,7 @@ public class NetworkManager : MonoBehaviour
         SendNetworkMsg(msg);
     }
 
-    #endregion
+#endregion
 
     private long unixMillis()
     {

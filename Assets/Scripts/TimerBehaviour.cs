@@ -10,14 +10,14 @@ public class TimerBehaviour : MonoBehaviour
 
     internal static TimerBehaviour singleton;
     private TextMeshProUGUI textComponent;
-    private int timeElapsed;
+    private int timeLeft;
 
     void Start()
     {
         singleton = this;
         textComponent = GetComponent<TextMeshProUGUI>();
 
-        timeElapsed = matchTime;
+        timeLeft = matchTime;
         SetText();
     }
 
@@ -28,10 +28,10 @@ public class TimerBehaviour : MonoBehaviour
 
     private IEnumerator Timer()
     {
-        while (timeElapsed > 0)
+        while (timeLeft > 0)
         {
             yield return new WaitForSeconds(1);
-            --timeElapsed;
+            --timeLeft;
             SetText();
         }
 
@@ -40,14 +40,14 @@ public class TimerBehaviour : MonoBehaviour
 
     void SetText()
     {
-        var minutes = (int)(timeElapsed / 60);
-        var seconds = (timeElapsed % 60).ToString().PadLeft(2, '0');
+        var minutes = timeLeft / 60;
+        var seconds = (timeLeft % 60).ToString().PadLeft(2, '0');
         var text = string.Format("{0} {1}:{2}", Common.CLOCK_CODE, minutes, seconds);
         textComponent.text = text;
     }
 
-    internal int GetElapsedTime()
+    internal int GetTimeLeft()
     {
-        return timeElapsed;
+        return timeLeft;
     }
 }
