@@ -5,7 +5,7 @@ import { PassThrough, Readable, Writable } from 'stream'
 
 enum Codes {
   noop = 0, // [0]
-  start = 1, // [1, playerNumber: int]
+  start = 1, // [(1), (playerNumber: int), (totalNumberOfPlayers: int)]
   newPlayerDestination = 2, // [2, positionX: float, timeWhenReach: long]
   newVoters = 3, // [3, ...voters: [id: int, positionX: float]]
   guessTime = 5, // to server: [5, guessedTime: int], from server: [5, deltaGuess: int]
@@ -33,7 +33,11 @@ server.on('connection', async (socket) => {
     return
   }
 
-  const duplex = { socket, in: new PassThrough({ objectMode: true }), out: new PassThrough({ objectMode: true }) }
+  const duplex = {
+    socket,
+    in: new PassThrough({ objectMode: true }),
+    out: new PassThrough({ objectMode: true }),
+  }
   sendTo(duplex, [Codes.hello])
   waitingQueue.push(duplex)
 
@@ -79,15 +83,7 @@ server.on('connection', async (socket) => {
   socket.on('close', socketClosed.bind(null, socket))
   socket.on('error', socketClosed.bind(null, socket))
 
-  if (waitingQueue.length < 2) return
-
-  waitingQueue.forEach((it) => {
-    it.socket.on('close', matchOver.bind(null, waitingQueue))
-    it.socket.on('error', matchOver.bind(null, waitingQueue))
-  })
-
-  new Match(waitingQueue).Start()
-  waitingQueue = []
+  tryStartMatch()
 })
 
 function safeWaitForHello(socket: net.Socket) {
@@ -111,6 +107,28 @@ function safeWaitForHello(socket: net.Socket) {
       resolve()
     }
   })
+}
+
+let waitingForPlayersTimeout: NodeJS.Timeout | undefined
+function tryStartMatch(timeout?: boolean) {
+  if ((!timeout && waitingQueue.length < 4) || (timeout && waitingQueue.length < 2)) {
+    if (!waitingForPlayersTimeout || timeout) {
+      console.info('not enough players. waiting')
+      waitingForPlayersTimeout = setTimeout(tryStartMatch.bind(null, true), 10000)
+    }
+    return
+  }
+
+  if (waitingForPlayersTimeout) clearTimeout(waitingForPlayersTimeout)
+  waitingForPlayersTimeout = undefined
+
+  waitingQueue.forEach((it) => {
+    it.socket.on('close', matchOver.bind(null, waitingQueue))
+    it.socket.on('error', matchOver.bind(null, waitingQueue))
+  })
+
+  new Match(waitingQueue).Start()
+  waitingQueue = []
 }
 
 function onGuessTime(player: Duplex, msg: any[]) {
@@ -165,7 +183,7 @@ class Match {
 
   Start() {
     this.players.forEach((player, index) => {
-      sendTo(player, [Codes.start, index])
+      sendTo(player, [Codes.start, index, this.players.length])
     })
 
     this.votersCentral.Start()
