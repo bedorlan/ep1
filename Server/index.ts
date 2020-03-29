@@ -255,15 +255,16 @@ class VotersCentral {
   }
 
   public readonly TryConvertVoter = (player: number, msg: any[]) => {
-    const [code, voterId, _, time] = msg
+    const NO_PLAYER = -1
+    const [code, voterId, playerToConvertTo, time] = msg
     const voter = this.voters[voterId]
     if (voter.claimed) return
-    if (voter.lastHitTime > time) return
+    if (playerToConvertTo !== NO_PLAYER && voter.lastHitTime > time) return
 
-    voter.player = player
+    voter.player = playerToConvertTo
     voter.lastHitTime = time
 
-    const reply = [Codes.voterConverted, voterId, player]
+    const reply = [Codes.voterConverted, voterId, playerToConvertTo]
     this.players.forEach((it) => {
       sendTo(it, reply)
     })

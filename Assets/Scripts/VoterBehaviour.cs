@@ -9,7 +9,7 @@ public class VoterBehaviour : MonoBehaviour
     public AudioClip whenClaimedClip;
 
     private int voterId;
-    private int playerOwner = -1;
+    private int playerOwner = Common.NO_PLAYER;
     private bool indifferent = false;
 
     void Start()
@@ -73,8 +73,10 @@ public class VoterBehaviour : MonoBehaviour
     internal void BeIndifferent()
     {
         indifferent = true;
-        GetComponent<TextMeshPro>().color = Color.gray;
-        playerOwner = -1;
+        playerOwner = Common.NO_PLAYER;
+        GetComponent<TextMeshPro>().color = Common.playerColors[playerOwner];
+
+        NetworkManager.singleton.TryConvertVoter(playerOwner, voterId);
     }
 
     internal void StopBeingIndifferent()
