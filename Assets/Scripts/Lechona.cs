@@ -10,19 +10,16 @@ public class Lechona : MonoBehaviour, IProjectile
         return validTarget;
     }
 
-    private List<VoterBehaviour> votersAtRange = new List<VoterBehaviour>();
-    private bool onTheFloor = false;
+    private HashSet<VoterBehaviour> votersAtRange = new HashSet<VoterBehaviour>();
 
     public void OnTriggerEnter2D(Collider2D other)
     {
         if (other.GetComponent<Floor>() != null)
         {
-            onTheFloor = true;
+            Explode();
+            return;
         }
-    }
 
-    private void OnTriggerStay2D(Collider2D other)
-    {
         var voter = other.GetComponent<VoterBehaviour>();
         if (voter != null)
         {
@@ -30,14 +27,8 @@ public class Lechona : MonoBehaviour, IProjectile
         }
     }
 
-    private void Update()
+    private void Explode()
     {
-        if (!onTheFloor)
-        {
-            votersAtRange.Clear();
-            return;
-        }
-
         var projectile = gameObject.GetComponent<Projectile>();
         var playerOwner = projectile.playerOwner;
         var isLocal = projectile.isLocal;
