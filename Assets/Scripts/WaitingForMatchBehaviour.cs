@@ -83,7 +83,7 @@ public class WaitingForMatchBehaviour : MonoBehaviour
     {
         camera.SetActive(true);
         string text;
-        if (draw) text = "Empate! a segunda vuelta.";
+        if (iWin && draw) text = "Empate! a segunda vuelta.";
         else
         {
             if (iWin) text = "Ganador!";

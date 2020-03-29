@@ -254,7 +254,7 @@ public class NetworkManager : MonoBehaviour
     private void OnDisconnected()
     {
         var timeLeft = TimerBehaviour.singleton.GetElapsedTime();
-        if (!matchOver && timeLeft > 5)
+        if (!matchOver && timeLeft <= 5)
         {
             // intentar reconectar!
             OnConnection?.Invoke(false);
@@ -401,11 +401,14 @@ public class NetworkManager : MonoBehaviour
         matchOver = true;
         client.Disconnect();
 
-        var votes1 = votesCounters[0].GetComponent<VotesCountBehaviour>().GetVotes();
-        var votes2 = votesCounters[1].GetComponent<VotesCountBehaviour>().GetVotes();
-        var winner = votes1 > votes2 ? 0 : 1;
-        var draw = votes1 == votes2;
-        var iWin = winner == playerNumber;
+        var playerVotes = votesCounters.ConvertAll(voter => voter.GetComponent<VotesCountBehaviour>().GetVotes());
+        var myVotes = playerVotes[playerNumber];
+
+        playerVotes.Sort((a, b) => b - a);
+        var maxVotes = playerVotes[0];
+
+        var iWin = myVotes == maxVotes;
+        var draw = playerVotes[0] == playerVotes[1];
         OnMatchEnd?.Invoke(draw, iWin);
     }
 
