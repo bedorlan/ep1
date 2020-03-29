@@ -7,6 +7,8 @@ public class BillboardProjectileBehaviour : MonoBehaviour, IProjectile
 {
     public GameObject playerFace;
 
+    private HashSet<VoterBehaviour> votersUnderInfluence = new HashSet<VoterBehaviour>();
+
     public bool CanYouFireAt(Vector3 position, GameObject target)
     {
         var validTarget = target != null && target.GetComponentInChildren<PlayerBehaviour>() != null;
@@ -24,19 +26,33 @@ public class BillboardProjectileBehaviour : MonoBehaviour, IProjectile
 
     private void OnTriggerEnter2D(Collider2D other)
     {
+        var voter = other.GetComponent<VoterBehaviour>();
+        if (voter != null)
+        {
+            votersUnderInfluence.Add(voter);
+            voter.BeIndifferent();
+            return;
+        }
+
         var floor = other.GetComponent<Floor>();
         if (floor == null) return;
 
         var rigidbody = GetComponent<Rigidbody2D>();
         rigidbody.velocity = Vector3.zero;
-        rigidbody.simulated = false;
+        rigidbody.bodyType = RigidbodyType2D.Kinematic;
 
-        StartCoroutine(KillSelfAfter(7));
+        StartCoroutine(StopInfluenceAfter(7));
     }
 
-    private IEnumerator KillSelfAfter(int seconds)
+    private IEnumerator StopInfluenceAfter(int seconds)
     {
         yield return new WaitForSeconds(seconds);
+
+        foreach (var voter in votersUnderInfluence)
+        {
+            voter.StopBeingIndifferent();
+        }
+
         Destroy(transform.root.gameObject);
     }
 }

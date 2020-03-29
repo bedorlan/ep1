@@ -10,6 +10,7 @@ public class VoterBehaviour : MonoBehaviour
 
     private int voterId;
     private int playerOwner = -1;
+    private bool indifferent = false;
 
     void Start()
     {
@@ -33,7 +34,7 @@ public class VoterBehaviour : MonoBehaviour
 
     public void TryConvertTo(int playerOwner, bool isLocal)
     {
-        if (this.playerOwner == playerOwner) return;
+        if (this.playerOwner == playerOwner || indifferent) return;
 
         GetComponent<TextMeshPro>().color = Color.gray;
         GetComponent<Jumper>().LastJump();
@@ -44,7 +45,7 @@ public class VoterBehaviour : MonoBehaviour
 
     public void ConvertTo(int player)
     {
-        this.playerOwner = player;
+        playerOwner = player;
         GetComponent<TextMeshPro>().color = Common.playerColors[playerOwner];
         GetComponent<Jumper>().LastJump();
     }
@@ -67,5 +68,18 @@ public class VoterBehaviour : MonoBehaviour
         yield return new WaitForSeconds(whenClaimedClip.length);
 
         Destroy(transform.root.gameObject);
+    }
+
+    internal void BeIndifferent()
+    {
+        indifferent = true;
+        GetComponent<TextMeshPro>().color = Color.gray;
+        playerOwner = -1;
+    }
+
+    internal void StopBeingIndifferent()
+    {
+        indifferent = false;
+        GetComponent<TextMeshPro>().color = Color.white;
     }
 }

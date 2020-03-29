@@ -193,9 +193,9 @@ public class NetworkManager : MonoBehaviour
             var voterId = voter[0].AsInt;
             var voterPositionX = voter[1].AsFloat;
 
-            var newVoter = Instantiate(voterPrefab);
+            var voterPosition = new Vector3(voterPositionX, FLOOR_LEVEL_Y + .3f, 0f);
+            var newVoter = Instantiate(voterPrefab, voterPosition, Quaternion.identity);
             newVoter.GetComponent<VoterBehaviour>().SetId(voterId);
-            newVoter.transform.position = new Vector3(voterPositionX, FLOOR_LEVEL_Y + .3f, 0f);
 
             votersMap.Add(voterId, newVoter);
         }
