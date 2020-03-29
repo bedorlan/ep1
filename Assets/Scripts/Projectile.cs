@@ -12,6 +12,7 @@ public class Projectile : MonoBehaviour
 
     internal bool isLocal;
     internal int playerOwner;
+    internal GameObject targetObject;
 
     public Vector3 AimAtTarget(Transform origin, Vector3 currentTarget, float minVelocity)
     {
@@ -38,16 +39,18 @@ public class Projectile : MonoBehaviour
     }
 
     public void FireProjectile(
-        int playerNumber,
+        int playerNumberOwner,
         bool isLocal,
-        Transform player,
+        Transform playerOrigin,
         Vector3 velocity,
-        bool toTheLeft)
+        bool toTheLeft,
+        GameObject targetObject)
     {
-        playerOwner = playerNumber;
+        playerOwner = playerNumberOwner;
         this.isLocal = isLocal;
+        this.targetObject = targetObject;
 
-        var position = player.position;
+        var position = playerOrigin.position;
         position.y += initialPositionOffsetY;
         transform.position = position;
 
@@ -56,10 +59,15 @@ public class Projectile : MonoBehaviour
         GetComponent<Rigidbody2D>().velocity = velocity;
     }
 
-    public void FireProjectileImmediate(int playerNumber, bool isLocal, Vector3 currentTarget)
+    public void FireProjectileImmediate(
+        int playerOwnerNumber,
+        bool isLocal,
+        Vector3 currentTarget,
+        GameObject targetObject)
     {
-        playerOwner = playerNumber;
+        playerOwner = playerOwnerNumber;
         this.isLocal = isLocal;
+        this.targetObject = targetObject;
         transform.position = currentTarget;
     }
 

@@ -1242,7 +1242,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   projectilePrefab: {fileID: 5286521264718530226, guid: c86de3d4971fc4486b83a07cfd634351,
     type: 3}
-  cooldown: 15
+  cooldown: 17
 --- !u!1 &1137530303
 GameObject:
   m_ObjectHideFlags: 0
@@ -2713,7 +2713,7 @@ PrefabInstance:
     - target: {fileID: 2785558394686738562, guid: 25c99fb72632e423e958d67b4311add8,
         type: 3}
       propertyPath: cooldown
-      value: 15
+      value: 17
       objectReference: {fileID: 0}
     - target: {fileID: 2785558394686738564, guid: 25c99fb72632e423e958d67b4311add8,
         type: 3}

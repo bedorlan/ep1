@@ -20,6 +20,11 @@ public class PlayerBehaviour : MonoBehaviour
     private Vector3 firingTargetPosition;
     private bool isFiring = false;
 
+    internal int GetPlayerNumber()
+    {
+        return playerNumber;
+    }
+
     void Awake()
     {
         rigidbody = GetComponent<Rigidbody2D>();
@@ -82,7 +87,8 @@ public class PlayerBehaviour : MonoBehaviour
             immediateProjectile.GetComponentInChildren<Projectile>().FireProjectileImmediate(
                 playerNumber,
                 isLocal,
-                firingTargetPosition);
+                firingTargetPosition,
+                firingTargetObject);
             firingTargetPosition = Vector3.zero;
             yield break;
         }
@@ -113,7 +119,8 @@ public class PlayerBehaviour : MonoBehaviour
             isLocal,
             transform,
             velocity,
-            IsFacingLeft());
+            IsFacingLeft(),
+            firingTargetObject);
         firingTargetPosition = Vector3.zero;
 
         // wait for animation to finish
@@ -282,6 +289,8 @@ public class PlayerBehaviour : MonoBehaviour
         var validTarget = currentProjectilePrefab.GetComponentInChildren<IProjectile>().CanYouFireAt(position, target);
         if (!validTarget)
         {
+            firingTargetPosition = Vector3.zero;
+            firingTargetObject = null;
             OnNewDestination(position.x);
             return;
         }
