@@ -17,10 +17,10 @@ public class PlayerBehaviour : MonoBehaviour
     private new Rigidbody2D rigidbody;
     private Animator animator;
     private float currentDestination;
-    private Vector3 currentTarget;
+    private Vector3 currentTargetPosition;
     private bool isFiring = false;
 
-    void Start()
+    void Awake()
     {
         rigidbody = GetComponent<Rigidbody2D>();
         animator = GetComponent<Animator>();
@@ -66,9 +66,9 @@ public class PlayerBehaviour : MonoBehaviour
 
     private void tryFireAtCurrentTarget()
     {
-        if (currentTarget == Vector3.zero) return;
+        if (currentTargetPosition == Vector3.zero) return;
 
-        var velocity = currentProjectilePrefab.GetComponentInChildren<Projectile>().AimAtTarget(transform, currentTarget, 0f);
+        var velocity = currentProjectilePrefab.GetComponentInChildren<Projectile>().AimAtTarget(transform, currentTargetPosition, 0f);
         if (velocity == Vector3.zero) return;
 
         StartCoroutine(Fire(currentProjectilePrefab, velocity, false));
@@ -82,24 +82,26 @@ public class PlayerBehaviour : MonoBehaviour
             immediateProjectile.GetComponentInChildren<Projectile>().FireProjectileImmediate(
                 playerNumber,
                 isLocal,
-                currentTarget);
-            currentTarget = Vector3.zero;
+                currentTargetPosition);
+            currentTargetPosition = Vector3.zero;
             yield break;
         }
 
         if (isLocal)
         {
-            var distance = Mathf.Abs(transform.position.x - currentTarget.x);
+            var distance = Mathf.Abs(transform.position.x - currentTargetPosition.x);
             var timeToReach = TIME_ANIMATION_PRE_FIRE + (distance / Mathf.Abs(velocity.x));
             var projectileType = projectileToFire.GetComponentInChildren<Projectile>().projectileTypeId;
-            NetworkManager.singleton.ProjectileFired(playerNumber, currentTarget, timeToReach, projectileType);
+            NetworkManager.singleton.ProjectileFired(playerNumber, currentTargetPosition, timeToReach, projectileType);
         }
 
         isFiring = true;
         animator.SetBool("firing", true);
         stop();
 
-        var targetAtMyRight = currentTarget.x > transform.position.x;
+        Debug.Log("currentTargetPosition=" + currentTargetPosition);
+        Debug.Log("transform.position=" + transform.position);
+        var targetAtMyRight = currentTargetPosition.x > transform.position.x;
         if (IsFacingLeft() && targetAtMyRight || !IsFacingLeft() && !targetAtMyRight)
         {
             Flip();
@@ -114,7 +116,7 @@ public class PlayerBehaviour : MonoBehaviour
             transform,
             velocity,
             IsFacingLeft());
-        currentTarget = Vector3.zero;
+        currentTargetPosition = Vector3.zero;
 
         // wait for animation to finish
         yield return new WaitForSeconds(.35f);
@@ -185,6 +187,7 @@ public class PlayerBehaviour : MonoBehaviour
         if (rigidbody.velocity.x > 0 && facingLeft
             || rigidbody.velocity.x < 0 && !facingLeft)
         {
+            Debug.Log("x=" + rigidbody.velocity.x);
             Flip();
         }
     }
@@ -201,7 +204,7 @@ public class PlayerBehaviour : MonoBehaviour
         return transform.localScale.x > 0;
     }
 
-    public void OnNewDestination(float positionX)
+    private void OnNewDestination(float positionX)
     {
         if (isLocal && isFiring) return;
 
@@ -221,27 +224,27 @@ public class PlayerBehaviour : MonoBehaviour
 
     public void Remote_FireProjectile(GameObject projectile, Vector3 destination, float timeToReach)
     {
-        currentTarget = destination;
+        currentTargetPosition = destination;
         timeToReach -= TIME_ANIMATION_PRE_FIRE;
 
-        var velocity = projectile.GetComponentInChildren<Projectile>().AimAtTargetAnyVelocity(transform, currentTarget);
+        var velocity = projectile.GetComponentInChildren<Projectile>().AimAtTargetAnyVelocity(transform, currentTargetPosition);
         var immediate = timeToReach <= 0;
 
         StartCoroutine(Fire(projectile, velocity, immediate));
     }
 
-    public void ChaseVoter(VoterBehaviour voter)
+    private void ChaseAndFireToPosition(Vector3 position)
     {
         if (isLocal && isFiring) return;
-        currentTarget = voter.transform.position;
+        currentTargetPosition = position;
 
-        var offsetY = transform.position.y - currentTarget.y;
+        var offsetY = transform.position.y - currentTargetPosition.y;
         var maxReach = currentProjectilePrefab.GetComponentInChildren<Projectile>().CalcMaxReach(offsetY) - .1f;
-        var distance = Mathf.Abs(currentTarget.x - transform.position.x);
+        var distance = Mathf.Abs(currentTargetPosition.x - transform.position.x);
         var distanceToMove = distance - maxReach;
         if (distanceToMove <= 0) return;
 
-        distanceToMove *= Mathf.Sign(currentTarget.x - transform.position.x);
+        distanceToMove *= Mathf.Sign(currentTargetPosition.x - transform.position.x);
         var newPositionToFire = transform.position.x + distanceToMove;
         OnNewDestination(newPositionToFire);
     }
@@ -259,6 +262,7 @@ public class PlayerBehaviour : MonoBehaviour
     internal void ChangeProjectile(GameObject projectile)
     {
         currentProjectilePrefab = projectile;
+        stop();
     }
 
     internal void OnVotesChanges(int votes)
@@ -266,5 +270,24 @@ public class PlayerBehaviour : MonoBehaviour
         var votesIndicator = Instantiate(votesChangesIndicatorPrefab);
         votesIndicator.transform.position = transform.position;
         votesIndicator.GetComponent<VotesChangesBehaviour>().Show(votes);
+    }
+
+    private void OnMouseDown()
+    {
+        if (!isLocal)
+        {
+            NetworkManager.singleton.RemotePlayerClicked(playerNumber);
+        }
+    }
+
+    internal void NewObjective(Vector3 position, GameObject target)
+    {
+        var validTarget = currentProjectilePrefab.GetComponentInChildren<IProjectile>().CanYouFireAt(position, target);
+        if (!validTarget)
+        {
+            OnNewDestination(position.x);
+            return;
+        }
+        ChaseAndFireToPosition(position);
     }
 }

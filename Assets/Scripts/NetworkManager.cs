@@ -76,6 +76,7 @@ public class NetworkManager : MonoBehaviour
         }
 
         defaultProjectile = projectilesMap[0].GetComponentInChildren<ButtonProjectileBehaviour>().projectilePrefab;
+        camera.SetActive(false);
     }
 
     private Telepathy.Client client;
@@ -246,9 +247,13 @@ public class NetworkManager : MonoBehaviour
 
     private void ignoreCollisions()
     {
-        Physics2D.IgnoreCollision(localPlayer.GetComponent<Collider2D>(), background.GetComponent<Collider2D>());
-        Physics2D.IgnoreCollision(remotePlayer.GetComponent<Collider2D>(), background.GetComponent<Collider2D>());
-        Physics2D.IgnoreCollision(localPlayer.GetComponent<Collider2D>(), remotePlayer.GetComponent<Collider2D>());
+        foreach (var player in players)
+        {
+            var collider = player.GetComponent<Collider2D>();
+            Physics2D.IgnoreCollision(collider, localPlayer.GetComponent<Collider2D>());
+            Physics2D.IgnoreCollision(collider, remotePlayer.GetComponent<Collider2D>());
+            Physics2D.IgnoreCollision(collider, background.GetComponent<Collider2D>());
+        }
     }
 
     private long timer = -1;
@@ -291,8 +296,18 @@ public class NetworkManager : MonoBehaviour
 
     public void BackgroundClicked(Vector3 position)
     {
-        var playerBehaviour = localPlayer.GetComponent<PlayerBehaviour>();
-        playerBehaviour?.OnNewDestination(position.x);
+        localPlayer.GetComponent<PlayerBehaviour>().NewObjective(position, null);
+    }
+
+    public void VoterClicked(VoterBehaviour voter)
+    {
+        localPlayer.GetComponent<PlayerBehaviour>().NewObjective(voter.transform.root.position, voter.transform.root.gameObject);
+    }
+
+    internal void RemotePlayerClicked(int playerNumber)
+    {
+        //var player = players[playerNumber];
+        //localPlayer.GetComponent<PlayerBehaviour>().ChaseAndFireToPosition(player.transform);
     }
 
     public void NewLocalPlayerDestination(float newDestinationX, float timeToReach)
@@ -300,11 +315,6 @@ public class NetworkManager : MonoBehaviour
         var timeWhenReach = timeToReach2timeWhenReach(timeToReach);
         var msg = string.Format("[{0}, {1}, {2}]", (int)Codes.newPlayerDestination, newDestinationX, timeWhenReach);
         SendNetworkMsg(msg);
-    }
-
-    public void VoterClicked(VoterBehaviour voter)
-    {
-        localPlayer.GetComponent<PlayerBehaviour>().ChaseVoter(voter);
     }
 
     public void ProjectileFired(int playerOwner, Vector3 destination, float timeToReach, int projectileType)

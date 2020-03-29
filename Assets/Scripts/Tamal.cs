@@ -2,8 +2,14 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-public class Tamal : MonoBehaviour
+public class Tamal : MonoBehaviour, IProjectile
 {
+    public bool CanYouFireAt(Vector3 position, GameObject target)
+    {
+        var validTarget = target != null && target.GetComponentInChildren<VoterBehaviour>() != null;
+        return validTarget;
+    }
+
     public void OnTriggerEnter2D(Collider2D other)
     {
         var projectile = gameObject.GetComponent<Projectile>();
