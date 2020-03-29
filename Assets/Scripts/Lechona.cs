@@ -2,8 +2,14 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-public class Lechona : MonoBehaviour
+public class Lechona : MonoBehaviour, IProjectile
 {
+    public bool CanYouFireAt(Vector3 position, GameObject target)
+    {
+        var validTarget = target != null && target.GetComponentInChildren<VoterBehaviour>() != null;
+        return validTarget;
+    }
+
     private List<VoterBehaviour> votersAtRange = new List<VoterBehaviour>();
     private bool onTheFloor = false;
 
