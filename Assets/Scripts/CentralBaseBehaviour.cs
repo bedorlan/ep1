@@ -9,6 +9,12 @@ public class CentralBaseBehaviour : MonoBehaviour, IProjectile
         return true;
     }
 
+    private void Start()
+    {
+        var playerOwner = GetComponent<Projectile>().playerOwner;
+        GetComponent<SpriteRenderer>().color = Common.playerColors[playerOwner];
+    }
+
     private void OnTriggerEnter2D(Collider2D other)
     {
         var floor = other.GetComponent<Floor>();
@@ -16,8 +22,8 @@ public class CentralBaseBehaviour : MonoBehaviour, IProjectile
 
         var rigidbody = GetComponent<Rigidbody2D>();
         rigidbody.velocity = Vector3.zero;
-        rigidbody.bodyType = RigidbodyType2D.Kinematic;
+        rigidbody.bodyType = RigidbodyType2D.Static;
 
-        // disable my collider
+        GetComponent<Collider2D>().enabled = false;
     }
 }
