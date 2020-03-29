@@ -76,4 +76,11 @@ public class Projectile : MonoBehaviour
         var y = offsetY + initialPositionOffsetY;
         return MyMath.CalcMaxReach(projectileVelocity, y);
     }
+
+    private void OnMouseDown()
+    {
+        // clicking projectiles do nothing. perhaps you are trying to move
+        var position = Camera.main.ScreenToWorldPoint(Input.mousePosition);
+        NetworkManager.singleton.BackgroundClicked(position);
+    }
 }
