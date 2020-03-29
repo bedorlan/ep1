@@ -9,13 +9,14 @@ enum Codes {
   newPlayerDestination = 2, // [2, positionX: float, timeWhenReach: long]
   newVoters = 3, // [3, ...voters: [id: int, positionX: float]]
   guessTime = 5, // to server: [5, guessedTime: int], from server: [5, deltaGuess: int]
-  projectileFired = 6, // [(6), (player: int), (destinationVector: [x, y: floats]), (timeWhenReach: long), (projectileType: int)]
+  projectileFired = 6, // [(6), (player: int), (destinationVector: [x, y: floats]), (timeWhenReach: long), (projectileType: int), (targetPlayer?: int)]
   tryConvertVoter = 7, // [(7), (voterId: int), (player: int), (time: long)]
   voterConverted = 8, // [(8), (voterId: int), (player: int)]
   tryClaimVoter = 9, // [(9), (voterId: int)]
   voterClaimed = 10, // [(10), (voterId: int), (player: int)]
   hello = 11, // [(11)]
-  // if code == 50 .. be careful: ctrl + f Codes.guessTime on server
+  tryAddVotes = 12, // [(12), (playerNumber: int), (votes: int)]
+  votesAdded = 13, // [(13), (playerNumber: int), (votes: int)]
 }
 
 const server = net.createServer()
@@ -174,6 +175,7 @@ class Match {
       [Codes.projectileFired]: this.resendToOthers,
       [Codes.tryConvertVoter]: this.votersCentral.TryConvertVoter,
       [Codes.tryClaimVoter]: this.votersCentral.TryClaimVoter,
+      [Codes.tryAddVotes]: this.votersCentral.TryAddVotes,
     } as const
 
     this.players.forEach((player, index) => {
@@ -280,6 +282,17 @@ class VotersCentral {
     voter.claimed = true
 
     const reply = [Codes.voterClaimed, voterId, player]
+    this.players.forEach((it) => {
+      sendTo(it, reply)
+    })
+  }
+
+  public readonly TryAddVotes = (player: number, msg: any[]) => {
+    const [code, playerNumberToAddVotes, votes] = msg
+
+    // todo: count the votes!
+
+    const reply = [Codes.votesAdded, playerNumberToAddVotes, votes]
     this.players.forEach((it) => {
       sendTo(it, reply)
     })

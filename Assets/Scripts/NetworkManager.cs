@@ -12,13 +12,14 @@ enum Codes
     newPlayerDestination = 2, // [2, positionX: float, timeWhenReach: long]
     newVoters = 3, // [3, ...voters: [id: int, positionX: float]]
     guessTime = 5, // to server: [5, guessedTime: int], from server: [5, deltaGuess: int]
-    projectileFired = 6, // [(6), (player: int), (destinationVector: [x, y: floats]), (timeWhenReach: long), (projectileType: int)]
+    projectileFired = 6, // [(6), (player: int), (destinationVector: [x, y: floats]), (timeWhenReach: long), (projectileType: int), (targetPlayer?: int)]
     tryConvertVoter = 7, // [(7), (voterId: int), (player: int), (time: long)]
     voterConverted = 8, // [(8), (voterId: int), (player: int)]
     tryClaimVoter = 9, // [(9), (voterId: int)]
     voterClaimed = 10, // [(10), (voterId: int), (player: int)]
     hello = 11, // [(11)]
-    // if code == 50 .. be careful: ctrl + f Codes.guessTime on server
+    tryAddVotes = 12, // [(12), (playerNumber: int), (votes: int)]
+    votesAdded = 13, // [(13), (playerNumber: int), (votes: int)]
 }
 
 public class NetworkManager : MonoBehaviour
@@ -66,6 +67,7 @@ public class NetworkManager : MonoBehaviour
             { Codes.voterConverted, OnVoterConverted },
             { Codes.voterClaimed, OnVoterClaimed },
             { Codes.hello, OnHello },
+            { Codes.votesAdded, OnVotesAdded },
         };
 
         projectilesMap = new Dictionary<int, GameObject>();
@@ -163,8 +165,6 @@ public class NetworkManager : MonoBehaviour
 
         ignoreCollisions();
 
-        votesCounters[0].GetComponent<VotesCountBehaviour>().SetVotes(0);
-        votesCounters[1].GetComponent<VotesCountBehaviour>().SetVotes(0);
         votesCounters[2].SetActive(false);
         votesCounters[3].SetActive(false);
 
@@ -207,8 +207,9 @@ public class NetworkManager : MonoBehaviour
         var timeWhenReach = data[3].AsLong;
         var timeToReach = timeWhenReach2timeToReach(timeWhenReach);
         var projectileType = data[4].AsInt;
+        var playerTarget = data[5].IsNull ? null : players[data[5].AsInt];
         var projectile = projectilesMap[projectileType].GetComponentInChildren<ButtonProjectileBehaviour>().projectilePrefab;
-        remotePlayer.GetComponent<PlayerBehaviour>().Remote_FireProjectile(projectile, destination, timeToReach);
+        remotePlayer.GetComponent<PlayerBehaviour>().Remote_FireProjectile(projectile, destination, timeToReach, playerTarget);
     }
 
     private void OnVoterConverted(JSONNode data)
@@ -226,8 +227,17 @@ public class NetworkManager : MonoBehaviour
         var voter = votersMap[voterId];
         voter.GetComponent<VoterBehaviour>().ClaimedBy(player);
 
-        votesCounters[player].GetComponent<VotesCountBehaviour>().PlusOneVote();
+        votesCounters[player].GetComponent<VotesCountBehaviour>().AddVotes(1);
         players[player].GetComponent<PlayerBehaviour>().OnVotesChanges(1);
+    }
+
+    private void OnVotesAdded(JSONNode data)
+    {
+        var player = data[1].AsInt;
+        var votes = data[2].AsInt;
+
+        votesCounters[player].GetComponent<VotesCountBehaviour>().AddVotes(votes);
+        players[player].GetComponent<PlayerBehaviour>().OnVotesChanges(votes);
     }
 
     private void OnDisconnected()
@@ -301,12 +311,14 @@ public class NetworkManager : MonoBehaviour
 
     public void VoterClicked(VoterBehaviour voter)
     {
-        localPlayer.GetComponent<PlayerBehaviour>().NewObjective(voter.transform.root.position, voter.transform.root.gameObject);
+        var root = voter.transform.root;
+        localPlayer.GetComponent<PlayerBehaviour>().NewObjective(root.position, root.gameObject);
     }
 
     internal void RemotePlayerClicked(GameObject player)
     {
-        localPlayer.GetComponent<PlayerBehaviour>().NewObjective(player.transform.position, player);
+        var root = player.transform.root;
+        localPlayer.GetComponent<PlayerBehaviour>().NewObjective(root.position, root.gameObject);
     }
 
     public void NewLocalPlayerDestination(float newDestinationX, float timeToReach)
@@ -316,18 +328,21 @@ public class NetworkManager : MonoBehaviour
         SendNetworkMsg(msg);
     }
 
-    public void ProjectileFired(int playerOwner, Vector3 destination, float timeToReach, int projectileType)
+    public void ProjectileFired(int playerOwner, Vector3 destination, float timeToReach, int projectileType, GameObject targetObject)
     {
-        // [(6), (player: int), (destinationVector: [x, y: floats]), (timeWhenReach: long), (projectileType: int)]
+        var playerObject = targetObject?.GetComponent<PlayerBehaviour>();
+        var playerTarget = playerObject?.GetPlayerNumber().ToString() ?? "null";
+
         var destinationMsg = vector2msg(destination);
         var timeWhenReach = timeToReach2timeWhenReach(timeToReach);
         var msg = string.Format(
-            "[{0}, {1}, {2}, {3}, {4}]",
+            "[{0}, {1}, {2}, {3}, {4}, {5}]",
             (int)Codes.projectileFired,
             playerNumber,
             destinationMsg,
             timeWhenReach,
-            projectileType);
+            projectileType,
+            playerTarget);
         SendNetworkMsg(msg);
 
         var projectile = projectilesMap[projectileType];
@@ -374,6 +389,16 @@ public class NetworkManager : MonoBehaviour
         var draw = votes1 == votes2;
         var iWin = winner == playerNumber;
         OnMatchEnd?.Invoke(draw, iWin);
+    }
+
+    internal void AddVotes(int playerNumber, int votes)
+    {
+        var msg = string.Format(
+            "[{0}, {1}, {2}]",
+            (int)Codes.tryAddVotes,
+            playerNumber,
+            votes);
+        SendNetworkMsg(msg);
     }
 
     #endregion

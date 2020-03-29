@@ -7,7 +7,11 @@ public class BillboardProjectileBehaviour : MonoBehaviour, IProjectile
 {
     public GameObject playerFace;
 
+    private bool isLocal;
+    private PlayerBehaviour playerTarget;
+    private int playerTargetNumber;
     private HashSet<VoterBehaviour> votersUnderInfluence = new HashSet<VoterBehaviour>();
+    private BoxCollider2D myCollider;
 
     public bool CanYouFireAt(Vector3 position, GameObject target)
     {
@@ -17,9 +21,13 @@ public class BillboardProjectileBehaviour : MonoBehaviour, IProjectile
 
     private void Start()
     {
-        var targetObject = GetComponent<Projectile>().targetObject;
-        var playerTarget = targetObject.GetComponent<PlayerBehaviour>();
-        var playerTargetNumber = playerTarget.GetPlayerNumber();
+        var projectile = GetComponent<Projectile>();
+        var targetObject = projectile.targetObject;
+        isLocal = projectile.isLocal;
+        playerTarget = targetObject.GetComponent<PlayerBehaviour>();
+        playerTargetNumber = playerTarget.GetPlayerNumber();
+        myCollider = GetComponent<BoxCollider2D>();
+
         var color = Common.playerColors[playerTargetNumber];
         playerFace.GetComponent<SpriteRenderer>().color = color;
     }
@@ -42,6 +50,7 @@ public class BillboardProjectileBehaviour : MonoBehaviour, IProjectile
         rigidbody.bodyType = RigidbodyType2D.Kinematic;
 
         StartCoroutine(StopInfluenceAfter(7));
+        if (isLocal) StartCoroutine(SubstractTargetPlayerVotes());
     }
 
     private IEnumerator StopInfluenceAfter(int seconds)
@@ -53,6 +62,18 @@ public class BillboardProjectileBehaviour : MonoBehaviour, IProjectile
             voter.StopBeingIndifferent();
         }
 
+        StopAllCoroutines();
         Destroy(transform.root.gameObject);
+    }
+
+    private IEnumerator SubstractTargetPlayerVotes()
+    {
+        while (true)
+        {
+            var atRange = myCollider.bounds.Contains(playerTarget.transform.root.position);
+            if (atRange) playerTarget.AddVotes(-1);
+
+            yield return new WaitForSeconds(.5f);
+        }
     }
 }

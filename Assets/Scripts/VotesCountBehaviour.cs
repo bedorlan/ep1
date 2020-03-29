@@ -19,15 +19,16 @@ public class VotesCountBehaviour : MonoBehaviour
         SetVotes(votes);
     }
 
-    internal void SetVotes(int votes)
+    private void SetVotes(int votes)
     {
         var text = string.Format("{0} {1}<size=40%>,000</size>", Common.MAN_CODE, votes.ToString());
         textComponent.text = text;
     }
 
-    internal void PlusOneVote()
+    internal void AddVotes(int votes)
     {
-        SetVotes(++votes);
+        this.votes += votes;
+        SetVotes(this.votes);
     }
 
     internal int GetVotes()

@@ -89,6 +89,7 @@ public class PlayerBehaviour : MonoBehaviour
                 isLocal,
                 firingTargetPosition,
                 firingTargetObject);
+            firingTargetObject = null;
             firingTargetPosition = Vector3.zero;
             yield break;
         }
@@ -98,7 +99,7 @@ public class PlayerBehaviour : MonoBehaviour
             var distance = Mathf.Abs(transform.position.x - firingTargetPosition.x);
             var timeToReach = TIME_ANIMATION_PRE_FIRE + (distance / Mathf.Abs(velocity.x));
             var projectileType = projectileToFire.GetComponentInChildren<Projectile>().projectileTypeId;
-            NetworkManager.singleton.ProjectileFired(playerNumber, firingTargetPosition, timeToReach, projectileType);
+            NetworkManager.singleton.ProjectileFired(playerNumber, firingTargetPosition, timeToReach, projectileType, firingTargetObject);
         }
 
         isFiring = true;
@@ -111,7 +112,6 @@ public class PlayerBehaviour : MonoBehaviour
             Flip();
         }
 
-        // wait for animation to raise hands
         yield return new WaitForSeconds(TIME_ANIMATION_PRE_FIRE);
         var newProjectile = Instantiate(projectileToFire);
         newProjectile.GetComponentInChildren<Projectile>().FireProjectile(
@@ -121,9 +121,9 @@ public class PlayerBehaviour : MonoBehaviour
             velocity,
             IsFacingLeft(),
             firingTargetObject);
+        firingTargetObject = null;
         firingTargetPosition = Vector3.zero;
 
-        // wait for animation to finish
         yield return new WaitForSeconds(.35f);
         animator.SetBool("firing", false);
         isFiring = false;
@@ -226,8 +226,9 @@ public class PlayerBehaviour : MonoBehaviour
         moveToCurrentDestination(timeToReach);
     }
 
-    public void Remote_FireProjectile(GameObject projectile, Vector3 destination, float timeToReach)
+    public void Remote_FireProjectile(GameObject projectile, Vector3 destination, float timeToReach, GameObject targetObject)
     {
+        firingTargetObject = targetObject;
         firingTargetPosition = destination;
         timeToReach -= TIME_ANIMATION_PRE_FIRE;
 
@@ -271,8 +272,9 @@ public class PlayerBehaviour : MonoBehaviour
 
     internal void OnVotesChanges(int votes)
     {
-        var votesIndicator = Instantiate(votesChangesIndicatorPrefab);
-        votesIndicator.transform.position = transform.position;
+        var position = transform.position;
+        position.y += 3f;
+        var votesIndicator = Instantiate(votesChangesIndicatorPrefab, position, Quaternion.identity);
         votesIndicator.GetComponent<VotesChangesBehaviour>().Show(votes);
     }
 
@@ -296,5 +298,10 @@ public class PlayerBehaviour : MonoBehaviour
         }
         firingTargetObject = target;
         ChaseAndFireToPosition(position);
+    }
+
+    internal void AddVotes(int votes)
+    {
+        NetworkManager.singleton.AddVotes(playerNumber, votes);
     }
 }
