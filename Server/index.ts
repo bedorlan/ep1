@@ -177,7 +177,7 @@ class Match {
   private votersCentral: VotersCentral
 
   constructor(players: Duplex[]) {
-    this.players = lodash.shuffle(players)
+    this.players = players = lodash.shuffle(players)
     this.votersCentral = new VotersCentral(players)
   }
 
@@ -190,7 +190,7 @@ class Match {
 
     const codesMap: { [code in Codes]?: (player: number, msg: any[]) => void } = {
       [Codes.newPlayerDestination]: this.resendToOthers,
-      [Codes.projectileFired]: this.resendToOthers,
+      [Codes.projectileFired]: this.votersCentral.ProjectileFired,
       [Codes.tryConvertVoter]: this.votersCentral.TryConvertVoter,
       [Codes.tryClaimVoter]: this.votersCentral.TryClaimVoter,
       [Codes.tryAddVotes]: this.votersCentral.TryAddVotes,
@@ -240,34 +240,51 @@ interface Voter {
 }
 
 class VotersCentral {
-  private newVotersInterval?: NodeJS.Timeout
+  private myInterval?: NodeJS.Timeout
 
-  // the id is the index, the position the value
-  private voters: Voter[] = []
   private voterSeq = 0
+  private readonly voters: Voter[] = []
+  private readonly centralBases: (number | undefined)[]
 
-  constructor(private players: Duplex[]) {}
+  constructor(private players: Duplex[]) {
+    this.centralBases = Array(this.players.length).fill(undefined)
+  }
 
   public Start() {
-    this.newVotersInterval = setInterval(this.SendVotersPack, 1000)
+    this.myInterval = setInterval(this.PeriodicTasks, 1000)
   }
 
   public Stop() {
-    if (this.newVotersInterval) clearInterval(this.newVotersInterval)
-    this.newVotersInterval = undefined
+    if (this.myInterval) clearInterval(this.myInterval)
+    this.myInterval = undefined
+  }
+
+  private readonly PeriodicTasks = () => {
+    this.SendVotersPack()
+    this.SendVotersToCentrals()
   }
 
   private readonly SendVotersPack = () => {
     const votesPerSecond = Math.ceil(this.players.length / 2)
-    const votersToSend: [number, number][] = []
-    for (let i = 0; i < votesPerSecond; ++i) {
-      const positionX = GenerateVoterPositionX()
-      const voter = { positionX, lastHitTime: 0, player: -1, claimed: false }
-      this.voters.push(voter)
-      votersToSend.push([this.voterSeq, positionX])
-      ++this.voterSeq
-    }
+    const votersToSend = lodash
+      .times(votesPerSecond)
+      .map(GenerateVoterPositionX)
+      .map(this.GenerateVoterCloseTo)
 
+    this.SendVotersToAll(votersToSend)
+  }
+
+  private readonly SendVotersToCentrals = () => {
+    this.centralBases.forEach((positionX, player) => {
+      if (positionX === undefined) return
+      if (Math.random() < 0.7) return
+
+      var voter = this.GenerateVoterCloseTo(positionX)
+      this.SendVoterConverted(player, voter)
+    })
+  }
+
+  private SendVotersToAll(votersToSend: (readonly [number, number])[]) {
     const msg = [Codes.newVoters, ...votersToSend]
     this.players.forEach((player) => {
       sendTo(player, msg)
@@ -314,6 +331,41 @@ class VotersCentral {
     this.players.forEach((it) => {
       sendTo(it, reply)
     })
+  }
+
+  public readonly ProjectileFired = (player: number, msg: any[]) => {
+    const [code, playerOwner, destination, timeWhenReach, projectileType, targetPlayer] = msg
+
+    this.players
+      .filter((_, index) => index !== playerOwner)
+      .forEach((other) => {
+        sendTo(other, msg)
+      })
+
+    const CENTRAL_BASE_PROJECTILE_TYPE = 3
+    if (projectileType !== CENTRAL_BASE_PROJECTILE_TYPE) return
+
+    const [centralPositionX, centralPositionY] = destination
+    this.centralBases[playerOwner] = centralPositionX
+
+    lodash
+      .times(3)
+      .fill(centralPositionX)
+      .map(this.GenerateVoterCloseTo)
+      .forEach(this.SendVoterConverted.bind(null, playerOwner))
+  }
+
+  private readonly SendVoterConverted = (playerOwner: number, voter: readonly [number, number]) => {
+    this.SendVotersToAll([voter])
+    this.TryConvertVoter(playerOwner, [Codes.tryConvertVoter, voter[0], playerOwner, Date.now()])
+  }
+
+  private readonly GenerateVoterCloseTo = (x: number) => {
+    const positionX = x + (Math.random() * 20.0 - 10.0)
+    const voter = { positionX, lastHitTime: 0, player: -1, claimed: false }
+
+    this.voters.push(voter)
+    return [this.voterSeq++, positionX] as const
   }
 }
 
