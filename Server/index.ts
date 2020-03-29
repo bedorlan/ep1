@@ -6,7 +6,7 @@ import { PassThrough, Readable, Writable } from 'stream'
 enum Codes {
   noop = 0, // [0]
   start = 1, // [(1), (playerNumber: int), (totalNumberOfPlayers: int)]
-  newPlayerDestination = 2, // [2, positionX: float, timeWhenReach: long]
+  newPlayerDestination = 2, // [(2), (positionX: float), (timeWhenReach: long), (playerNumber: int)]
   newVoters = 3, // [3, ...voters: [id: int, positionX: float]]
   guessTime = 5, // to server: [5, guessedTime: int], from server: [5, deltaGuess: int]
   projectileFired = 6, // [(6), (player: int), (destinationVector: [x, y: floats]), (timeWhenReach: long), (projectileType: int), (targetPlayer?: int)]

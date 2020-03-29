@@ -9,7 +9,7 @@ enum Codes
 {
     noop = 0, // [0]
     start = 1, // [(1), (playerNumber: int), (totalNumberOfPlayers: int)]
-    newPlayerDestination = 2, // [2, positionX: float, timeWhenReach: long]
+    newPlayerDestination = 2, // [(2), (positionX: float), (timeWhenReach: long), (playerNumber: int)]
     newVoters = 3, // [3, ...voters: [id: int, positionX: float]]
     guessTime = 5, // to server: [5, guessedTime: int], from server: [5, deltaGuess: int]
     projectileFired = 6, // [(6), (player: int), (destinationVector: [x, y: floats]), (timeWhenReach: long), (projectileType: int), (targetPlayer?: int)]
@@ -42,7 +42,6 @@ public class NetworkManager : MonoBehaviour
     private GameObject defaultProjectile;
 
     private GameObject localPlayer;
-    private GameObject remotePlayer;
     private List<GameObject> players = new List<GameObject>();
 
 
@@ -151,27 +150,35 @@ public class NetworkManager : MonoBehaviour
     private void StartGame(JSONNode data)
     {
         playerNumber = data[1].AsInt;
-        Debug.Log("myPlayer=" + playerNumber);
+        var numberOfPlayers = data[2].AsInt;
 
-        localPlayer = Instantiate(playerPrefab);
-        camera.GetComponent<MainCamera>().objectToFollow = localPlayer;
-        localPlayer.GetComponent<PlayerBehaviour>().Initialize(playerNumber, true);
+        for (var i = 0; i < numberOfPlayers; ++i)
+        {
+            var player = Instantiate(playerPrefab);
+            var isLocal = this.playerNumber == i;
+            player.GetComponent<PlayerBehaviour>().Initialize(i, isLocal);
 
-        remotePlayer = Instantiate(playerPrefab);
-        remotePlayer.GetComponent<PlayerBehaviour>().Initialize(playerNumber == 0 ? 1 : 0, false);
+            if (isLocal)
+            {
+                localPlayer = player;
+                camera.GetComponent<MainCamera>().objectToFollow = localPlayer;
+            }
 
-        players.Add(playerNumber == 0 ? localPlayer : remotePlayer);
-        players.Add(playerNumber == 1 ? localPlayer : remotePlayer);
+            players.Add(player);
+        }
 
         ignoreCollisions();
 
-        votesCounters[2].SetActive(false);
-        votesCounters[3].SetActive(false);
+        const int MAX_NUMBER_OF_PLAYERS = 4;
+        for (var i = numberOfPlayers; i < MAX_NUMBER_OF_PLAYERS; ++i)
+        {
+            votesCounters[i].SetActive(false);
+        }
 
-        OnMatchReady?.Invoke();
-        camera.SetActive(true);
         ProjectileSelected(defaultProjectile);
+        OnMatchReady?.Invoke();
 
+        camera.SetActive(true);
         TimerBehaviour.singleton.StartTimer();
     }
 
@@ -179,6 +186,8 @@ public class NetworkManager : MonoBehaviour
     {
         var newDestination = data[1].AsFloat;
         var timeWhenReach = data[2].AsLong;
+        var remotePlayerNumber = data[3].AsInt;
+        var remotePlayer = players[remotePlayerNumber];
         var timeToReach = timeWhenReach2timeToReach(timeWhenReach);
         remotePlayer.GetComponent<PlayerBehaviour>().Remote_NewDestination(newDestination, timeToReach);
     }
@@ -203,12 +212,14 @@ public class NetworkManager : MonoBehaviour
 
     private void OnProjectileFired(JSONNode data)
     {
+        var remotePlayerNumber = data[1].AsInt;
         var destination = new Vector3(data[2].AsArray[0].AsFloat, data[2].AsArray[1].AsFloat, 0f);
         var timeWhenReach = data[3].AsLong;
         var timeToReach = timeWhenReach2timeToReach(timeWhenReach);
         var projectileType = data[4].AsInt;
         var playerTarget = data[5].IsNull ? null : players[data[5].AsInt];
         var projectile = projectilesMap[projectileType].GetComponentInChildren<ButtonProjectileBehaviour>().projectilePrefab;
+        var remotePlayer = players[remotePlayerNumber];
         remotePlayer.GetComponent<PlayerBehaviour>().Remote_FireProjectile(projectile, destination, timeToReach, playerTarget);
     }
 
@@ -260,9 +271,12 @@ public class NetworkManager : MonoBehaviour
         foreach (var player in players)
         {
             var collider = player.GetComponent<Collider2D>();
-            Physics2D.IgnoreCollision(collider, localPlayer.GetComponent<Collider2D>());
-            Physics2D.IgnoreCollision(collider, remotePlayer.GetComponent<Collider2D>());
             Physics2D.IgnoreCollision(collider, background.GetComponent<Collider2D>());
+
+            foreach (var remotePlayer in players)
+            {
+                Physics2D.IgnoreCollision(collider, remotePlayer.GetComponent<Collider2D>());
+            }
         }
     }
 
@@ -324,7 +338,11 @@ public class NetworkManager : MonoBehaviour
     public void NewLocalPlayerDestination(float newDestinationX, float timeToReach)
     {
         var timeWhenReach = timeToReach2timeWhenReach(timeToReach);
-        var msg = string.Format("[{0}, {1}, {2}]", (int)Codes.newPlayerDestination, newDestinationX, timeWhenReach);
+        var msg = string.Format("[{0}, {1}, {2}, {3}]",
+            (int)Codes.newPlayerDestination,
+            newDestinationX,
+            timeWhenReach,
+            playerNumber);
         SendNetworkMsg(msg);
     }
 
@@ -338,7 +356,7 @@ public class NetworkManager : MonoBehaviour
         var msg = string.Format(
             "[{0}, {1}, {2}, {3}, {4}, {5}]",
             (int)Codes.projectileFired,
-            playerNumber,
+            playerOwner,
             destinationMsg,
             timeWhenReach,
             projectileType,
