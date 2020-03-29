@@ -304,10 +304,9 @@ public class NetworkManager : MonoBehaviour
         localPlayer.GetComponent<PlayerBehaviour>().NewObjective(voter.transform.root.position, voter.transform.root.gameObject);
     }
 
-    internal void RemotePlayerClicked(int playerNumber)
+    internal void RemotePlayerClicked(GameObject player)
     {
-        //var player = players[playerNumber];
-        //localPlayer.GetComponent<PlayerBehaviour>().ChaseAndFireToPosition(player.transform);
+        localPlayer.GetComponent<PlayerBehaviour>().NewObjective(player.transform.position, player);
     }
 
     public void NewLocalPlayerDestination(float newDestinationX, float timeToReach)

@@ -8,16 +8,16 @@ public class PlayerBehaviour : MonoBehaviour
     const float VELOCITY_RUNNING = 10f;
     const float TIME_ANIMATION_PRE_FIRE = .15f;
 
-    // todo: privatize this v
-    public GameObject currentProjectilePrefab;
+    public GameObject currentProjectilePrefab; // todo: privatize this <
     public GameObject votesChangesIndicatorPrefab;
 
     private int playerNumber;
     private bool isLocal;
     private new Rigidbody2D rigidbody;
     private Animator animator;
-    private float currentDestination;
-    private Vector3 currentTargetPosition;
+    private float movingDestination;
+    private GameObject firingTargetObject;
+    private Vector3 firingTargetPosition;
     private bool isFiring = false;
 
     void Awake()
@@ -66,9 +66,9 @@ public class PlayerBehaviour : MonoBehaviour
 
     private void tryFireAtCurrentTarget()
     {
-        if (currentTargetPosition == Vector3.zero) return;
+        if (firingTargetPosition == Vector3.zero) return;
 
-        var velocity = currentProjectilePrefab.GetComponentInChildren<Projectile>().AimAtTarget(transform, currentTargetPosition, 0f);
+        var velocity = currentProjectilePrefab.GetComponentInChildren<Projectile>().AimAtTarget(transform, firingTargetPosition, 0f);
         if (velocity == Vector3.zero) return;
 
         StartCoroutine(Fire(currentProjectilePrefab, velocity, false));
@@ -82,26 +82,24 @@ public class PlayerBehaviour : MonoBehaviour
             immediateProjectile.GetComponentInChildren<Projectile>().FireProjectileImmediate(
                 playerNumber,
                 isLocal,
-                currentTargetPosition);
-            currentTargetPosition = Vector3.zero;
+                firingTargetPosition);
+            firingTargetPosition = Vector3.zero;
             yield break;
         }
 
         if (isLocal)
         {
-            var distance = Mathf.Abs(transform.position.x - currentTargetPosition.x);
+            var distance = Mathf.Abs(transform.position.x - firingTargetPosition.x);
             var timeToReach = TIME_ANIMATION_PRE_FIRE + (distance / Mathf.Abs(velocity.x));
             var projectileType = projectileToFire.GetComponentInChildren<Projectile>().projectileTypeId;
-            NetworkManager.singleton.ProjectileFired(playerNumber, currentTargetPosition, timeToReach, projectileType);
+            NetworkManager.singleton.ProjectileFired(playerNumber, firingTargetPosition, timeToReach, projectileType);
         }
 
         isFiring = true;
         animator.SetBool("firing", true);
         stop();
 
-        Debug.Log("currentTargetPosition=" + currentTargetPosition);
-        Debug.Log("transform.position=" + transform.position);
-        var targetAtMyRight = currentTargetPosition.x > transform.position.x;
+        var targetAtMyRight = firingTargetPosition.x > transform.position.x;
         if (IsFacingLeft() && targetAtMyRight || !IsFacingLeft() && !targetAtMyRight)
         {
             Flip();
@@ -116,7 +114,7 @@ public class PlayerBehaviour : MonoBehaviour
             transform,
             velocity,
             IsFacingLeft());
-        currentTargetPosition = Vector3.zero;
+        firingTargetPosition = Vector3.zero;
 
         // wait for animation to finish
         yield return new WaitForSeconds(.35f);
@@ -132,24 +130,24 @@ public class PlayerBehaviour : MonoBehaviour
             return;
         }
 
-        var distance = Mathf.Abs(transform.position.x - currentDestination);
+        var distance = Mathf.Abs(transform.position.x - movingDestination);
         var velocityToReach = distance / timeToReach;
 
         var newVelocityX = Mathf.Max(VELOCITY_RUNNING, velocityToReach);
-        if (currentDestination < transform.position.x) newVelocityX *= -1;
+        if (movingDestination < transform.position.x) newVelocityX *= -1;
         setVelocityX(newVelocityX);
     }
 
     private void teletransport()
     {
-        var toTheRight = currentDestination > transform.position.x;
+        var toTheRight = movingDestination > transform.position.x;
         if (toTheRight && IsFacingLeft() || !toTheRight && !IsFacingLeft())
         {
             Flip();
         }
 
         var justGoThere = transform.position;
-        justGoThere.x = currentDestination;
+        justGoThere.x = movingDestination;
         transform.position = justGoThere;
 
         stop();
@@ -157,7 +155,7 @@ public class PlayerBehaviour : MonoBehaviour
 
     private void stopWhenArriveToDestination()
     {
-        var distanceToDestination = currentDestination - transform.position.x;
+        var distanceToDestination = movingDestination - transform.position.x;
         var direction = Mathf.Sign(rigidbody.velocity.x);
         if (direction > 0 && distanceToDestination <= 0
             || direction < 0 && distanceToDestination >= 0)
@@ -168,7 +166,7 @@ public class PlayerBehaviour : MonoBehaviour
 
     private void stop()
     {
-        currentDestination = 0f;
+        movingDestination = 0f;
         setVelocityX(0);
     }
 
@@ -187,7 +185,6 @@ public class PlayerBehaviour : MonoBehaviour
         if (rigidbody.velocity.x > 0 && facingLeft
             || rigidbody.velocity.x < 0 && !facingLeft)
         {
-            Debug.Log("x=" + rigidbody.velocity.x);
             Flip();
         }
     }
@@ -208,26 +205,26 @@ public class PlayerBehaviour : MonoBehaviour
     {
         if (isLocal && isFiring) return;
 
-        currentDestination = positionX;
+        movingDestination = positionX;
         moveToCurrentDestination(float.MaxValue);
 
-        var distance = Mathf.Abs(currentDestination - transform.position.x);
+        var distance = Mathf.Abs(movingDestination - transform.position.x);
         var timeToReach = distance / VELOCITY_RUNNING;
-        NetworkManager.singleton.NewLocalPlayerDestination(currentDestination, timeToReach);
+        NetworkManager.singleton.NewLocalPlayerDestination(movingDestination, timeToReach);
     }
 
     public void Remote_NewDestination(float newDestination, float timeToReach)
     {
-        currentDestination = newDestination;
+        movingDestination = newDestination;
         moveToCurrentDestination(timeToReach);
     }
 
     public void Remote_FireProjectile(GameObject projectile, Vector3 destination, float timeToReach)
     {
-        currentTargetPosition = destination;
+        firingTargetPosition = destination;
         timeToReach -= TIME_ANIMATION_PRE_FIRE;
 
-        var velocity = projectile.GetComponentInChildren<Projectile>().AimAtTargetAnyVelocity(transform, currentTargetPosition);
+        var velocity = projectile.GetComponentInChildren<Projectile>().AimAtTargetAnyVelocity(transform, firingTargetPosition);
         var immediate = timeToReach <= 0;
 
         StartCoroutine(Fire(projectile, velocity, immediate));
@@ -236,15 +233,15 @@ public class PlayerBehaviour : MonoBehaviour
     private void ChaseAndFireToPosition(Vector3 position)
     {
         if (isLocal && isFiring) return;
-        currentTargetPosition = position;
+        firingTargetPosition = position;
 
-        var offsetY = transform.position.y - currentTargetPosition.y;
+        var offsetY = transform.position.y - firingTargetPosition.y;
         var maxReach = currentProjectilePrefab.GetComponentInChildren<Projectile>().CalcMaxReach(offsetY) - .1f;
-        var distance = Mathf.Abs(currentTargetPosition.x - transform.position.x);
+        var distance = Mathf.Abs(firingTargetPosition.x - transform.position.x);
         var distanceToMove = distance - maxReach;
         if (distanceToMove <= 0) return;
 
-        distanceToMove *= Mathf.Sign(currentTargetPosition.x - transform.position.x);
+        distanceToMove *= Mathf.Sign(firingTargetPosition.x - transform.position.x);
         var newPositionToFire = transform.position.x + distanceToMove;
         OnNewDestination(newPositionToFire);
     }
@@ -276,7 +273,7 @@ public class PlayerBehaviour : MonoBehaviour
     {
         if (!isLocal)
         {
-            NetworkManager.singleton.RemotePlayerClicked(playerNumber);
+            NetworkManager.singleton.RemotePlayerClicked(transform.root.gameObject);
         }
     }
 
@@ -288,6 +285,7 @@ public class PlayerBehaviour : MonoBehaviour
             OnNewDestination(position.x);
             return;
         }
+        firingTargetObject = target;
         ChaseAndFireToPosition(position);
     }
 }
