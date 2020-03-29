@@ -15,6 +15,11 @@ public class CooldownBehaviour : MonoBehaviour
     internal IEnumerator StartCooldown(int cooldown)
     {
         if (cooldown == 0) yield break;
+        if (cooldown == -1)
+        {
+            // never cooldown
+            yield return new WaitForSeconds(float.MaxValue);
+        }
 
         textUI.enabled = true;
         while (cooldown > 0)
