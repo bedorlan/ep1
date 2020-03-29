@@ -32,7 +32,7 @@ public class NetworkManager : MonoBehaviour
     public GameObject voterPrefab;
     public new GameObject camera;
     public GameObject background;
-    public List<GameObject> projectilePrefabs;
+    public List<GameObject> projectileButtons;
     public List<GameObject> votesCounters;
 
     private int playerNumber;
@@ -70,7 +70,7 @@ public class NetworkManager : MonoBehaviour
         };
 
         projectilesMap = new Dictionary<int, GameObject>();
-        foreach (var projectilePrefab in projectilePrefabs)
+        foreach (var projectilePrefab in projectileButtons)
         {
             var typeId = projectilePrefab.GetComponentInChildren<ButtonProjectileBehaviour>().GetProjectileTypeId();
             projectilesMap.Add(typeId, projectilePrefab);
@@ -178,10 +178,25 @@ public class NetworkManager : MonoBehaviour
         }
 
         ProjectileSelected(defaultProjectile);
+
+        projectileButtons[1].SetActive(false);
+        projectileButtons[2].SetActive(false);
+        projectileButtons[3].SetActive(false);
+        StartCoroutine(ActiveProjectilesDelayed());
+
         OnMatchReady?.Invoke();
 
         camera.SetActive(true);
         TimerBehaviour.singleton.StartTimer();
+    }
+
+    private IEnumerator ActiveProjectilesDelayed()
+    {
+        for (var i = 1; i < 4; ++i)
+        {
+            yield return new WaitForSeconds(30);
+            projectileButtons[i].SetActive(true);
+        }
     }
 
     private void OnRemoteNewDestination(JSONNode data)
