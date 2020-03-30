@@ -20,6 +20,7 @@ enum Codes
     hello = 11, // [(11)]
     tryAddVotes = 12, // [(12), (playerNumber: int), (votes: int)]
     votesAdded = 13, // [(13), (playerNumber: int), (votes: int)]
+    log = 14, // [(14), (condition: string), (stackTrace: string), (type: string)]
 }
 
 public class NetworkManager : MonoBehaviour
@@ -145,8 +146,24 @@ public class NetworkManager : MonoBehaviour
         // yay!
         // should i validate the server somehow?
 
+        Application.logMessageReceived += Application_logMessageReceived;
+
         OnConnection?.Invoke(true);
         guessServerTime();
+    }
+
+    private void Application_logMessageReceived(string condition, string stackTrace, LogType type)
+    {
+        if (client == null || !client.Connected) return;
+
+        var array = new JSONArray();
+        array.Add(new JSONNumber((int)Codes.log));
+        array.Add(new JSONString(condition));
+        array.Add(new JSONString(stackTrace));
+        array.Add(new JSONString(type.ToString()));
+
+        var msg = array.ToString();
+        SendNetworkMsg(msg);
     }
 
     private void StartGame(JSONNode data)

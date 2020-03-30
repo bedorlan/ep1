@@ -17,6 +17,7 @@ enum Codes {
   hello = 11, // [(11)]
   tryAddVotes = 12, // [(12), (playerNumber: int), (votes: int)]
   votesAdded = 13, // [(13), (playerNumber: int), (votes: int)]
+  log = 14, // [(14), (condition: string), (stackTrace: string), (type: string)]
 }
 
 const MAP_WIDTH = 200
@@ -197,6 +198,7 @@ class Match {
       [Codes.tryConvertVoter]: this.votersCentral.TryConvertVoter,
       [Codes.tryClaimVoter]: this.votersCentral.TryClaimVoter,
       [Codes.tryAddVotes]: this.votersCentral.TryAddVotes,
+      [Codes.log]: this.logReceived,
     } as const
 
     this.players.forEach((player, index) => {
@@ -224,6 +226,10 @@ class Match {
       .forEach((other) => {
         sendTo(other, msg)
       })
+  }
+
+  private readonly logReceived = (player: number, msg: any[]) => {
+    console.info({ player, msg })
   }
 
   private readonly Stop = () => {
