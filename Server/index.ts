@@ -116,7 +116,8 @@ function tryStartMatch(timeout?: boolean) {
   if ((!timeout && waitingQueue.length < 4) || (timeout && waitingQueue.length < 2)) {
     if (!waitingForPlayersTimeout || timeout) {
       console.info('not enough players. waiting')
-      waitingForPlayersTimeout = setTimeout(tryStartMatch.bind(null, true), 60000)
+      const waitTime = process.env.LOBBY_WAIT_TIME ? Number.parseInt(process.env.LOBBY_WAIT_TIME) : 60000
+      waitingForPlayersTimeout = setTimeout(tryStartMatch.bind(null, true), waitTime)
     }
     return
   }
@@ -162,7 +163,7 @@ function matchOver(players: typeof waitingQueue, err: any) {
   })
 }
 
-const PORT = process.env.PORT || 7777
+const PORT = process.env.PORT ? Number.parseInt(process.env.PORT) : 7777
 
 server.on('listening', () => {
   console.info(`listening on port ${PORT}`)
