@@ -12,6 +12,7 @@ public class BillboardProjectileBehaviour : MonoBehaviour, IProjectile
     private int playerTargetNumber;
     private HashSet<VoterBehaviour> votersUnderInfluence = new HashSet<VoterBehaviour>();
     private BoxCollider2D myCollider;
+    private bool influencing = false;
 
     public bool CanYouFireAt(Vector3 position, GameObject target)
     {
@@ -43,37 +44,38 @@ public class BillboardProjectileBehaviour : MonoBehaviour, IProjectile
         }
 
         var floor = other.GetComponent<Floor>();
-        if (floor == null) return;
+        if (floor == null || influencing) return;
+        influencing = true;
 
         var rigidbody = GetComponent<Rigidbody2D>();
         rigidbody.velocity = Vector3.zero;
         rigidbody.bodyType = RigidbodyType2D.Kinematic;
 
         StartCoroutine(StopInfluenceAfter(7));
-        if (isLocal) StartCoroutine(SubstractTargetPlayerVotes());
+        if (isLocal) StartCoroutine(SubstractTargetPlayerVotesAndDie());
     }
 
     private IEnumerator StopInfluenceAfter(int seconds)
     {
         yield return new WaitForSeconds(seconds);
+        influencing = false;
 
         foreach (var voter in votersUnderInfluence)
         {
             voter.StopBeingIndifferent();
         }
-
-        StopAllCoroutines();
-        Destroy(transform.root.gameObject);
     }
 
-    private IEnumerator SubstractTargetPlayerVotes()
+    private IEnumerator SubstractTargetPlayerVotesAndDie()
     {
-        while (true)
+        while (influencing)
         {
             var atRange = myCollider.bounds.Contains(playerTarget.transform.root.position);
             if (atRange) playerTarget.AddVotes(-1);
 
             yield return new WaitForSeconds(.5f);
         }
+
+        Destroy(transform.root.gameObject);
     }
 }
