@@ -107,14 +107,12 @@ public class NetworkManager : MonoBehaviour
             switch (msg.eventType)
             {
                 case Telepathy.EventType.Connected:
-                    Debug.Log("Connected");
                     sayHello();
                     break;
                 case Telepathy.EventType.Data:
                     ProcessRemoteMsg(msg.data);
                     break;
                 case Telepathy.EventType.Disconnected:
-                    Debug.Log("Disconnected");
                     OnDisconnected();
                     break;
             }
@@ -343,7 +341,6 @@ public class NetworkManager : MonoBehaviour
         {
             serverDelta = newDelta - (newLatency / 2);
             minServerLatency = newLatency;
-            Debug.LogFormat("serverDelta={0} minServerLatency={1}", serverDelta, minServerLatency);
         }
 
         if (minServerLatency <= 40) yield break;
