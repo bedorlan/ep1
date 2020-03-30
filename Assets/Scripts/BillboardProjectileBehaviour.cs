@@ -52,7 +52,7 @@ public class BillboardProjectileBehaviour : MonoBehaviour, IProjectile
         rigidbody.bodyType = RigidbodyType2D.Kinematic;
 
         StartCoroutine(StopInfluenceAfter(7));
-        if (isLocal) StartCoroutine(SubstractTargetPlayerVotesAndDie());
+        if (isLocal) StartCoroutine(SubstractTargetPlayerVotes());
     }
 
     private IEnumerator StopInfluenceAfter(int seconds)
@@ -64,9 +64,11 @@ public class BillboardProjectileBehaviour : MonoBehaviour, IProjectile
         {
             voter.StopBeingIndifferent();
         }
+
+        Destroy(transform.root.gameObject, 1f);
     }
 
-    private IEnumerator SubstractTargetPlayerVotesAndDie()
+    private IEnumerator SubstractTargetPlayerVotes()
     {
         while (influencing)
         {
@@ -76,6 +78,5 @@ public class BillboardProjectileBehaviour : MonoBehaviour, IProjectile
             yield return new WaitForSeconds(.5f);
         }
 
-        Destroy(transform.root.gameObject);
     }
 }
