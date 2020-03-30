@@ -116,7 +116,7 @@ function tryStartMatch(timeout?: boolean) {
   if ((!timeout && waitingQueue.length < 4) || (timeout && waitingQueue.length < 2)) {
     if (!waitingForPlayersTimeout || timeout) {
       console.info('not enough players. waiting')
-      waitingForPlayersTimeout = setTimeout(tryStartMatch.bind(null, true), 10000)
+      waitingForPlayersTimeout = setTimeout(tryStartMatch.bind(null, true), 60000)
     }
     return
   }
