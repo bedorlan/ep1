@@ -79,8 +79,13 @@ public class PlayerBehaviour : MonoBehaviour
         StartCoroutine(Fire(currentProjectilePrefab, velocity, false));
     }
 
-    IEnumerator Fire(GameObject projectileToFire, Vector3 velocity, bool immediate)
+    private IEnumerator Fire(GameObject projectileToFire, Vector3 velocity, bool immediate)
     {
+        var firingTargetObject = this.firingTargetObject;
+        var firingTargetPosition = this.firingTargetPosition;
+        this.firingTargetObject = null;
+        this.firingTargetPosition = Vector3.zero;
+
         if (immediate)
         {
             var immediateProjectile = Instantiate(projectileToFire);
@@ -89,8 +94,6 @@ public class PlayerBehaviour : MonoBehaviour
                 isLocal,
                 firingTargetPosition,
                 firingTargetObject);
-            firingTargetObject = null;
-            firingTargetPosition = Vector3.zero;
             yield break;
         }
 
@@ -121,8 +124,6 @@ public class PlayerBehaviour : MonoBehaviour
             velocity,
             IsFacingLeft(),
             firingTargetObject);
-        firingTargetObject = null;
-        firingTargetPosition = Vector3.zero;
 
         yield return new WaitForSeconds(.35f);
         animator.SetBool("firing", false);
@@ -288,6 +289,8 @@ public class PlayerBehaviour : MonoBehaviour
 
     internal void NewObjective(Vector3 position, GameObject target)
     {
+        if (isFiring) return;
+
         var validTarget = currentProjectilePrefab.GetComponentInChildren<IProjectile>().CanYouFireAt(position, target);
         if (!validTarget)
         {
