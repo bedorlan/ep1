@@ -19,6 +19,8 @@ enum Codes {
   votesAdded = 13, // [(13), (playerNumber: int), (votes: int)]
 }
 
+const MAP_WIDTH = 200
+
 const server = net.createServer()
 
 type Duplex = { in: Readable; out: Writable }
@@ -361,9 +363,11 @@ class VotersCentral {
   }
 
   private readonly GenerateVoterCloseTo = (x: number) => {
-    const positionX = x + (Math.random() * 20.0 - 10.0)
-    const voter = { positionX, lastHitTime: 0, player: -1, claimed: false }
+    let positionX = x + (Math.random() * 20.0 - 10.0)
+    positionX = Math.min(positionX, MAP_WIDTH / 2)
+    positionX = Math.max(positionX, MAP_WIDTH / -2)
 
+    const voter = { positionX, lastHitTime: 0, player: -1, claimed: false }
     this.voters.push(voter)
     return [this.voterSeq++, positionX] as const
   }
@@ -384,7 +388,6 @@ function GenerateVoterPositionX() {
   } else {
     voterPosition = forVoterPosition * 0.15 + 0.85
   }
-  const MAP_WIDTH = 200
   return (voterPosition - 0.5) * MAP_WIDTH
 }
 
