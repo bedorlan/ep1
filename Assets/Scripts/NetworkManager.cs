@@ -179,10 +179,12 @@ public class NetworkManager : MonoBehaviour
 
         ProjectileSelected(defaultProjectile);
 
+#if !UNITY_EDITOR
         projectileButtons[1].SetActive(false);
         projectileButtons[2].SetActive(false);
         projectileButtons[3].SetActive(false);
         StartCoroutine(ActiveProjectilesDelayed());
+#endif
 
         OnMatchReady?.Invoke();
 
