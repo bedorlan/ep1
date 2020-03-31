@@ -60,7 +60,7 @@ public class VoterBehaviour : MonoBehaviour
         StartCoroutine(die());
     }
 
-    internal IEnumerator die()
+    private IEnumerator die()
     {
         enabled = false;
 
