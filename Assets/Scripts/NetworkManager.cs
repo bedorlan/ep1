@@ -53,6 +53,8 @@ public class NetworkManager : MonoBehaviour
         // update even if window isn't focused, otherwise we don't receive.
         Application.runInBackground = true;
 
+        Config.Load();
+
         // use Debug.Log functions for Telepathy so we can see it in the console
         Telepathy.Logger.Log = Debug.Log;
         Telepathy.Logger.LogWarning = Debug.LogWarning;
@@ -95,7 +97,7 @@ public class NetworkManager : MonoBehaviour
 #if UNITY_EDITOR || !UNITY_ANDROID
         client.Connect("localhost", 7777);
 #else
-        client.Connect("3.223.135.88", 80);
+        client.Connect(Config.serverHost, Config.serverPort);
 #endif
     }
 
@@ -434,11 +436,24 @@ public class NetworkManager : MonoBehaviour
         matchOver = true;
         client.Disconnect();
 
+        // todo: votes count should come from the server
         var playerVotes = votesCounters.ConvertAll(voter => voter.GetComponent<VotesCountBehaviour>().GetVotes());
         var myVotes = playerVotes[playerNumber];
-
-        playerVotes.Sort((a, b) => b - a);
+        Debug.Log("initial");
+        Debug.Log("0=" + playerVotes[0].ToString());
+        Debug.Log("1=" + playerVotes[1].ToString());
+        playerVotes.Sort();
+        Debug.Log("after sort");
+        Debug.Log("0=" + playerVotes[0].ToString());
+        Debug.Log("1=" + playerVotes[1].ToString());
+        playerVotes.Reverse();
+        Debug.Log("after reverse");
+        Debug.Log("0=" + playerVotes[0].ToString());
+        Debug.Log("1=" + playerVotes[1].ToString());
         var maxVotes = playerVotes[0];
+        Debug.Log("after max");
+        Debug.Log("0=" + playerVotes[0].ToString());
+        Debug.Log("1=" + playerVotes[1].ToString());
 
         var iWin = myVotes == maxVotes;
         var draw = playerVotes[0] == playerVotes[1];

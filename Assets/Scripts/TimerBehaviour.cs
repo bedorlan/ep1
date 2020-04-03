@@ -6,15 +6,16 @@ using UnityEngine;
 
 public class TimerBehaviour : MonoBehaviour
 {
-    public int matchTime = 120;
-
     internal static TimerBehaviour singleton;
+
+    internal int matchTime;
     private TextMeshProUGUI textComponent;
     private int timeLeft;
 
     void Start()
     {
         singleton = this;
+        matchTime = Config.matchLength;
         textComponent = GetComponent<TextMeshProUGUI>();
 
         timeLeft = matchTime;
@@ -30,7 +31,7 @@ public class TimerBehaviour : MonoBehaviour
     {
         while (timeLeft > 0)
         {
-            yield return new WaitForSeconds(1);
+            yield return new WaitForSecondsRealtime(1);
             --timeLeft;
             SetText();
         }
