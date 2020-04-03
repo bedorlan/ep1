@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 using System.Text;
 using SimpleJSON;
 using UnityEngine;
@@ -437,24 +438,16 @@ public class NetworkManager : MonoBehaviour
         client.Disconnect();
 
         // todo: votes count should come from the server
-        var playerVotes = votesCounters.ConvertAll(voter => voter.GetComponent<VotesCountBehaviour>().GetVotes());
-        var myVotes = playerVotes[playerNumber];
-        Debug.Log("initial");
-        Debug.Log("0=" + playerVotes[0].ToString());
-        Debug.Log("1=" + playerVotes[1].ToString());
-        playerVotes.Sort();
-        Debug.Log("after sort");
-        Debug.Log("0=" + playerVotes[0].ToString());
-        Debug.Log("1=" + playerVotes[1].ToString());
-        playerVotes.Reverse();
-        Debug.Log("after reverse");
-        Debug.Log("0=" + playerVotes[0].ToString());
-        Debug.Log("1=" + playerVotes[1].ToString());
-        var maxVotes = playerVotes[0];
-        Debug.Log("after max");
-        Debug.Log("0=" + playerVotes[0].ToString());
-        Debug.Log("1=" + playerVotes[1].ToString());
+        var playerVotes = votesCounters
+            .Where(voter => voter.activeSelf)
+            .Select(voter => voter.GetComponent<VotesCountBehaviour>().GetVotes())
+            .ToList();
 
+        var myVotes = playerVotes[playerNumber];
+        playerVotes.Sort();
+        playerVotes.Reverse();
+
+        var maxVotes = playerVotes[0];
         var iWin = myVotes == maxVotes;
         var draw = playerVotes[0] == playerVotes[1];
         OnMatchEnd?.Invoke(draw, iWin);
