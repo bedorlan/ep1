@@ -17,6 +17,8 @@ public class CentralBaseBehaviour : MonoBehaviour, IProjectile
         {
             sprite.color = Common.playerColors[playerOwner];
         }
+
+        NetworkManager.singleton.DisableCentralBasesButtons();
     }
 
     private void OnTriggerEnter2D(Collider2D other)

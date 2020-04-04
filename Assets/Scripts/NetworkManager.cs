@@ -203,7 +203,7 @@ public class NetworkManager : MonoBehaviour
         {
             projectileButtons.transform.GetChild(i).gameObject.SetActive(false);
         }
-        StartCoroutine(ActiveProjectilesDelayed());
+        StartCoroutine(ActiveCentralBasesProjectilesDelayed());
 #endif
 
         OnMatchReady?.Invoke();
@@ -212,13 +212,20 @@ public class NetworkManager : MonoBehaviour
         TimerBehaviour.singleton.StartTimer();
     }
 
-    private IEnumerator ActiveProjectilesDelayed()
+    private IEnumerator ActiveCentralBasesProjectilesDelayed()
     {
-        for (var i = 1; i < projectileButtons.transform.childCount; ++i)
-        {
-            yield return new WaitForSeconds(30);
-            projectileButtons.transform.GetChild(i).gameObject.SetActive(true);
-        }
+        yield return new WaitForSeconds(30);
+
+        projectileButtons.transform.GetChild(1).gameObject.SetActive(true);
+        projectileButtons.transform.GetChild(2).gameObject.SetActive(true);
+        projectileButtons.transform.GetChild(3).gameObject.SetActive(true);
+    }
+
+    internal void DisableCentralBasesButtons()
+    {
+        projectileButtons.transform.GetChild(1).gameObject.SetActive(false);
+        projectileButtons.transform.GetChild(2).gameObject.SetActive(false);
+        projectileButtons.transform.GetChild(3).gameObject.SetActive(false);
     }
 
     private void OnRemoteNewDestination(JSONNode data)
