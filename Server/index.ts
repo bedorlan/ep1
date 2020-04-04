@@ -31,7 +31,7 @@ server.on('connection', async (socket) => {
   try {
     await safeWaitForHello(socket)
   } catch (err) {
-    console.error(err)
+    console.info(err)
     socket.destroy()
     return
   }
@@ -65,8 +65,7 @@ server.on('connection', async (socket) => {
     try {
       msg = getTelepathyMsg(raw)
     } catch (err) {
-      // is this needed?
-      console.error(err)
+      console.info(err)
       socket.destroy()
       readliner.removeAllListeners()
       duplex.in.destroy()
@@ -142,7 +141,7 @@ function onGuessTime(player: Duplex, msg: any[]) {
 }
 
 function socketClosed(socket: net.Socket, err: any) {
-  console.error('socket closed', err)
+  console.info('socket closed', err)
   if (!socket.destroyed) socket.destroy()
 
   waitingQueue = waitingQueue.filter((it) => {
@@ -156,7 +155,7 @@ function socketClosed(socket: net.Socket, err: any) {
 }
 
 function matchOver(players: typeof waitingQueue, err: any) {
-  console.error('match over', err)
+  console.info('match over', err)
   players.forEach((it) => {
     if (!it.socket.destroyed) it.socket.destroy()
     it.in.destroy()
@@ -171,7 +170,7 @@ server.on('listening', () => {
 })
 
 server.on('error', (err) => {
-  console.error('server error:', err)
+  console.info('server error:', err)
 })
 
 server.listen(PORT)
@@ -209,7 +208,7 @@ class Match {
       player.in.on('data', (msg) => {
         const code = msg[0] as Codes
         if (!(code in codesMap)) {
-          console.error('unmapped code', code)
+          console.info('unmapped code', code)
           return
         }
 
@@ -275,10 +274,7 @@ class VotersCentral {
 
   private readonly SendVotersPack = () => {
     const votesPerSecond = Math.ceil(this.players.length / 2)
-    const votersToSend = lodash
-      .times(votesPerSecond)
-      .map(GenerateVoterPositionX)
-      .map(this.GenerateVoterCloseTo)
+    const votersToSend = lodash.times(votesPerSecond).map(GenerateVoterPositionX).map(this.GenerateVoterCloseTo)
 
     this.SendVotersToAll(votersToSend)
   }
@@ -400,7 +396,7 @@ function GenerateVoterPositionX() {
 
 function sendTo(duplex: Duplex, msg: any[]) {
   if (!duplex.out.writable) {
-    console.error('unable to send msg', msg)
+    console.info('unable to send msg', msg)
     return
   }
   duplex.out.write(msg)
