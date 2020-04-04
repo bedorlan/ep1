@@ -347,8 +347,8 @@ class VotersCentral {
         sendTo(other, msg)
       })
 
-    const CENTRAL_BASE_PROJECTILE_TYPE = 3
-    if (projectileType !== CENTRAL_BASE_PROJECTILE_TYPE) return
+    const CENTRAL_BASE_PROJECTILE_TYPES = [4, 5, 6]
+    if (!CENTRAL_BASE_PROJECTILE_TYPES.includes(projectileType)) return
 
     const [centralPositionX, centralPositionY] = destination
     this.centralBases[playerOwner] = centralPositionX
