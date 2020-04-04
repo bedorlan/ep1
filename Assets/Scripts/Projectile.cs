@@ -79,8 +79,8 @@ public class Projectile : MonoBehaviour
 
     private void OnMouseDown()
     {
-        // clicking projectiles do nothing. perhaps you are trying to move
+        if (Common.IsPointerOverUIObject()) return;
         var position = Camera.main.ScreenToWorldPoint(Input.mousePosition);
-        NetworkManager.singleton.BackgroundClicked(position);
+        NetworkManager.singleton.ObjectiveClicked(gameObject, position);
     }
 }

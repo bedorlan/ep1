@@ -1672,6 +1672,11 @@ PrefabInstance:
       propertyPath: m_Name
       value: ColombiaHumanaButton
       objectReference: {fileID: 0}
+    - target: {fileID: 955274967738283093, guid: 6a2aa7ed072444749b3f5a9b73601e36,
+        type: 3}
+      propertyPath: m_TagString
+      value: UI
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 6a2aa7ed072444749b3f5a9b73601e36, type: 3}
 --- !u!224 &1705708496 stripped
@@ -2026,6 +2031,11 @@ PrefabInstance:
       propertyPath: m_Name
       value: CompromisoCiudadanoButton
       objectReference: {fileID: 0}
+    - target: {fileID: 955274967738283093, guid: 6a2aa7ed072444749b3f5a9b73601e36,
+        type: 3}
+      propertyPath: m_TagString
+      value: UI
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 6a2aa7ed072444749b3f5a9b73601e36, type: 3}
 --- !u!224 &1744541454 stripped
@@ -2360,7 +2370,7 @@ GameObject:
   - component: {fileID: 2088616867}
   m_Layer: 5
   m_Name: ProjectileButtons
-  m_TagString: Untagged
+  m_TagString: UI
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -2721,6 +2731,11 @@ PrefabInstance:
         type: 3}
       propertyPath: m_Name
       value: CentroDemocraticoButton
+      objectReference: {fileID: 0}
+    - target: {fileID: 955274967738283093, guid: 6a2aa7ed072444749b3f5a9b73601e36,
+        type: 3}
+      propertyPath: m_TagString
+      value: UI
       objectReference: {fileID: 0}
     m_RemovedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 6a2aa7ed072444749b3f5a9b73601e36, type: 3}

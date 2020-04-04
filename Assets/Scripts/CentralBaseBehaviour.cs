@@ -28,10 +28,4 @@ public class CentralBaseBehaviour : MonoBehaviour, IProjectile
         rigidbody.velocity = Vector3.zero;
         rigidbody.bodyType = RigidbodyType2D.Static;
     }
-
-    private void OnMouseDown()
-    {
-        var position = Camera.main.ScreenToWorldPoint(Input.mousePosition);
-        NetworkManager.singleton.ObjectiveClicked(gameObject, position);
-    }
 }
