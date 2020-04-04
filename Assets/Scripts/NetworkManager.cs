@@ -34,7 +34,7 @@ public class NetworkManager : MonoBehaviour
     public GameObject voterPrefab;
     public new GameObject camera;
     public GameObject background;
-    public List<GameObject> projectileButtons;
+    public GameObject projectileButtons;
     public List<GameObject> votesCounters;
 
     private int playerNumber;
@@ -74,8 +74,9 @@ public class NetworkManager : MonoBehaviour
         };
 
         projectilesMap = new Dictionary<int, GameObject>();
-        foreach (var projectilePrefab in projectileButtons)
+        for (var i = 0; i < projectileButtons.transform.childCount; ++i)
         {
+            var projectilePrefab = projectileButtons.transform.GetChild(i).gameObject;
             var typeId = projectilePrefab.GetComponentInChildren<ButtonProjectileBehaviour>().GetProjectileTypeId();
             projectilesMap.Add(typeId, projectilePrefab);
         }
@@ -198,9 +199,10 @@ public class NetworkManager : MonoBehaviour
         ProjectileSelected(defaultProjectile);
 
 #if !UNITY_EDITOR
-        projectileButtons[1].SetActive(false);
-        projectileButtons[2].SetActive(false);
-        projectileButtons[3].SetActive(false);
+        for (var i = 1; i < projectileButtons.transform.childCount; ++i)
+        {
+            projectileButtons.transform.GetChild(i).gameObject.SetActive(false);
+        }
         StartCoroutine(ActiveProjectilesDelayed());
 #endif
 
@@ -212,10 +214,10 @@ public class NetworkManager : MonoBehaviour
 
     private IEnumerator ActiveProjectilesDelayed()
     {
-        for (var i = 1; i < 4; ++i)
+        for (var i = 1; i < projectileButtons.transform.childCount; ++i)
         {
             yield return new WaitForSeconds(30);
-            projectileButtons[i].SetActive(true);
+            projectileButtons.transform.GetChild(i).gameObject.SetActive(true);
         }
     }
 
@@ -359,16 +361,11 @@ public class NetworkManager : MonoBehaviour
         localPlayer.GetComponent<PlayerBehaviour>().NewObjective(position, null);
     }
 
-    public void VoterClicked(VoterBehaviour voter)
+    internal void ObjectiveClicked(GameObject objective, Vector3? position = null)
     {
-        var root = voter.transform.root;
-        localPlayer.GetComponent<PlayerBehaviour>().NewObjective(root.position, root.gameObject);
-    }
-
-    internal void RemotePlayerClicked(GameObject player)
-    {
-        var root = player.transform.root;
-        localPlayer.GetComponent<PlayerBehaviour>().NewObjective(root.position, root.gameObject);
+        var root = objective.transform.root;
+        position = position ?? root.position;
+        localPlayer.GetComponent<PlayerBehaviour>().NewObjective(position.Value, root.gameObject);
     }
 
     public void NewLocalPlayerDestination(float newDestinationX, float timeToReach)

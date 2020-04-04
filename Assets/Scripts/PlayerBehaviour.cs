@@ -283,7 +283,7 @@ public class PlayerBehaviour : MonoBehaviour
     {
         if (!isLocal)
         {
-            NetworkManager.singleton.RemotePlayerClicked(transform.root.gameObject);
+            NetworkManager.singleton.ObjectiveClicked(transform.root.gameObject);
         }
     }
 

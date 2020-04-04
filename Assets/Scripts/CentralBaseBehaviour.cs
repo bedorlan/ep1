@@ -6,13 +6,17 @@ public class CentralBaseBehaviour : MonoBehaviour, IProjectile
 {
     public bool CanYouFireAt(Vector3 position, GameObject target)
     {
-        return true;
+        var otherBase = target?.GetComponentInChildren<CentralBaseBehaviour>() ?? null;
+        return otherBase == null;
     }
 
     private void Start()
     {
         var playerOwner = GetComponent<Projectile>().playerOwner;
-        GetComponent<SpriteRenderer>().color = Common.playerColors[playerOwner];
+        foreach (var sprite in GetComponentsInChildren<SpriteRenderer>())
+        {
+            sprite.color = Common.playerColors[playerOwner];
+        }
     }
 
     private void OnTriggerEnter2D(Collider2D other)
@@ -23,7 +27,11 @@ public class CentralBaseBehaviour : MonoBehaviour, IProjectile
         var rigidbody = GetComponent<Rigidbody2D>();
         rigidbody.velocity = Vector3.zero;
         rigidbody.bodyType = RigidbodyType2D.Static;
+    }
 
-        GetComponent<Collider2D>().enabled = false;
+    private void OnMouseDown()
+    {
+        var position = Camera.main.ScreenToWorldPoint(Input.mousePosition);
+        NetworkManager.singleton.ObjectiveClicked(gameObject, position);
     }
 }

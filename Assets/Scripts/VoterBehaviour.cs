@@ -29,7 +29,7 @@ public class VoterBehaviour : MonoBehaviour
 
     private void OnMouseDown()
     {
-        NetworkManager.singleton.VoterClicked(this);
+        NetworkManager.singleton.ObjectiveClicked(gameObject);
     }
 
     public void TryConvertTo(int playerOwner, bool isLocal)
