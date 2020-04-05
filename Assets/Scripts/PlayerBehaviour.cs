@@ -10,6 +10,7 @@ public class PlayerBehaviour : MonoBehaviour
 
     public GameObject votesChangesIndicatorPrefab;
     public List<GameObject> headsPrefabs;
+    public List<AudioClip> partyIntroductions;
     public GameObject changeHeadAnimationPrefab;
 
     private GameObject currentProjectilePrefab;
@@ -17,6 +18,7 @@ public class PlayerBehaviour : MonoBehaviour
     private bool isLocal;
     private new Rigidbody2D rigidbody;
     private Animator animator;
+    private AudioSource audioSource;
     private float movingDestination;
     private GameObject firingTargetObject;
     private Vector3 firingTargetPosition;
@@ -31,6 +33,7 @@ public class PlayerBehaviour : MonoBehaviour
     {
         rigidbody = GetComponent<Rigidbody2D>();
         animator = GetComponent<Animator>();
+        audioSource = GetComponent<AudioSource>();
     }
 
     void Update()
@@ -319,5 +322,8 @@ public class PlayerBehaviour : MonoBehaviour
         var animationPosition = transform.position;
         animationPosition.y += 2.5f;
         Instantiate(changeHeadAnimationPrefab, animationPosition, Quaternion.identity);
+
+        audioSource.pitch = 1.5f;
+        audioSource.PlayOneShot(partyIntroductions[(int)party]);
     }
 }

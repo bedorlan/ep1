@@ -6,6 +6,8 @@ public class CentralBaseBehaviour : MonoBehaviour, IProjectile
 {
     public Common.Parties party;
 
+    private int playerOwnerNumber;
+
     public bool CanYouFireAt(Vector3 position, GameObject target)
     {
         var otherBase = target?.GetComponentInChildren<CentralBaseBehaviour>() ?? null;
@@ -14,13 +16,13 @@ public class CentralBaseBehaviour : MonoBehaviour, IProjectile
 
     private void Start()
     {
-        var playerOwner = GetComponent<Projectile>().playerOwner;
+        playerOwnerNumber = GetComponent<Projectile>().playerOwner;
         foreach (var sprite in GetComponentsInChildren<SpriteRenderer>())
         {
-            sprite.color = Common.playerColors[playerOwner];
+            sprite.color = Common.playerColors[playerOwnerNumber];
         }
 
-        NetworkManager.singleton.PartyChose(party);
+        NetworkManager.singleton.PartyChose(playerOwnerNumber, party);
     }
 
     private void OnTriggerEnter2D(Collider2D other)

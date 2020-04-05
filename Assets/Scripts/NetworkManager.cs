@@ -221,13 +221,17 @@ public class NetworkManager : MonoBehaviour
         projectileButtons.transform.GetChild(3).gameObject.SetActive(true);
     }
 
-    internal void PartyChose(Common.Parties party)
+    internal void PartyChose(int playerNumber, Common.Parties party)
     {
-        projectileButtons.transform.GetChild(1).gameObject.SetActive(false);
-        projectileButtons.transform.GetChild(2).gameObject.SetActive(false);
-        projectileButtons.transform.GetChild(3).gameObject.SetActive(false);
+        if (playerNumber == this.playerNumber)
+        {
+            projectileButtons.transform.GetChild(1).gameObject.SetActive(false);
+            projectileButtons.transform.GetChild(2).gameObject.SetActive(false);
+            projectileButtons.transform.GetChild(3).gameObject.SetActive(false);
+        }
 
-        localPlayer.GetComponent<PlayerBehaviour>().PartyChose(party);
+        var player = players[playerNumber];
+        player.GetComponent<PlayerBehaviour>().PartyChose(party);
     }
 
     private void OnRemoteNewDestination(JSONNode data)
