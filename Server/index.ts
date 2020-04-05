@@ -91,9 +91,7 @@ server.on('connection', async (socket) => {
 function safeWaitForHello(socket: net.Socket) {
   const BYTES_TO_READ = 9 // Codes.hello: 000?[11]\n
   return new Promise((resolve, reject) => {
-    socket.on('readable', process)
-
-    function process() {
+    socket.on('readable', () => {
       if (socket.readableLength < BYTES_TO_READ) return
 
       const data = socket.read(BYTES_TO_READ).toString()
@@ -105,8 +103,15 @@ function safeWaitForHello(socket: net.Socket) {
       }
       if (code !== Codes.hello) return reject('weird data: ' + data)
 
-      socket.off('readable', process)
+      socket.removeAllListeners()
       resolve()
+    })
+
+    socket.on('close', endSocket)
+    socket.on('error', endSocket)
+    function endSocket(err: any) {
+      socket.removeAllListeners()
+      reject(err)
     }
   })
 }
