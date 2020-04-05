@@ -214,7 +214,7 @@ public class NetworkManager : MonoBehaviour
 
     private IEnumerator ActiveCentralBasesProjectilesDelayed()
     {
-        yield return new WaitForSeconds(30);
+        yield return new WaitForSecondsRealtime(30);
 
         projectileButtons.transform.GetChild(1).gameObject.SetActive(true);
         projectileButtons.transform.GetChild(2).gameObject.SetActive(true);
