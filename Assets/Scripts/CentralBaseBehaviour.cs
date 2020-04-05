@@ -4,6 +4,8 @@ using UnityEngine;
 
 public class CentralBaseBehaviour : MonoBehaviour, IProjectile
 {
+    public Common.Parties party;
+
     public bool CanYouFireAt(Vector3 position, GameObject target)
     {
         var otherBase = target?.GetComponentInChildren<CentralBaseBehaviour>() ?? null;
@@ -18,7 +20,7 @@ public class CentralBaseBehaviour : MonoBehaviour, IProjectile
             sprite.color = Common.playerColors[playerOwner];
         }
 
-        NetworkManager.singleton.DisableCentralBasesButtons();
+        NetworkManager.singleton.PartyChose(party);
     }
 
     private void OnTriggerEnter2D(Collider2D other)

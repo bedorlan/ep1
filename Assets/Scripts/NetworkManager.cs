@@ -221,11 +221,13 @@ public class NetworkManager : MonoBehaviour
         projectileButtons.transform.GetChild(3).gameObject.SetActive(true);
     }
 
-    internal void DisableCentralBasesButtons()
+    internal void PartyChose(Common.Parties party)
     {
         projectileButtons.transform.GetChild(1).gameObject.SetActive(false);
         projectileButtons.transform.GetChild(2).gameObject.SetActive(false);
         projectileButtons.transform.GetChild(3).gameObject.SetActive(false);
+
+        localPlayer.GetComponent<PlayerBehaviour>().PartyChose(party);
     }
 
     private void OnRemoteNewDestination(JSONNode data)

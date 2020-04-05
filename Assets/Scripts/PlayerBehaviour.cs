@@ -8,9 +8,11 @@ public class PlayerBehaviour : MonoBehaviour
     const float VELOCITY_RUNNING = 10f;
     const float TIME_ANIMATION_PRE_FIRE = .15f;
 
-    public GameObject currentProjectilePrefab; // todo: privatize this <
     public GameObject votesChangesIndicatorPrefab;
+    public List<GameObject> headsPrefabs;
+    public GameObject changeHeadAnimationPrefab;
 
+    private GameObject currentProjectilePrefab;
     private int playerNumber;
     private bool isLocal;
     private new Rigidbody2D rigidbody;
@@ -306,5 +308,16 @@ public class PlayerBehaviour : MonoBehaviour
     internal void AddVotes(int votes)
     {
         NetworkManager.singleton.AddVotes(playerNumber, votes);
+    }
+
+    internal void PartyChose(Common.Parties party)
+    {
+        headsPrefabs[0].SetActive(false);
+        headsPrefabs[(int)party].SetActive(true);
+        headsPrefabs[(int)party].GetComponent<SpriteRenderer>().color = Common.playerColors[playerNumber];
+
+        var animationPosition = transform.position;
+        animationPosition.y += 2.5f;
+        Instantiate(changeHeadAnimationPrefab, animationPosition, Quaternion.identity);
     }
 }

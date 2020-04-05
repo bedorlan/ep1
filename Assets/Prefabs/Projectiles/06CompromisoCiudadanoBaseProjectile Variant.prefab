@@ -84,6 +84,11 @@ PrefabInstance:
       propertyPath: m_Name
       value: 06CompromisoCiudadanoBaseProjectile Variant
       objectReference: {fileID: 0}
+    - target: {fileID: 2963236117563046757, guid: 52140a4c2048b4ad4a0a198dd6cf6f74,
+        type: 3}
+      propertyPath: party
+      value: 3
+      objectReference: {fileID: 0}
     - target: {fileID: 6116598348789080376, guid: 52140a4c2048b4ad4a0a198dd6cf6f74,
         type: 3}
       propertyPath: projectileTypeId

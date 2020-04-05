@@ -2,7 +2,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.EventSystems;
 
-internal static class Common
+public static class Common
 {
     internal const char MAN_CODE = '\uf1bb';
     internal const char WOMAN_CODE = '\ue901';
@@ -17,6 +17,14 @@ internal static class Common
         {2, new Color(.5f, 1, .5f) },
         {3, new Color(1, 1, 0) },
     };
+
+    public enum Parties
+    {
+        Default = 0,
+        CentroDemocratico = 1,
+        ColombiaHumana = 2,
+        CompromisoCiudadano = 3,
+    }
 
     internal static bool IsPointerOverUIObject()
     {
