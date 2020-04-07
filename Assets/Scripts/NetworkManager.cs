@@ -249,16 +249,22 @@ public class NetworkManager : MonoBehaviour
         },
     };
 
+    Dictionary<Common.Projectiles, List<(Common.Projectiles, AllyBehaviour)>>
+        alliesInMatch = new Dictionary<Common.Projectiles, List<(Common.Projectiles, AllyBehaviour)>>();
+
     private IEnumerator StartGamePlan()
     {
         var projectileLevels = mapPartyToProjectiles[playerParty];
         var level = 0;
         var projectiles = projectileLevels[level];
-
+        var newAlliesInMatch = new List<(Common.Projectiles, AllyBehaviour)>();
         foreach (var projectile in projectiles)
         {
             var ally = Instantiate(allyPrefab).GetComponent<AllyBehaviour>();
             ally.Initialize(playerNumber, projectile);
+
+            newAlliesInMatch.Add((projectile, ally));
+            alliesInMatch[projectile] = newAlliesInMatch;
         }
 
         yield return new WaitForSecondsRealtime(30);
@@ -267,6 +273,11 @@ public class NetworkManager : MonoBehaviour
     internal void NewAlly(Common.Projectiles projectileType)
     {
         projectileButtons.transform.GetChild((int)projectileType).gameObject.SetActive(true);
+        foreach (var alliesAtLevel in alliesInMatch[projectileType])
+        {
+            if (alliesAtLevel.Item1 == projectileType) continue;
+            Destroy(alliesAtLevel.Item2.transform.root.gameObject);
+        }
     }
 
     private void OnRemoteNewDestination(JSONNode data)
