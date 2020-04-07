@@ -247,6 +247,14 @@ public class NetworkManager : MonoBehaviour
                 new Common.Projectiles[] { Common.Projectiles.Lechona },
             }
         },
+        { Common.Parties.ColombiaHumana, new Common.Projectiles[][] {
+                new Common.Projectiles[] { Common.Projectiles.Lechona },
+            }
+        },
+        { Common.Parties.CompromisoCiudadano, new Common.Projectiles[][] {
+                new Common.Projectiles[] { Common.Projectiles.Lechona },
+            }
+        },
     };
 
     Dictionary<Common.Projectiles, List<(Common.Projectiles, AllyBehaviour)>>
