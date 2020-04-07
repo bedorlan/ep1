@@ -32,12 +32,14 @@ public class NetworkManager : MonoBehaviour
 
     public GameObject playerPrefab;
     public GameObject voterPrefab;
+    public GameObject allyPrefab;
     public new GameObject camera;
     public GameObject background;
     public GameObject projectileButtons;
     public List<GameObject> votesCounters;
 
     private int playerNumber;
+    private Common.Parties playerParty;
     private bool matchOver = false;
     private Dictionary<Codes, Action<JSONNode>> codesMap;
     private Dictionary<int, GameObject> projectilesMap;
@@ -77,7 +79,10 @@ public class NetworkManager : MonoBehaviour
         for (var i = 0; i < projectileButtons.transform.childCount; ++i)
         {
             var projectilePrefab = projectileButtons.transform.GetChild(i).gameObject;
-            var typeId = projectilePrefab.GetComponentInChildren<ButtonProjectileBehaviour>().GetProjectileTypeId();
+            var projectileBehaviour = projectilePrefab.GetComponentInChildren<ButtonProjectileBehaviour>();
+            if (projectileBehaviour == null) continue;
+
+            var typeId = projectileBehaviour.GetProjectileTypeId();
             projectilesMap.Add(typeId, projectilePrefab);
         }
 
@@ -176,7 +181,7 @@ public class NetworkManager : MonoBehaviour
         for (var i = 0; i < numberOfPlayers; ++i)
         {
             var player = Instantiate(playerPrefab);
-            var isLocal = this.playerNumber == i;
+            var isLocal = playerNumber == i;
             player.GetComponent<PlayerBehaviour>().Initialize(i, isLocal);
 
             if (isLocal)
@@ -203,35 +208,65 @@ public class NetworkManager : MonoBehaviour
         {
             projectileButtons.transform.GetChild(i).gameObject.SetActive(false);
         }
-        StartCoroutine(ActiveCentralBasesProjectilesDelayed());
+
+        StartCoroutine(ShowPartySelection());
 #endif
 
         OnMatchReady?.Invoke();
-
         camera.SetActive(true);
         TimerBehaviour.singleton.StartTimer();
     }
 
-    private IEnumerator ActiveCentralBasesProjectilesDelayed()
+    private IEnumerator ShowPartySelection()
     {
         yield return new WaitForSecondsRealtime(30);
 
-        projectileButtons.transform.GetChild(1).gameObject.SetActive(true);
-        projectileButtons.transform.GetChild(2).gameObject.SetActive(true);
-        projectileButtons.transform.GetChild(3).gameObject.SetActive(true);
+        projectileButtons.transform.GetChild((int)Common.Projectiles.CentroDemocraticoBase).gameObject.SetActive(true);
+        projectileButtons.transform.GetChild((int)Common.Projectiles.ColombiaHumanaBase).gameObject.SetActive(true);
+        projectileButtons.transform.GetChild((int)Common.Projectiles.CompromisoCiudadanoBase).gameObject.SetActive(true);
     }
 
     internal void PartyChose(int playerNumber, Common.Parties party)
     {
-        if (playerNumber == this.playerNumber)
-        {
-            projectileButtons.transform.GetChild(1).gameObject.SetActive(false);
-            projectileButtons.transform.GetChild(2).gameObject.SetActive(false);
-            projectileButtons.transform.GetChild(3).gameObject.SetActive(false);
-        }
+        this.playerParty = party;
 
         var player = players[playerNumber];
         player.GetComponent<PlayerBehaviour>().PartyChose(party);
+
+        if (playerNumber != this.playerNumber) return;
+
+        projectileButtons.transform.GetChild((int)Common.Projectiles.CentroDemocraticoBase).gameObject.SetActive(false);
+        projectileButtons.transform.GetChild((int)Common.Projectiles.ColombiaHumanaBase).gameObject.SetActive(false);
+        projectileButtons.transform.GetChild((int)Common.Projectiles.CompromisoCiudadanoBase).gameObject.SetActive(false);
+
+        StartCoroutine(StartGamePlan());
+    }
+
+    Dictionary<Common.Parties, Common.Projectiles[][]> mapPartyToProjectiles = new Dictionary<Common.Parties, Common.Projectiles[][]>() {
+        { Common.Parties.CentroDemocratico, new Common.Projectiles[][] {
+                new Common.Projectiles[] { Common.Projectiles.Lechona },
+            }
+        },
+    };
+
+    private IEnumerator StartGamePlan()
+    {
+        var projectileLevels = mapPartyToProjectiles[playerParty];
+        var level = 0;
+        var projectiles = projectileLevels[level];
+
+        foreach (var projectile in projectiles)
+        {
+            var ally = Instantiate(allyPrefab).GetComponent<AllyBehaviour>();
+            ally.Initialize(playerNumber, projectile);
+        }
+
+        yield return new WaitForSecondsRealtime(30);
+    }
+
+    internal void NewAlly(Common.Projectiles projectileType)
+    {
+        projectileButtons.transform.GetChild((int)projectileType).gameObject.SetActive(true);
     }
 
     private void OnRemoteNewDestination(JSONNode data)

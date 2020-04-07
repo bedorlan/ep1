@@ -262,12 +262,13 @@ public class PlayerBehaviour : MonoBehaviour
 
     private void OnTriggerStay2D(Collider2D collision)
     {
+        // todo: ignore collisions with remote players perhaps?
         if (!isLocal) return;
 
-        var voter = collision.GetComponent<VoterBehaviour>();
-        if (!voter) return;
+        var collectable = collision.GetComponent<ICollectable>();
+        if (collectable == null) return;
 
-        voter.TryClaim(playerNumber);
+        collectable.TryClaim(playerNumber);
     }
 
     internal void ChangeProjectile(GameObject projectile)

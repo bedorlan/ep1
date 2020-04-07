@@ -6,7 +6,7 @@ public class Tamal : MonoBehaviour, IProjectile
 {
     public bool CanYouFireAt(Vector3 position, GameObject target)
     {
-        var validTarget = target != null && target.GetComponentInChildren<VoterBehaviour>() != null;
+        var validTarget = target != null && target.GetComponentInChildren<IPartySupporter>() != null;
         return validTarget;
     }
 
@@ -17,7 +17,7 @@ public class Tamal : MonoBehaviour, IProjectile
         var isLocal = projectile.isLocal;
         var endAnimationPrefab = projectile.endAnimationPrefab;
 
-        var voter = other.gameObject.GetComponent<VoterBehaviour>();
+        var voter = other.gameObject.GetComponent<IPartySupporter>();
         if (voter == null) return;
         voter.TryConvertTo(playerOwner, isLocal);
 

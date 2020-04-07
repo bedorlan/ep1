@@ -57,6 +57,9 @@ TagManager:
   - name: Voters
     uniqueID: 2646311245
     locked: 0
+  - name: Allies
+    uniqueID: 2346663659
+    locked: 0
   - name: Projectiles
     uniqueID: 2040142309
     locked: 0

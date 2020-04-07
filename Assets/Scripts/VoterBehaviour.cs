@@ -4,7 +4,7 @@ using System.Collections.Generic;
 using TMPro;
 using UnityEngine;
 
-public class VoterBehaviour : MonoBehaviour
+public class VoterBehaviour : MonoBehaviour, IPartySupporter, ICollectable
 {
     public AudioClip whenClaimedClip;
 

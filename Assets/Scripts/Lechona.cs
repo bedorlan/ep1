@@ -6,11 +6,11 @@ public class Lechona : MonoBehaviour, IProjectile
 {
     public bool CanYouFireAt(Vector3 position, GameObject target)
     {
-        var validTarget = target != null && target.GetComponentInChildren<VoterBehaviour>() != null;
+        var validTarget = target != null && target.GetComponentInChildren<IPartySupporter>() != null;
         return validTarget;
     }
 
-    private HashSet<VoterBehaviour> votersAtRange = new HashSet<VoterBehaviour>();
+    private HashSet<IPartySupporter> votersAtRange = new HashSet<IPartySupporter>();
 
     public void OnTriggerEnter2D(Collider2D other)
     {
@@ -20,7 +20,7 @@ public class Lechona : MonoBehaviour, IProjectile
             return;
         }
 
-        var voter = other.GetComponent<VoterBehaviour>();
+        var voter = other.GetComponent<IPartySupporter>();
         if (voter != null)
         {
             votersAtRange.Add(voter);

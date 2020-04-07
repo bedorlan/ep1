@@ -4,6 +4,8 @@ using UnityEngine.EventSystems;
 
 public static class Common
 {
+    internal const int MAP_WIDTH = 200;
+
     internal const char MAN_CODE = '\uf1bb';
     internal const char WOMAN_CODE = '\ue901';
     internal const char CLOCK_CODE = '\ue900';
@@ -24,6 +26,16 @@ public static class Common
         CentroDemocratico = 1,
         ColombiaHumana = 2,
         CompromisoCiudadano = 3,
+    }
+
+    public enum Projectiles
+    {
+        Tamal = 0,
+        Lechona = 1,
+        Billboard = 2,
+        CentroDemocraticoBase = 4,
+        ColombiaHumanaBase = 5,
+        CompromisoCiudadanoBase = 6,
     }
 
     internal static bool IsPointerOverUIObject()
