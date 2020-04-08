@@ -279,18 +279,6 @@ public class NetworkManager : MonoBehaviour
         yield return new WaitForSecondsRealtime(30f);
     }
 
-    internal void NewAlly(Common.Projectiles projectileType)
-    {
-        projectileButtons.transform.GetChild((int)projectileType).gameObject.SetActive(true);
-        foreach (var alliesAtLevel in alliesInMatch[projectileType])
-        {
-            if (alliesAtLevel.Item1 == projectileType) continue;
-            Destroy(alliesAtLevel.Item2.transform.root.gameObject);
-        }
-
-        StartCoroutine(localPlayer.NewAlly(projectileType));
-    }
-
     private void OnRemoteNewDestination(JSONNode data)
     {
         var newDestination = data[1].AsFloat;
@@ -499,6 +487,28 @@ public class NetworkManager : MonoBehaviour
         OnProjectileSelected?.Invoke(projectile);
     }
 
+    internal void AddVotes(int playerNumber, int votes)
+    {
+        var msg = string.Format(
+            "[{0}, {1}, {2}]",
+            (int)Codes.tryAddVotes,
+            playerNumber,
+            votes);
+        SendNetworkMsg(msg);
+    }
+
+    internal void NewAlly(Common.Projectiles projectileType)
+    {
+        projectileButtons.transform.GetChild((int)projectileType).gameObject.SetActive(true);
+        foreach (var alliesAtLevel in alliesInMatch[projectileType])
+        {
+            if (alliesAtLevel.Item1 == projectileType) continue;
+            Destroy(alliesAtLevel.Item2.transform.root.gameObject);
+        }
+
+        StartCoroutine(localPlayer.NewAlly(projectileType));
+    }
+
     internal void TimerOver()
     {
         matchOver = true;
@@ -520,17 +530,7 @@ public class NetworkManager : MonoBehaviour
         OnMatchEnd?.Invoke(draw, iWin);
     }
 
-    internal void AddVotes(int playerNumber, int votes)
-    {
-        var msg = string.Format(
-            "[{0}, {1}, {2}]",
-            (int)Codes.tryAddVotes,
-            playerNumber,
-            votes);
-        SendNetworkMsg(msg);
-    }
-
-#endregion
+    #endregion
 
     private long unixMillis()
     {
