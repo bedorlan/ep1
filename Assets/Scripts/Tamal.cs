@@ -12,13 +12,14 @@ public class Tamal : MonoBehaviour, IProjectile
 
     public void OnTriggerEnter2D(Collider2D other)
     {
+        var voter = other.gameObject.GetComponent<IPartySupporter>();
+        if (voter == null) return;
+
         var projectile = gameObject.GetComponent<Projectile>();
         var playerOwner = projectile.playerOwner;
         var isLocal = projectile.isLocal;
         var endAnimationPrefab = projectile.endAnimationPrefab;
 
-        var voter = other.gameObject.GetComponent<IPartySupporter>();
-        if (voter == null) return;
         voter.TryConvertTo(playerOwner, isLocal);
 
         var endAnimation = Instantiate(endAnimationPrefab);

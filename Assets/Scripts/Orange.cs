@@ -1,4 +1,5 @@
-﻿using System.Collections;
+﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -8,6 +9,16 @@ public class Orange : MonoBehaviour, IProjectile
     {
         var validTarget = target != null && target.GetComponentInChildren<IPartySupporter>() != null;
         return validTarget;
+    }
+
+    private Projectile projectile;
+    private GameObject endAnimationPrefab;
+
+    private void Start()
+    {
+        projectile = gameObject.GetComponent<Projectile>();
+        endAnimationPrefab = projectile.endAnimationPrefab;
+        StartCoroutine(DestroyAfter(2f));
     }
 
     private void OnTriggerEnter2D(Collider2D collision)
@@ -24,10 +35,23 @@ public class Orange : MonoBehaviour, IProjectile
 
             var r = GetComponent<CircleCollider2D>().radius;
             var w = -velocity.x / r;
-            Debug.Log("r=" + r);
-            Debug.Log("x=" + velocity.x);
-            Debug.Log("w=" + w);
             rigidbody.angularVelocity = Mathf.Rad2Deg * w;
+
+            return;
         }
+
+        var voter = collision.gameObject.GetComponent<IPartySupporter>();
+        if (voter != null)
+        {
+            voter.TryConvertTo(projectile.playerOwner, projectile.isLocal);
+        }
+    }
+
+    private IEnumerator DestroyAfter(float seconds)
+    {
+        yield return new WaitForSecondsRealtime(seconds);
+
+        Instantiate(endAnimationPrefab, transform.position, Quaternion.identity);
+        Destroy(transform.root.gameObject);
     }
 }

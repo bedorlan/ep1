@@ -244,7 +244,7 @@ public class NetworkManager : MonoBehaviour
 
     Dictionary<Common.Parties, Common.Projectiles[][]> mapPartyToProjectiles = new Dictionary<Common.Parties, Common.Projectiles[][]>() {
         { Common.Parties.CentroDemocratico, new Common.Projectiles[][] {
-                new Common.Projectiles[] { Common.Projectiles.Lechona },
+                new Common.Projectiles[] { Common.Projectiles.Orange, Common.Projectiles.Lechona },
             }
         },
         { Common.Parties.ColombiaHumana, new Common.Projectiles[][] {

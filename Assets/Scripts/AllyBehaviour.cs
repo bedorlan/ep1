@@ -6,11 +6,16 @@ using UnityEngine;
 public class AllyBehaviour : MonoBehaviour, IPartySupporter, ICollectable
 {
     const char CHEF_CODE = '\uf119';
+    const char FARMER_CODE = '\uf133';
+    const char GIRL_DANCING_CODE = '\uf13d';
+    const char SHAKESPEARE_CODE = '\uf190';
+    const char AVOCADO_GIRL_CODE = '\uf1d5';
 
     private int playerNumber;
     private Common.Projectiles projectileType;
     private bool converted = false;
     Dictionary<Common.Projectiles, char> mapProjectileIcon = new Dictionary<Common.Projectiles, char>() {
+        { Common.Projectiles.Orange, SHAKESPEARE_CODE },
         { Common.Projectiles.Lechona, CHEF_CODE },
     };
 
