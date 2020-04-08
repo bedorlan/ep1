@@ -118,8 +118,14 @@ function safeWaitForHello(socket: net.Socket) {
 
 let waitingForPlayersTimeout: NodeJS.Timeout | undefined
 function tryStartMatch(timeout?: boolean) {
+  clearBadSockets()
+
   if ((!timeout && waitingQueue.length < 4) || (timeout && waitingQueue.length < 2)) {
     if (!waitingForPlayersTimeout || timeout) {
+      if (waitingQueue.length === 0) {
+        waitingForPlayersTimeout = undefined
+        return
+      }
       console.info('not enough players. waiting')
       const waitTime = process.env.LOBBY_WAIT_TIME ? Number.parseInt(process.env.LOBBY_WAIT_TIME) : 60000
       waitingForPlayersTimeout = setTimeout(tryStartMatch.bind(null, true), waitTime)
@@ -148,7 +154,10 @@ function onGuessTime(player: Duplex, msg: any[]) {
 function socketClosed(socket: net.Socket, err: any) {
   console.info('socket closed', err)
   if (!socket.destroyed) socket.destroy()
+  clearBadSockets()
+}
 
+function clearBadSockets() {
   waitingQueue = waitingQueue.filter((it) => {
     const isGood = !it.socket.destroyed && it.socket.readable && it.socket.writable
     if (isGood) return true
