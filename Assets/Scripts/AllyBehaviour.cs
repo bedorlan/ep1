@@ -62,6 +62,6 @@ public class AllyBehaviour : MonoBehaviour, IPartySupporter, ICollectable
         GetComponent<Collider2D>().enabled = false;
         GetComponent<Renderer>().enabled = false;
 
-        Destroy(gameObject, 3f);
+        Destroy(gameObject, Common.NEW_ALLY_CLIP_DURATION);
     }
 }

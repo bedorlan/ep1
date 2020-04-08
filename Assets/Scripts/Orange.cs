@@ -49,7 +49,7 @@ public class Orange : MonoBehaviour, IProjectile
 
     private IEnumerator DestroyAfter(float seconds)
     {
-        yield return new WaitForSecondsRealtime(seconds);
+        yield return new WaitForSeconds(seconds);
 
         Instantiate(endAnimationPrefab, transform.position, Quaternion.identity);
         Destroy(transform.root.gameObject);

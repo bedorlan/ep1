@@ -929,6 +929,15 @@ MonoBehaviour:
   - {fileID: 8300000, guid: b3ca8abee65bf4e0e83806019cd63da4, type: 3}
   changeHeadAnimationPrefab: {fileID: 8586724955451477321, guid: e1d3917efa17640a5b231695dfe8802d,
     type: 3}
+  projectileIntroductions:
+  - {fileID: 0}
+  - {fileID: 0}
+  - {fileID: 0}
+  - {fileID: 0}
+  - {fileID: 0}
+  - {fileID: 0}
+  - {fileID: 0}
+  - {fileID: 8300000, guid: 91713dfc546e7493889aacb44f538b1d, type: 3}
 --- !u!82 &82505390896062264
 AudioSource:
   m_ObjectHideFlags: 0

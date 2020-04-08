@@ -12,6 +12,7 @@ public class PlayerBehaviour : MonoBehaviour
     public List<GameObject> headsPrefabs;
     public List<AudioClip> partyIntroductions;
     public GameObject changeHeadAnimationPrefab;
+    public List<AudioClip> projectileIntroductions;
 
     private GameObject currentProjectilePrefab;
     private int playerNumber;
@@ -328,5 +329,14 @@ public class PlayerBehaviour : MonoBehaviour
 
         audioSource.pitch = 1.5f;
         audioSource.PlayOneShot(partyIntroductions[(int)party]);
+    }
+
+    internal IEnumerator NewAlly(Common.Projectiles projectileType)
+    {
+        var clip = projectileIntroductions[(int)projectileType];
+        if (clip == null) yield break;
+
+        yield return new WaitForSeconds(Common.NEW_ALLY_CLIP_DURATION);
+        audioSource.PlayOneShot(clip);
     }
 }

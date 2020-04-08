@@ -5,6 +5,7 @@ using UnityEngine.EventSystems;
 public static class Common
 {
     internal const int MAP_WIDTH = 200;
+    internal const float NEW_ALLY_CLIP_DURATION = 1.897f;
 
     internal const char MAN_CODE = '\uf1bb';
     internal const char WOMAN_CODE = '\ue901';

@@ -45,7 +45,7 @@ public class NetworkManager : MonoBehaviour
     private Dictionary<int, GameObject> projectilesMap;
     private GameObject defaultProjectile;
 
-    private GameObject localPlayer;
+    private PlayerBehaviour localPlayer;
     private List<GameObject> players = new List<GameObject>();
 
 
@@ -182,12 +182,13 @@ public class NetworkManager : MonoBehaviour
         {
             var player = Instantiate(playerPrefab);
             var isLocal = playerNumber == i;
-            player.GetComponent<PlayerBehaviour>().Initialize(i, isLocal);
+            var playerBehaviour = player.GetComponent<PlayerBehaviour>();
+            playerBehaviour.Initialize(i, isLocal);
 
             if (isLocal)
             {
-                localPlayer = player;
-                camera.GetComponent<MainCamera>().objectToFollow = localPlayer;
+                localPlayer = playerBehaviour;
+                camera.GetComponent<MainCamera>().objectToFollow = player;
             }
 
             players.Add(player);
@@ -219,7 +220,7 @@ public class NetworkManager : MonoBehaviour
 
     private IEnumerator ShowPartySelection()
     {
-        yield return new WaitForSecondsRealtime(30);
+        yield return new WaitForSecondsRealtime(30f);
 
         projectileButtons.transform.GetChild((int)Common.Projectiles.CentroDemocraticoBase).gameObject.SetActive(true);
         projectileButtons.transform.GetChild((int)Common.Projectiles.ColombiaHumanaBase).gameObject.SetActive(true);
@@ -275,7 +276,7 @@ public class NetworkManager : MonoBehaviour
             alliesInMatch[projectile] = newAlliesInMatch;
         }
 
-        yield return new WaitForSecondsRealtime(30);
+        yield return new WaitForSecondsRealtime(30f);
     }
 
     internal void NewAlly(Common.Projectiles projectileType)
@@ -286,6 +287,8 @@ public class NetworkManager : MonoBehaviour
             if (alliesAtLevel.Item1 == projectileType) continue;
             Destroy(alliesAtLevel.Item2.transform.root.gameObject);
         }
+
+        StartCoroutine(localPlayer.NewAlly(projectileType));
     }
 
     private void OnRemoteNewDestination(JSONNode data)
@@ -425,14 +428,14 @@ public class NetworkManager : MonoBehaviour
 
     public void BackgroundClicked(Vector3 position)
     {
-        localPlayer.GetComponent<PlayerBehaviour>().NewObjective(position, null);
+        localPlayer.NewObjective(position, null);
     }
 
     internal void ObjectiveClicked(GameObject objective, Vector3? position = null)
     {
         var root = objective.transform.root;
         position = position ?? root.position;
-        localPlayer.GetComponent<PlayerBehaviour>().NewObjective(position.Value, root.gameObject);
+        localPlayer.NewObjective(position.Value, root.gameObject);
     }
 
     public void NewLocalPlayerDestination(float newDestinationX, float timeToReach)
@@ -492,7 +495,7 @@ public class NetworkManager : MonoBehaviour
     internal event Action<GameObject> OnProjectileSelected;
     internal void ProjectileSelected(GameObject projectile)
     {
-        localPlayer.GetComponent<PlayerBehaviour>().ChangeProjectile(projectile);
+        localPlayer.ChangeProjectile(projectile);
         OnProjectileSelected?.Invoke(projectile);
     }
 
