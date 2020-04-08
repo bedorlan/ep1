@@ -22,6 +22,7 @@ enum Codes
     tryAddVotes = 12, // [(12), (playerNumber: int), (votes: int)]
     votesAdded = 13, // [(13), (playerNumber: int), (votes: int)]
     log = 14, // [(14), (condition: string), (stackTrace: string), (type: string)]
+    newAlly = 15, // [(15), (playerNumber: int), (projectileType: int)]
 }
 
 public class NetworkManager : MonoBehaviour
@@ -73,6 +74,7 @@ public class NetworkManager : MonoBehaviour
             { Codes.voterClaimed, OnVoterClaimed },
             { Codes.hello, OnHello },
             { Codes.votesAdded, OnVotesAdded },
+            { Codes.newAlly, OnNewAlly }
         };
 
         projectilesMap = new Dictionary<int, GameObject>();
@@ -348,6 +350,15 @@ public class NetworkManager : MonoBehaviour
         players[player].GetComponent<PlayerBehaviour>().OnVotesChanges(votes);
     }
 
+    private void OnNewAlly(JSONNode data)
+    {
+        var playerNumber = data[1].AsInt;
+        var projectileType = (Common.Projectiles)data[2].AsInt;
+        var player = players[playerNumber];
+
+        StartCoroutine(player.GetComponent<PlayerBehaviour>().NewAlly(projectileType));
+    }
+
     private void OnDisconnected()
     {
         var timeLeft = TimerBehaviour.singleton.GetTimeLeft();
@@ -505,6 +516,12 @@ public class NetworkManager : MonoBehaviour
             if (alliesAtLevel.Item1 == projectileType) continue;
             Destroy(alliesAtLevel.Item2.transform.root.gameObject);
         }
+
+        var msg = new JSONArray();
+        msg.Add((int)Codes.newAlly);
+        msg.Add(playerNumber);
+        msg.Add((int)projectileType);
+        SendNetworkMsg(msg.ToString());
 
         StartCoroutine(localPlayer.NewAlly(projectileType));
     }

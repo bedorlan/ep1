@@ -18,6 +18,7 @@ enum Codes {
   tryAddVotes = 12, // [(12), (playerNumber: int), (votes: int)]
   votesAdded = 13, // [(13), (playerNumber: int), (votes: int)]
   log = 14, // [(14), (condition: string), (stackTrace: string), (type: string)]
+  newAlly = 15, // [(15), (playerNumber: int), (projectileType: int)]
 }
 
 const MAP_WIDTH = 200
@@ -207,11 +208,15 @@ class Match {
 
     const codesMap: { [code in Codes]?: (player: number, msg: any[]) => void } = {
       [Codes.newPlayerDestination]: this.resendToOthers,
-      [Codes.projectileFired]: this.votersCentral.ProjectileFired,
+      [Codes.projectileFired]: (player: number, msg: any[]) => {
+        this.resendToOthers(player, msg)
+        this.votersCentral.ProjectileFired(player, msg)
+      },
       [Codes.tryConvertVoter]: this.votersCentral.TryConvertVoter,
       [Codes.tryClaimVoter]: this.votersCentral.TryClaimVoter,
       [Codes.tryAddVotes]: this.votersCentral.TryAddVotes,
       [Codes.log]: this.logReceived,
+      [Codes.newAlly]: this.resendToOthers,
     } as const
 
     this.players.forEach((player, index) => {
@@ -354,12 +359,6 @@ class VotersCentral {
 
   public readonly ProjectileFired = (player: number, msg: any[]) => {
     const [code, playerOwner, destination, timeWhenReach, projectileType, targetPlayer] = msg
-
-    this.players
-      .filter((_, index) => index !== playerOwner)
-      .forEach((other) => {
-        sendTo(other, msg)
-      })
 
     const CENTRAL_BASE_PROJECTILE_TYPES = [4, 5, 6]
     if (!CENTRAL_BASE_PROJECTILE_TYPES.includes(projectileType)) return
