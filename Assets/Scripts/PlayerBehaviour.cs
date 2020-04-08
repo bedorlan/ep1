@@ -287,6 +287,8 @@ public class PlayerBehaviour : MonoBehaviour
 
     private void OnMouseDown()
     {
+        if (Common.IsPointerOverUIObject()) return;
+
         if (!isLocal)
         {
             NetworkManager.singleton.ObjectiveClicked(transform.root.gameObject);

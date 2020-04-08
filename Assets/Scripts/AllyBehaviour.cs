@@ -35,6 +35,7 @@ public class AllyBehaviour : MonoBehaviour, IPartySupporter, ICollectable
 
     private void OnMouseDown()
     {
+        if (Common.IsPointerOverUIObject()) return;
         NetworkManager.singleton.ObjectiveClicked(gameObject);
     }
 

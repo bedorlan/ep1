@@ -36,6 +36,7 @@ public static class Common
         CentroDemocraticoBase = 4,
         ColombiaHumanaBase = 5,
         CompromisoCiudadanoBase = 6,
+        Orange = 7,
     }
 
     internal static bool IsPointerOverUIObject()
