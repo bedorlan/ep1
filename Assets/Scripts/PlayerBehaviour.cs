@@ -288,7 +288,7 @@ public class PlayerBehaviour : MonoBehaviour
         votesCount += votes;
 
         var position = transform.position;
-        position.y += 3f;
+        position.y += 2f;
         var votesIndicator = Instantiate(votesChangesIndicatorPrefab, position, Quaternion.identity);
         votesIndicator.GetComponent<VotesChangesBehaviour>().Show(votes);
     }

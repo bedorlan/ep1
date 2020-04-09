@@ -155,7 +155,9 @@ public class NetworkManager : MonoBehaviour
         // yay!
         // should i validate the server somehow?
 
+#if !UNITY_EDITOR
         Application.logMessageReceived += Application_logMessageReceived;
+#endif
 
         OnConnection?.Invoke(true);
         guessServerTime();
@@ -547,7 +549,7 @@ public class NetworkManager : MonoBehaviour
         OnMatchEnd?.Invoke(draw, iWin);
     }
 
-    #endregion
+#endregion
 
     private long unixMillis()
     {

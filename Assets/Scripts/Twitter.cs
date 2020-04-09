@@ -59,13 +59,13 @@ public class Twitter : MonoBehaviour, IProjectile, IManuallyFiredProjectile
 
     public void OnTriggerEnter2D(Collider2D other)
     {
-        if (maxInfluence == 0) return;
+        if (maxInfluence <= 0) return;
 
         var player = other.gameObject.GetComponent<PlayerBehaviour>();
         var voter = other.gameObject.GetComponent<IPartySupporter>();
         var projectile = GetComponent<Projectile>();
 
-        if (player != null)
+        if (projectile.isLocal && player != null)
         {
             if (player.GetPlayerNumber() == projectile.playerOwner) return;
 
