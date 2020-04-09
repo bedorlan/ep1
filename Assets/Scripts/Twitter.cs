@@ -65,11 +65,10 @@ public class Twitter : MonoBehaviour, IProjectile, IManuallyFiredProjectile
         var voter = other.gameObject.GetComponent<IPartySupporter>();
         var projectile = GetComponent<Projectile>();
 
-        if (projectile.isLocal && player != null)
+        if (player != null)
         {
             if (player.GetPlayerNumber() == projectile.playerOwner) return;
-
-            player.DoDamagePercentage(playerDamagePercentage);
+            if(projectile.isLocal) player.DoDamagePercentage(playerDamagePercentage);
             maxInfluence = 0;
         }
         else if (voter != null)
