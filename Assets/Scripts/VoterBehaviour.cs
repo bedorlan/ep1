@@ -47,6 +47,31 @@ public class VoterBehaviour : MonoBehaviour, IPartySupporter, ICollectable
         return true;
     }
 
+    public void TryConvertAndConvertOthers(int playerOwner, bool isLocal)
+    {
+        var success = TryConvertTo(playerOwner, isLocal);
+        if (!success) return;
+
+        StartCoroutine(ConvertOthers(playerOwner, isLocal));
+    }
+
+    private IEnumerator ConvertOthers(int playerOwner, bool isLocal)
+    {
+        yield return new WaitForSeconds(.5f);
+
+        var collider = GetComponent<CircleCollider2D>();
+        var others = new Collider2D[10];
+        var count = collider.OverlapCollider(new ContactFilter2D().NoFilter(), others);
+
+        for (var i = 0; i < count; ++i)
+        {
+            var voter = others[i].GetComponent<IPartySupporter>();
+            if (voter == null) continue;
+
+            voter.TryConvertAndConvertOthers(playerOwner, isLocal);
+        }
+    }
+
     public void ConvertTo(int player)
     {
         playerOwner = player;

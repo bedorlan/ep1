@@ -19,6 +19,7 @@ public class AllyBehaviour : MonoBehaviour, IPartySupporter, ICollectable
     Dictionary<Common.Projectiles, char> mapProjectileIcon = new Dictionary<Common.Projectiles, char>() {
         { Common.Projectiles.Orange, SHAKESPEARE_CODE },
         { Common.Projectiles.Twitter, MAN_DISTRACTED_WITH_PHONE_CODE },
+        { Common.Projectiles.Book, MAN_READING_BOOK_CODE },
         { Common.Projectiles.Lechona, CHEF_CODE },
     };
 
@@ -67,5 +68,10 @@ public class AllyBehaviour : MonoBehaviour, IPartySupporter, ICollectable
         GetComponent<Renderer>().enabled = false;
 
         Destroy(gameObject, Common.NEW_ALLY_CLIP_DURATION);
+    }
+
+    public void TryConvertAndConvertOthers(int playerOwner, bool isLocal)
+    {
+        TryConvertTo(playerOwner, isLocal);
     }
 }

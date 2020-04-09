@@ -257,7 +257,7 @@ public class NetworkManager : MonoBehaviour
             }
         },
         { Common.Parties.CompromisoCiudadano, new Common.Projectiles[][] {
-                new Common.Projectiles[] { Common.Projectiles.Lechona },
+                new Common.Projectiles[] { Common.Projectiles.Book, Common.Projectiles.Lechona },
             }
         },
     };
