@@ -33,15 +33,18 @@ public class VoterBehaviour : MonoBehaviour, IPartySupporter, ICollectable
         NetworkManager.singleton.ObjectiveClicked(gameObject);
     }
 
-    public void TryConvertTo(int playerOwner, bool isLocal)
+    public bool TryConvertTo(int playerOwner, bool isLocal)
     {
-        if (this.playerOwner == playerOwner || indifferent) return;
+        if (this.playerOwner == playerOwner || indifferent) return false;
 
         GetComponent<TextMeshPro>().color = Color.gray;
         GetComponent<Jumper>().LastJump();
 
-        if (!isLocal) return;
-        NetworkManager.singleton.TryConvertVoter(playerOwner, voterId);
+        if (isLocal)
+        {
+            NetworkManager.singleton.TryConvertVoter(playerOwner, voterId);
+        }
+        return true;
     }
 
     public void ConvertTo(int player)

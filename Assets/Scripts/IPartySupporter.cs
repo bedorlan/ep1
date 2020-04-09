@@ -2,5 +2,5 @@ using UnityEngine;
 
 interface IPartySupporter
 {
-    void TryConvertTo(int playerOwner, bool isLocal);
+    bool TryConvertTo(int playerOwner, bool isLocal);
 }

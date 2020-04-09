@@ -14,11 +14,19 @@ public class Projectile : MonoBehaviour
     internal int playerOwner;
     internal GameObject targetObject;
 
-    public Vector3 AimAtTarget(Transform origin, Vector3 currentTarget, float minVelocity)
+    public Vector3 AimAtTarget(Vector3 origin, Vector3 currentTarget, float minVelocity)
     {
         var velocity = Mathf.Max(projectileVelocity, minVelocity);
-        var distanceX = Mathf.Abs(origin.position.x - currentTarget.x);
-        var distanceY = currentTarget.y - origin.position.y - initialPositionOffsetY;
+        var distanceX = Mathf.Abs(origin.x - currentTarget.x);
+        var distanceY = currentTarget.y - origin.y - initialPositionOffsetY;
+
+        var manuallyFired = GetComponent<IManuallyFiredProjectile>();
+        if (manuallyFired != null)
+        {
+            return manuallyFired.AimAtTarget(distanceX, distanceY, velocity);
+        }
+
+
         var shootingAngle = MyMath.CalcAngle(velocity, distanceX, distanceY);
         if (float.IsNaN(shootingAngle)) return Vector3.zero;
 
@@ -29,10 +37,10 @@ public class Projectile : MonoBehaviour
         return velocityVector;
     }
 
-    public Vector3 AimAtTargetAnyVelocity(Transform origin, Vector3 currentTarget)
+    public Vector3 AimAtTargetAnyVelocity(Vector3 origin, Vector3 currentTarget)
     {
-        var distanceX = Mathf.Abs(origin.position.x - currentTarget.x);
-        var distanceY = currentTarget.y - origin.position.y - initialPositionOffsetY;
+        var distanceX = Mathf.Abs(origin.x - currentTarget.x);
+        var distanceY = currentTarget.y - origin.y - initialPositionOffsetY;
         var minVelocity = MyMath.CalcMinVelocity(distanceX, distanceY);
         var velocityVector = AimAtTarget(origin, currentTarget, minVelocity);
         return velocityVector;
@@ -57,11 +65,18 @@ public class Projectile : MonoBehaviour
         var direction = toTheLeft ? -1 : 1;
         velocity.x *= direction;
         GetComponent<Rigidbody2D>().velocity = velocity;
+
+        var manuallyFired = GetComponent<IManuallyFiredProjectile>();
+        if (manuallyFired != null)
+        {
+            manuallyFired.FireProjectile();
+        }
     }
 
     public void FireProjectileImmediate(
         int playerOwnerNumber,
         bool isLocal,
+        Vector3 origin,
         Vector3 currentTarget,
         GameObject targetObject)
     {
@@ -69,6 +84,12 @@ public class Projectile : MonoBehaviour
         this.isLocal = isLocal;
         this.targetObject = targetObject;
         transform.position = currentTarget;
+
+        var manuallyFired = GetComponent<IManuallyFiredProjectile>();
+        if (manuallyFired != null)
+        {
+            manuallyFired.FireProjectileImmediate(origin, currentTarget);
+        }
     }
 
     public float CalcMaxReach(float offsetY)

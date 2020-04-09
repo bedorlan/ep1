@@ -8,6 +8,8 @@ public class AllyBehaviour : MonoBehaviour, IPartySupporter, ICollectable
     const char CHEF_CODE = '\uf119';
     const char FARMER_CODE = '\uf133';
     const char GIRL_DANCING_CODE = '\uf13d';
+    const char MAN_READING_BOOK_CODE = '\uf180';
+    const char MAN_DISTRACTED_WITH_PHONE_CODE = '\uf18e';
     const char SHAKESPEARE_CODE = '\uf190';
     const char AVOCADO_GIRL_CODE = '\uf1d5';
 
@@ -16,6 +18,7 @@ public class AllyBehaviour : MonoBehaviour, IPartySupporter, ICollectable
     private bool converted = false;
     Dictionary<Common.Projectiles, char> mapProjectileIcon = new Dictionary<Common.Projectiles, char>() {
         { Common.Projectiles.Orange, SHAKESPEARE_CODE },
+        { Common.Projectiles.Twitter, MAN_DISTRACTED_WITH_PHONE_CODE },
         { Common.Projectiles.Lechona, CHEF_CODE },
     };
 
@@ -44,12 +47,13 @@ public class AllyBehaviour : MonoBehaviour, IPartySupporter, ICollectable
         NetworkManager.singleton.ObjectiveClicked(gameObject);
     }
 
-    public void TryConvertTo(int playerOwner, bool isLocal)
+    public bool TryConvertTo(int playerOwner, bool isLocal)
     {
-        if (playerOwner != playerNumber) return;
+        if (playerOwner != playerNumber) return false;
 
         GetComponent<TextMeshPro>().color = Common.playerColors[playerOwner];
         converted = true;
+        return true;
     }
 
     public void TryClaim(int playerNumber)

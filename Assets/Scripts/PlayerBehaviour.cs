@@ -17,6 +17,7 @@ public class PlayerBehaviour : MonoBehaviour
     private GameObject currentProjectilePrefab;
     private int playerNumber;
     private bool isLocal;
+    private int votesCount = 0;
     private new Rigidbody2D rigidbody;
     private Animator animator;
     private AudioSource audioSource;
@@ -49,10 +50,9 @@ public class PlayerBehaviour : MonoBehaviour
         stopWhenArriveToDestination();
     }
 
-
     public void Initialize(int playerNumber, bool isLocal)
     {
-        var PLAYER_INITIAL_POSITION = new Vector3(0, -4.197335f, 0);
+        var PLAYER_INITIAL_POSITION = new Vector3(0, -2.7f, 0);
 
         this.playerNumber = playerNumber;
         this.isLocal = isLocal;
@@ -79,7 +79,7 @@ public class PlayerBehaviour : MonoBehaviour
     {
         if (firingTargetPosition == Vector3.zero) return;
 
-        var velocity = currentProjectilePrefab.GetComponentInChildren<Projectile>().AimAtTarget(transform, firingTargetPosition, 0f);
+        var velocity = currentProjectilePrefab.GetComponentInChildren<Projectile>().AimAtTarget(transform.position, firingTargetPosition, 0f);
         if (velocity == Vector3.zero) return;
 
         StartCoroutine(Fire(currentProjectilePrefab, velocity, false));
@@ -98,6 +98,7 @@ public class PlayerBehaviour : MonoBehaviour
             immediateProjectile.GetComponentInChildren<Projectile>().FireProjectileImmediate(
                 playerNumber,
                 isLocal,
+                transform.position,
                 firingTargetPosition,
                 firingTargetObject);
             yield break;
@@ -239,7 +240,7 @@ public class PlayerBehaviour : MonoBehaviour
         firingTargetPosition = destination;
         timeToReach -= TIME_ANIMATION_PRE_FIRE;
 
-        var velocity = projectile.GetComponentInChildren<Projectile>().AimAtTargetAnyVelocity(transform, firingTargetPosition);
+        var velocity = projectile.GetComponentInChildren<Projectile>().AimAtTargetAnyVelocity(transform.position, firingTargetPosition);
         var immediate = timeToReach <= 0;
 
         StartCoroutine(Fire(projectile, velocity, immediate));
@@ -263,7 +264,6 @@ public class PlayerBehaviour : MonoBehaviour
 
     private void OnTriggerStay2D(Collider2D collision)
     {
-        // todo: ignore collisions with remote players perhaps?
         if (!isLocal) return;
 
         var collectable = collision.GetComponent<ICollectable>();
@@ -278,8 +278,15 @@ public class PlayerBehaviour : MonoBehaviour
         stop();
     }
 
+    internal void AddVotes(int votes)
+    {
+        NetworkManager.singleton.AddVotes(playerNumber, votes);
+    }
+
     internal void OnVotesChanges(int votes)
     {
+        votesCount += votes;
+
         var position = transform.position;
         position.y += 3f;
         var votesIndicator = Instantiate(votesChangesIndicatorPrefab, position, Quaternion.identity);
@@ -312,11 +319,6 @@ public class PlayerBehaviour : MonoBehaviour
         ChaseAndFireToPosition(position);
     }
 
-    internal void AddVotes(int votes)
-    {
-        NetworkManager.singleton.AddVotes(playerNumber, votes);
-    }
-
     internal void PartyChose(Common.Parties party)
     {
         headsPrefabs[0].SetActive(false);
@@ -338,5 +340,11 @@ public class PlayerBehaviour : MonoBehaviour
 
         yield return new WaitForSeconds(Common.NEW_ALLY_CLIP_DURATION);
         audioSource.PlayOneShot(clip);
+    }
+
+    internal void DoDamagePercentage(float playerDamagePercentage)
+    {
+        var votesLost = -(int)Mathf.Ceil(votesCount * playerDamagePercentage);
+        AddVotes(votesLost);
     }
 }
