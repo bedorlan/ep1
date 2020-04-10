@@ -81,6 +81,7 @@ public class VoterBehaviour : MonoBehaviour, IPartySupporter, ICollectable
 
     public void TryClaim(int playerNumber)
     {
+        if (playerOwner != playerNumber) return;
         NetworkManager.singleton.TryClaimVoter(voterId);
     }
 
