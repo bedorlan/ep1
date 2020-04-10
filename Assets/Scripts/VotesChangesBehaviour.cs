@@ -14,6 +14,7 @@ public class VotesChangesBehaviour : MonoBehaviour
         myRigidbody = GetComponent<Rigidbody2D>();
 
         var votesStr = votes.ToString().PadLeft(2, '+');
+        votesStr = string.Format("{0}<size=40%>,000</size>", votesStr);
         textMesh.text = votesStr;
 
         var color = votes > 0 ? Color.white : Color.red;
