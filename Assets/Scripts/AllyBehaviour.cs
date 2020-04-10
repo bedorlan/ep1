@@ -13,6 +13,7 @@ public class AllyBehaviour : MonoBehaviour, IPartySupporter, ICollectable
         { Common.Projectiles.Twitter, Common.MAN_DISTRACTED_WITH_PHONE_CODE },
         { Common.Projectiles.Book, Common.MAN_READING_BOOK_CODE },
         { Common.Projectiles.Lechona, Common.CHEF_CODE },
+        { Common.Projectiles.PlazaBoss, Common.CAPITALIST_CODE },
     };
 
     private void Start()

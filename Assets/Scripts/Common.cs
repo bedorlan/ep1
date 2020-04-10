@@ -7,11 +7,12 @@ public static class Common
     internal const int MAP_WIDTH = 200;
     internal const float NEW_ALLY_CLIP_DURATION = 1.897f;
 
+    internal const char SELLER_CODE = '\uf114';
     internal const char CHEF_CODE = '\uf119';
     internal const char PLAZA_BOSS_CODE = '\uf12f';
     internal const char FARMER_CODE = '\uf133';
-    internal const char CAPITALIST_CODE = '\uf134';
     internal const char GIRL_DANCING_CODE = '\uf13d';
+    internal const char CAPITALIST_CODE = '\uf150';
     internal const char MAN_READING_BOOK_CODE = '\uf180';
     internal const char MAN_DISTRACTED_WITH_PHONE_CODE = '\uf18e';
     internal const char SHAKESPEARE_CODE = '\uf190';

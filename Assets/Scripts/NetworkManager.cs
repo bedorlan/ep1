@@ -252,6 +252,7 @@ public class NetworkManager : MonoBehaviour
     Dictionary<Common.Parties, Common.Projectiles[][]> mapPartyToProjectiles = new Dictionary<Common.Parties, Common.Projectiles[][]>() {
         { Common.Parties.CentroDemocratico, new Common.Projectiles[][] {
                 new Common.Projectiles[] { Common.Projectiles.Orange, Common.Projectiles.Lechona },
+                new Common.Projectiles[] { Common.Projectiles.PlazaBoss },
             }
         },
         { Common.Parties.ColombiaHumana, new Common.Projectiles[][] {
@@ -270,19 +271,21 @@ public class NetworkManager : MonoBehaviour
     private IEnumerator StartGamePlan()
     {
         var projectileLevels = mapPartyToProjectiles[playerParty];
-        var level = 0;
-        var projectiles = projectileLevels[level];
-        var newAlliesInMatch = new List<(Common.Projectiles, AllyBehaviour)>();
-        foreach (var projectile in projectiles)
+        for (var level = 0; level < 2; ++level)
         {
-            var ally = Instantiate(allyPrefab).GetComponent<AllyBehaviour>();
-            ally.Initialize(playerNumber, projectile);
+            var projectiles = projectileLevels[level];
+            var newAlliesInMatch = new List<(Common.Projectiles, AllyBehaviour)>();
+            foreach (var projectile in projectiles)
+            {
+                var ally = Instantiate(allyPrefab).GetComponent<AllyBehaviour>();
+                ally.Initialize(playerNumber, projectile);
 
-            newAlliesInMatch.Add((projectile, ally));
-            alliesInMatch[projectile] = newAlliesInMatch;
+                newAlliesInMatch.Add((projectile, ally));
+                alliesInMatch[projectile] = newAlliesInMatch;
+            }
+
+            yield return new WaitForSecondsRealtime(30f);
         }
-
-        yield return new WaitForSecondsRealtime(30f);
     }
 
     private void OnRemoteNewDestination(JSONNode data)
@@ -539,6 +542,7 @@ public class NetworkManager : MonoBehaviour
         msg.Add((int)Codes.newAlly);
         msg.Add(playerNumber);
         msg.Add((int)projectileType);
+        Debug.Log("msg=" + msg.ToString());
         SendNetworkMsg(msg.ToString());
 
         StartCoroutine(localPlayer.NewAlly(projectileType));
