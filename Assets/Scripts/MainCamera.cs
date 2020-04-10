@@ -9,6 +9,13 @@ public class MainCamera : MonoBehaviour
     private const float speed = 2f;
     private const float offsetSideOfView = 7f;
 
+    private void Start()
+    {
+        Camera.main.eventMask = (1 << LayerMask.NameToLayer("Default"))
+            | (1 << LayerMask.NameToLayer("UI"))
+            | (1 << LayerMask.NameToLayer("Voters"));
+    }
+
     void Update()
     {
         if (!objectToFollow) return;

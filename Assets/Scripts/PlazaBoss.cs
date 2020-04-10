@@ -16,8 +16,8 @@ public class PlazaBoss : MonoBehaviour, IProjectile, IPartySupporter
 
     private void Start()
     {
-        projectile = GetComponent<Projectile>();
-        GetComponent<SpriteRenderer>().color = Common.playerColors[projectile.playerOwner];
+        projectile = transform.root.GetComponent<Projectile>();
+        transform.root.GetComponent<SpriteRenderer>().color = Common.playerColors[projectile.playerOwner];
 
         if (projectile.isLocal)
         {
@@ -29,18 +29,10 @@ public class PlazaBoss : MonoBehaviour, IProjectile, IPartySupporter
 
     private void OnTriggerEnter2D(Collider2D collision)
     {
-        var floor = collision.GetComponent<Floor>();
         var voter = collision.GetComponent<IPartySupporter>();
+        if (voter == null) return;
 
-        if (floor != null)
-        {
-            var rigidbody = GetComponent<Rigidbody2D>();
-            rigidbody.bodyType = RigidbodyType2D.Static;
-        }
-        else if (voter != null)
-        {
-            votersInRange.Enqueue(collision.gameObject);
-        }
+        votersInRange.Enqueue(collision.gameObject);
     }
 
     private IEnumerator StartConvertingOthers()
