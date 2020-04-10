@@ -6,12 +6,12 @@ using UnityEngine;
 public class VotesChangesBehaviour : MonoBehaviour
 {
     private TextMeshPro textMesh;
-    private new Rigidbody2D rigidbody;
+    private Rigidbody2D myRigidbody;
 
     internal void Show(int votes)
     {
         textMesh = GetComponent<TextMeshPro>();
-        rigidbody = GetComponent<Rigidbody2D>();
+        myRigidbody = GetComponent<Rigidbody2D>();
 
         var votesStr = votes.ToString().PadLeft(2, '+');
         textMesh.text = votesStr;
@@ -19,7 +19,7 @@ public class VotesChangesBehaviour : MonoBehaviour
         var color = votes > 0 ? Color.white : Color.red;
         textMesh.color = color;
 
-        rigidbody.velocity = new Vector3(0, 1, 0);
+        myRigidbody.velocity = new Vector3(0, 1, 0);
     }
 
     void Update()

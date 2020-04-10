@@ -8,7 +8,7 @@ using UnityEngine.Video;
 
 public class WaitingForMatchBehaviour : MonoBehaviour
 {
-    public new GameObject camera;
+    public GameObject myCamera;
     public GameObject buttonPlayGameObject;
     public GameObject statusGameObject;
 
@@ -76,12 +76,12 @@ public class WaitingForMatchBehaviour : MonoBehaviour
     {
         audioPlayer.Stop();
         videoPlayer.Stop();
-        camera.SetActive(false);
+        myCamera.SetActive(false);
     }
 
     private void NetworkManager_OnMatchEnd(bool draw, bool iWin)
     {
-        camera.SetActive(true);
+        myCamera.SetActive(true);
         string text;
         if (iWin && draw) text = "Empate! a segunda vuelta.";
         else
@@ -108,7 +108,7 @@ public class WaitingForMatchBehaviour : MonoBehaviour
             videoPlayer.time = 0;
             videoPlayer.Play();
         }
-        camera.SetActive(true);
+        myCamera.SetActive(true);
         buttonPlayGameObject.GetComponent<Button>().interactable = true;
     }
 }

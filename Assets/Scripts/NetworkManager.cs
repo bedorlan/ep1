@@ -35,7 +35,7 @@ public class NetworkManager : MonoBehaviour
     public GameObject playerPrefab;
     public GameObject voterPrefab;
     public GameObject allyPrefab;
-    public new GameObject camera;
+    public GameObject myCamera;
     public GameObject background;
     public GameObject projectileButtons;
     public List<GameObject> votesCounters;
@@ -92,7 +92,7 @@ public class NetworkManager : MonoBehaviour
 
         defaultProjectile = projectilesMap[0].GetComponentInChildren<ButtonProjectileBehaviour>().projectilePrefab;
 #if !UNITY_EDITOR
-        camera.SetActive(false);
+        myCamera.SetActive(false);
 #endif
     }
 
@@ -194,7 +194,7 @@ public class NetworkManager : MonoBehaviour
             if (isLocal)
             {
                 localPlayer = playerBehaviour;
-                camera.GetComponent<MainCamera>().objectToFollow = player;
+                myCamera.GetComponent<MainCamera>().objectToFollow = player;
             }
 
             players.Add(player);
@@ -220,7 +220,7 @@ public class NetworkManager : MonoBehaviour
 #endif
 
         OnMatchReady?.Invoke();
-        camera.SetActive(true);
+        myCamera.SetActive(true);
         TimerBehaviour.singleton.StartTimer();
     }
 

@@ -2251,7 +2251,7 @@ MonoBehaviour:
     type: 3}
   allyPrefab: {fileID: 56665236191748987, guid: f98b616927e454772b4fdb5a2834a40d,
     type: 3}
-  camera: {fileID: 519420028}
+  myCamera: {fileID: 519420028}
   background: {fileID: 387733856}
   projectileButtons: {fileID: 2088616865}
   votesCounters:

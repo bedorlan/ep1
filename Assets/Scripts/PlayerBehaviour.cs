@@ -18,7 +18,7 @@ public class PlayerBehaviour : MonoBehaviour
     private int playerNumber;
     private bool isLocal;
     private int votesCount = 0;
-    private new Rigidbody2D rigidbody;
+    private Rigidbody2D myRigidbody;
     private Animator animator;
     private AudioSource audioSource;
     private float movingDestination;
@@ -33,7 +33,7 @@ public class PlayerBehaviour : MonoBehaviour
 
     void Awake()
     {
-        rigidbody = GetComponent<Rigidbody2D>();
+        myRigidbody = GetComponent<Rigidbody2D>();
         animator = GetComponent<Animator>();
         audioSource = GetComponent<AudioSource>();
     }
@@ -181,7 +181,7 @@ public class PlayerBehaviour : MonoBehaviour
     private void stopWhenArriveToDestination()
     {
         var distanceToDestination = movingDestination - transform.position.x;
-        var direction = Mathf.Sign(rigidbody.velocity.x);
+        var direction = Mathf.Sign(myRigidbody.velocity.x);
         if (direction > 0 && distanceToDestination <= 0
             || direction < 0 && distanceToDestination >= 0)
         {
@@ -197,9 +197,9 @@ public class PlayerBehaviour : MonoBehaviour
 
     private void setVelocityX(float x)
     {
-        rigidbody.velocity = new Vector2(x, 0);
-        animator.SetFloat("velocityX", rigidbody.velocity.x);
-        animator.SetFloat("absVelocityX", Math.Abs(rigidbody.velocity.x));
+        myRigidbody.velocity = new Vector2(x, 0);
+        animator.SetFloat("velocityX", myRigidbody.velocity.x);
+        animator.SetFloat("absVelocityX", Math.Abs(myRigidbody.velocity.x));
 
         flipIfNeeded();
     }
@@ -207,8 +207,8 @@ public class PlayerBehaviour : MonoBehaviour
     private void flipIfNeeded()
     {
         var facingLeft = IsFacingLeft();
-        if (rigidbody.velocity.x > 0 && facingLeft
-            || rigidbody.velocity.x < 0 && !facingLeft)
+        if (myRigidbody.velocity.x > 0 && facingLeft
+            || myRigidbody.velocity.x < 0 && !facingLeft)
         {
             Flip();
         }
