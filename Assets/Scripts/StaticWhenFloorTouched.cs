@@ -11,6 +11,7 @@ public class StaticWhenFloorTouched : MonoBehaviour
         if (floor == null) return;
 
         var rigidbody = transform.root.GetComponent<Rigidbody2D>();
-        rigidbody.bodyType = RigidbodyType2D.Static;
+        rigidbody.bodyType = RigidbodyType2D.Kinematic;
+        rigidbody.velocity = Vector2.zero;
     }
 }

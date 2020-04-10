@@ -49,7 +49,8 @@ public class BillboardProjectileBehaviour : MonoBehaviour, IProjectile
         influencing = true;
 
         var rigidbody = GetComponent<Rigidbody2D>();
-        rigidbody.bodyType = RigidbodyType2D.Static;
+        rigidbody.bodyType = RigidbodyType2D.Kinematic;
+        rigidbody.velocity = Vector2.zero;
 
         StartCoroutine(StopInfluenceAfter(7));
         if (isLocal) StartCoroutine(SubstractTargetPlayerVotes());
