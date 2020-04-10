@@ -43,7 +43,6 @@ public static class Common
     {
         Tamal = 0,
         Lechona = 1,
-        Billboard = 2,
         CentroDemocraticoBase = 4,
         ColombiaHumanaBase = 5,
         CompromisoCiudadanoBase = 6,
@@ -51,6 +50,7 @@ public static class Common
         Twitter = 8,
         Book = 9,
         PlazaBoss = 10,
+        Billboard = 11,
     }
 
     internal static bool IsPointerOverUIObject()

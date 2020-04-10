@@ -16,8 +16,8 @@ TagManager:
   - 
   - Voters
   - VoterSensors
-  - 
-  - 
+  - VoterAndFloorSensors
+  - Floor
   - 
   - 
   - 

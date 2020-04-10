@@ -11,8 +11,8 @@ public class BillboardProjectileBehaviour : MonoBehaviour, IProjectile
     private PlayerBehaviour playerTarget;
     private int playerTargetNumber;
     private HashSet<VoterBehaviour> votersUnderInfluence = new HashSet<VoterBehaviour>();
-    private BoxCollider2D myCollider;
-    private bool influencing = false; // todo: this should be an int
+    private EdgeCollider2D myCollider;
+    private bool alive = true;
 
     public bool CanYouFireAt(Vector3 position, GameObject target)
     {
@@ -23,17 +23,18 @@ public class BillboardProjectileBehaviour : MonoBehaviour, IProjectile
     private void Start()
     {
         var projectile = GetComponent<Projectile>();
-        var targetObject = projectile.targetObject;
         isLocal = projectile.isLocal;
-        playerTarget = targetObject.GetComponent<PlayerBehaviour>();
+        playerTarget = projectile.targetObject.GetComponent<PlayerBehaviour>();
         playerTargetNumber = playerTarget.GetPlayerNumber();
-        myCollider = GetComponent<BoxCollider2D>();
+        myCollider = GetComponent<EdgeCollider2D>();
 
         var color = Common.playerColors[playerTargetNumber];
         playerFace.GetComponent<SpriteRenderer>().color = color;
+
+        StartCoroutine(StopInfluenceAfter(9));
+        if (isLocal) StartCoroutine(SubstractTargetPlayerVotes());
     }
 
-    // todo: do not use huge collider. easy to hit
     private void OnTriggerEnter2D(Collider2D other)
     {
         var voter = other.GetComponent<VoterBehaviour>();
@@ -43,23 +44,12 @@ public class BillboardProjectileBehaviour : MonoBehaviour, IProjectile
             voter.BeIndifferent();
             return;
         }
-
-        var floor = other.GetComponent<Floor>();
-        if (floor == null || influencing) return;
-        influencing = true;
-
-        var rigidbody = GetComponent<Rigidbody2D>();
-        rigidbody.bodyType = RigidbodyType2D.Kinematic;
-        rigidbody.velocity = Vector2.zero;
-
-        StartCoroutine(StopInfluenceAfter(7));
-        if (isLocal) StartCoroutine(SubstractTargetPlayerVotes());
     }
 
     private IEnumerator StopInfluenceAfter(int seconds)
     {
         yield return new WaitForSeconds(seconds);
-        influencing = false;
+        alive = false;
 
         foreach (var voter in votersUnderInfluence)
         {
@@ -71,7 +61,7 @@ public class BillboardProjectileBehaviour : MonoBehaviour, IProjectile
 
     private IEnumerator SubstractTargetPlayerVotes()
     {
-        while (influencing)
+        while (alive)
         {
             var atRange = myCollider.bounds.Contains(playerTarget.transform.root.position);
             if (atRange) playerTarget.AddVotes(-1);

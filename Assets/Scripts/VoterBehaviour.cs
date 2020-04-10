@@ -10,7 +10,7 @@ public class VoterBehaviour : MonoBehaviour, IPartySupporter, ICollectable
 
     private int voterId;
     private int playerOwner = Common.NO_PLAYER;
-    private bool indifferent = false;
+    private bool indifferent = false; // todo: this should be an int
 
     void Start()
     {

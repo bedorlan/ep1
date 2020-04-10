@@ -158,8 +158,8 @@ SpriteRenderer:
   m_WasSpriteAssigned: 1
   m_MaskInteraction: 0
   m_SpriteSortPoint: 0
---- !u!61 &340052456
-BoxCollider2D:
+--- !u!68 &4426674123932340280
+EdgeCollider2D:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
@@ -171,19 +171,11 @@ BoxCollider2D:
   m_IsTrigger: 1
   m_UsedByEffector: 0
   m_UsedByComposite: 0
-  m_Offset: {x: 0, y: -1.1842561}
-  m_SpriteTilingProperty:
-    border: {x: 0, y: 0, z: 0, w: 0}
-    pivot: {x: 0.5, y: 0.5}
-    oldSize: {x: 5, y: 3.86}
-    newSize: {x: 3, y: 3}
-    adaptiveTilingThreshold: 0.5
-    drawMode: 0
-    adaptiveTiling: 0
-  m_AutoTiling: 0
-  serializedVersion: 2
-  m_Size: {x: 15, y: 1.4280207}
+  m_Offset: {x: 0, y: 0}
   m_EdgeRadius: 0
+  m_Points:
+  - {x: -7.5, y: -1.899209}
+  - {x: 7.5, y: -1.8992088}
 --- !u!114 &1345721009
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -197,6 +189,18 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   playerFace: {fileID: 616722832}
+--- !u!114 &7467895696355450248
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5286521264718530226}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 4d2494ea6cd6d429ca5301d9ee43c916, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
 --- !u!1001 &4440866239187603121
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -207,7 +211,7 @@ PrefabInstance:
     - target: {fileID: 114037690935139942, guid: 836a63ae02519488ab511a63e8fa0756,
         type: 3}
       propertyPath: projectileTypeId
-      value: 2
+      value: 11
       objectReference: {fileID: 0}
     - target: {fileID: 114037690935139942, guid: 836a63ae02519488ab511a63e8fa0756,
         type: 3}
@@ -243,17 +247,22 @@ PrefabInstance:
     - target: {fileID: 8429717348609787907, guid: 836a63ae02519488ab511a63e8fa0756,
         type: 3}
       propertyPath: m_Name
-      value: BillboardProjectile
+      value: 11BillboardProjectile
+      objectReference: {fileID: 0}
+    - target: {fileID: 8429717348609787907, guid: 836a63ae02519488ab511a63e8fa0756,
+        type: 3}
+      propertyPath: m_Layer
+      value: 10
       objectReference: {fileID: 0}
     - target: {fileID: 8429717348609787917, guid: 836a63ae02519488ab511a63e8fa0756,
         type: 3}
       propertyPath: m_LocalPosition.x
-      value: 2.7164536
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 8429717348609787917, guid: 836a63ae02519488ab511a63e8fa0756,
         type: 3}
       propertyPath: m_LocalPosition.y
-      value: 0.09899175
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 8429717348609787917, guid: 836a63ae02519488ab511a63e8fa0756,
         type: 3}
@@ -313,7 +322,7 @@ PrefabInstance:
     - target: {fileID: 8429717348609787917, guid: 836a63ae02519488ab511a63e8fa0756,
         type: 3}
       propertyPath: m_LocalScale.z
-      value: 1.0072752
+      value: 1
       objectReference: {fileID: 0}
     m_RemovedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 836a63ae02519488ab511a63e8fa0756, type: 3}
