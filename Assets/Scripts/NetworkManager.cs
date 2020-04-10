@@ -597,7 +597,13 @@ public class NetworkManager : MonoBehaviour
 
     private void SendNetworkMsg(string msg)
     {
-        client.Send(Encoding.ASCII.GetBytes(msg + "\n"));
+        // we can not send messages length = 10.
+        // telephaty count the bytes, and the byte 10 is the newline.
+        // this will confuse the parser in the server
+        var safeByte = msg.Length == 9 ? " " : "";
+
+        var bytes = Encoding.ASCII.GetBytes(safeByte + msg + "\n");
+        client.Send(bytes);
     }
 
     void OnApplicationQuit()
