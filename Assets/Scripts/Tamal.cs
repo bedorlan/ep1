@@ -12,7 +12,7 @@ public class Tamal : MonoBehaviour, IProjectile
 
     public void OnTriggerEnter2D(Collider2D other)
     {
-        var voter = other.gameObject.GetComponent<IPartySupporter>();
+        var voter = other.gameObject.GetComponentInChildren<IPartySupporter>();
         if (voter == null) return;
 
         var projectile = gameObject.GetComponent<Projectile>();

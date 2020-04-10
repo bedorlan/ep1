@@ -65,7 +65,7 @@ public class VoterBehaviour : MonoBehaviour, IPartySupporter, ICollectable
 
         for (var i = 0; i < count; ++i)
         {
-            var voter = others[i].GetComponent<IPartySupporter>();
+            var voter = others[i].GetComponentInChildren<IPartySupporter>();
             if (voter == null) continue;
 
             voter.TryConvertAndConvertOthers(playerOwner, isLocal);

@@ -29,7 +29,7 @@ public class PlazaBoss : MonoBehaviour, IProjectile, IPartySupporter
 
     private void OnTriggerEnter2D(Collider2D collision)
     {
-        var voter = collision.GetComponent<IPartySupporter>();
+        var voter = collision.GetComponentInChildren<IPartySupporter>();
         if (voter == null) return;
 
         votersInRange.Enqueue(collision.gameObject);
@@ -48,7 +48,7 @@ public class PlazaBoss : MonoBehaviour, IProjectile, IPartySupporter
             }
             if (voter == null) continue;
 
-            voter.GetComponent<IPartySupporter>().TryConvertTo(projectile.playerOwner, projectile.isLocal);
+            voter.GetComponentInChildren<IPartySupporter>().TryConvertTo(projectile.playerOwner, projectile.isLocal);
             var collectable = voter.GetComponent<ICollectable>();
             if (collectable == null) continue;
 

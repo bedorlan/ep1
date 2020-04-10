@@ -20,7 +20,7 @@ public class Lechona : MonoBehaviour, IProjectile
             return;
         }
 
-        var voter = other.GetComponent<IPartySupporter>();
+        var voter = other.GetComponentInChildren<IPartySupporter>();
         if (voter != null)
         {
             votersAtRange.Add(voter);

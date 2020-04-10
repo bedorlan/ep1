@@ -40,7 +40,7 @@ public class Orange : MonoBehaviour, IProjectile
             return;
         }
 
-        var voter = collision.gameObject.GetComponent<IPartySupporter>();
+        var voter = collision.gameObject.GetComponentInChildren<IPartySupporter>();
         if (voter != null)
         {
             voter.TryConvertTo(projectile.playerOwner, projectile.isLocal);

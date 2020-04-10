@@ -62,7 +62,7 @@ public class Twitter : MonoBehaviour, IProjectile, IManuallyFiredProjectile
         if (maxInfluence <= 0) return;
 
         var player = other.gameObject.GetComponent<PlayerBehaviour>();
-        var voter = other.gameObject.GetComponent<IPartySupporter>();
+        var voter = other.gameObject.GetComponentInChildren<IPartySupporter>();
         var projectile = GetComponent<Projectile>();
 
         if (player != null)
