@@ -31,7 +31,6 @@ public class CentralBaseBehaviour : MonoBehaviour, IProjectile
         if (floor == null) return;
 
         var rigidbody = GetComponent<Rigidbody2D>();
-        rigidbody.velocity = Vector3.zero;
         rigidbody.bodyType = RigidbodyType2D.Static;
     }
 }

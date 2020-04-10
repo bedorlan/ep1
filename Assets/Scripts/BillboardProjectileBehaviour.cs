@@ -33,6 +33,7 @@ public class BillboardProjectileBehaviour : MonoBehaviour, IProjectile
         playerFace.GetComponent<SpriteRenderer>().color = color;
     }
 
+    // todo: do not use huge collider. easy to hit
     private void OnTriggerEnter2D(Collider2D other)
     {
         var voter = other.GetComponent<VoterBehaviour>();
@@ -48,7 +49,6 @@ public class BillboardProjectileBehaviour : MonoBehaviour, IProjectile
         influencing = true;
 
         var rigidbody = GetComponent<Rigidbody2D>();
-        rigidbody.velocity = Vector3.zero;
         rigidbody.bodyType = RigidbodyType2D.Static;
 
         StartCoroutine(StopInfluenceAfter(7));

@@ -9,7 +9,7 @@ enum Codes {
   newPlayerDestination = 2, // [(2), (positionX: float), (timeWhenReach: long), (playerNumber: int)]
   newVoters = 3, // [3, ...voters: [id: int, positionX: float]]
   guessTime = 5, // to server: [5, guessedTime: int], from server: [5, deltaGuess: int]
-  projectileFired = 6, // [(6), (player: int), (destinationVector: [x, y: floats]), (timeWhenReach: long), (projectileType: int), (targetPlayer?: int)]
+  projectileFired = 6, // [(6), (player: int), (destinationVector: [x, y: floats]), (timeWhenReach: long), (projectileType: int), (targetPlayer?: int), (projectileId: string)]
   tryConvertVoter = 7, // [(7), (voterId: int), (player: int), (time: long)]
   voterConverted = 8, // [(8), (voterId: int), (player: int)]
   tryClaimVoter = 9, // [(9), (voterId: int)]
@@ -19,6 +19,7 @@ enum Codes {
   votesAdded = 13, // [(13), (playerNumber: int), (votes: int)]
   log = 14, // [(14), (condition: string), (stackTrace: string), (type: string)]
   newAlly = 15, // [(15), (playerNumber: int), (projectileType: int)]
+  destroyProjectile = 16, // [(16), (projectileId: string)]
 }
 
 const MAP_WIDTH = 200
@@ -217,6 +218,7 @@ class Match {
       [Codes.tryAddVotes]: this.votersCentral.TryAddVotes,
       [Codes.log]: this.logReceived,
       [Codes.newAlly]: this.resendToOthers,
+      [Codes.destroyProjectile]: this.resendToOthers,
     } as const
 
     this.players.forEach((player, index) => {
@@ -358,7 +360,7 @@ class VotersCentral {
   }
 
   public readonly ProjectileFired = (player: number, msg: any[]) => {
-    const [code, playerOwner, destination, timeWhenReach, projectileType, targetPlayer] = msg
+    const [code, playerOwner, destination, timeWhenReach, projectileType, targetPlayer, projectileId] = msg
 
     const CENTRAL_BASE_PROJECTILE_TYPES = [4, 5, 6]
     if (!CENTRAL_BASE_PROJECTILE_TYPES.includes(projectileType)) return

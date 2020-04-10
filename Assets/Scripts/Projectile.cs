@@ -10,6 +10,7 @@ public class Projectile : MonoBehaviour
     public GameObject endAnimationPrefab;
     public int projectileTypeId;
 
+    internal string projectileId;
     internal bool isLocal;
     internal int playerOwner;
     internal GameObject targetObject;
@@ -46,17 +47,38 @@ public class Projectile : MonoBehaviour
         return velocityVector;
     }
 
+    static private int projectileSeq = 0;
+    static private Dictionary<string, GameObject> projectiles = new Dictionary<string, GameObject>();
+
+    static internal string NewId(int playerNumber)
+    {
+        return string.Format("{0}-{1}", playerNumber, projectileSeq++);
+    }
+
+    static internal void RegisterProjectile(string projectileId, GameObject projectile)
+    {
+        projectiles.Add(projectileId, projectile);
+    }
+
+    static internal void DestroyProjectile(string projectileId)
+    {
+        // todo: IDestroyable ?
+        Destroy(projectiles[projectileId].transform.root.gameObject);
+    }
+
     public void FireProjectile(
         int playerNumberOwner,
         bool isLocal,
         Transform playerOrigin,
         Vector3 velocity,
         bool toTheLeft,
-        GameObject targetObject)
+        GameObject targetObject,
+        string projectileId)
     {
         playerOwner = playerNumberOwner;
         this.isLocal = isLocal;
         this.targetObject = targetObject;
+        this.projectileId = projectileId;
 
         var position = playerOrigin.position;
         position.y += initialPositionOffsetY;
@@ -78,11 +100,13 @@ public class Projectile : MonoBehaviour
         bool isLocal,
         Vector3 origin,
         Vector3 currentTarget,
-        GameObject targetObject)
+        GameObject targetObject,
+        string projectileId)
     {
         playerOwner = playerOwnerNumber;
         this.isLocal = isLocal;
         this.targetObject = targetObject;
+        this.projectileId = projectileId;
         transform.position = currentTarget;
 
         var manuallyFired = GetComponent<IManuallyFiredProjectile>();

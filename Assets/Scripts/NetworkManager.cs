@@ -13,7 +13,7 @@ enum Codes
     newPlayerDestination = 2, // [(2), (positionX: float), (timeWhenReach: long), (playerNumber: int)]
     newVoters = 3, // [3, ...voters: [id: int, positionX: float]]
     guessTime = 5, // to server: [5, guessedTime: int], from server: [5, deltaGuess: int]
-    projectileFired = 6, // [(6), (player: int), (destinationVector: [x, y: floats]), (timeWhenReach: long), (projectileType: int), (targetPlayer?: int)]
+    projectileFired = 6, // [(6), (player: int), (destinationVector: [x, y: floats]), (timeWhenReach: long), (projectileType: int), (targetPlayer?: int), (projectileId: string)]
     tryConvertVoter = 7, // [(7), (voterId: int), (player: int), (time: long)]
     voterConverted = 8, // [(8), (voterId: int), (player: int)]
     tryClaimVoter = 9, // [(9), (voterId: int)]
@@ -23,6 +23,7 @@ enum Codes
     votesAdded = 13, // [(13), (playerNumber: int), (votes: int)]
     log = 14, // [(14), (condition: string), (stackTrace: string), (type: string)]
     newAlly = 15, // [(15), (playerNumber: int), (projectileType: int)]
+    destroyProjectile = 16, // [(16), (projectileId: string)]
 }
 
 public class NetworkManager : MonoBehaviour
@@ -74,7 +75,8 @@ public class NetworkManager : MonoBehaviour
             { Codes.voterClaimed, OnVoterClaimed },
             { Codes.hello, OnHello },
             { Codes.votesAdded, OnVotesAdded },
-            { Codes.newAlly, OnNewAlly }
+            { Codes.newAlly, OnNewAlly },
+            { Codes.destroyProjectile, OnDestroyProjectile },
         };
 
         projectilesMap = new Dictionary<int, GameObject>();
@@ -319,9 +321,10 @@ public class NetworkManager : MonoBehaviour
         var timeToReach = timeWhenReach2timeToReach(timeWhenReach);
         var projectileType = data[4].AsInt;
         var playerTarget = data[5].IsNull ? null : players[data[5].AsInt];
+        var projectileId = (string)data[6];
         var projectile = projectilesMap[projectileType].GetComponentInChildren<ButtonProjectileBehaviour>().projectilePrefab;
         var remotePlayer = players[remotePlayerNumber];
-        remotePlayer.GetComponent<PlayerBehaviour>().Remote_FireProjectile(projectile, destination, timeToReach, playerTarget);
+        remotePlayer.GetComponent<PlayerBehaviour>().Remote_FireProjectile(projectile, destination, timeToReach, playerTarget, projectileId);
     }
 
     private void OnVoterConverted(JSONNode data)
@@ -359,6 +362,12 @@ public class NetworkManager : MonoBehaviour
         var player = players[playerNumber];
 
         StartCoroutine(player.GetComponent<PlayerBehaviour>().NewAlly(projectileType));
+    }
+
+    private void OnDestroyProjectile(JSONNode data)
+    {
+        var projectileId = (string)data[1];
+        Projectile.DestroyProjectile(projectileId);
     }
 
     private void OnDisconnected()
@@ -450,22 +459,29 @@ public class NetworkManager : MonoBehaviour
         SendNetworkMsg(msg);
     }
 
-    public void ProjectileFired(int playerOwner, Vector3 destination, float timeToReach, int projectileType, GameObject targetObject)
+    public void ProjectileFired(
+        int playerOwner,
+        Vector3 destination,
+        float timeToReach,
+        int projectileType,
+        GameObject targetObject,
+        string projectileId)
     {
-        var playerObject = targetObject?.GetComponent<PlayerBehaviour>();
-        var playerTarget = playerObject?.GetPlayerNumber().ToString() ?? "null";
-
-        var destinationMsg = vector2msg(destination);
+        var playerTarget = targetObject?.GetComponent<PlayerBehaviour>()?.GetPlayerNumber() ?? null;
         var timeWhenReach = timeToReach2timeWhenReach(timeToReach);
-        var msg = string.Format(
-            "[{0}, {1}, {2}, {3}, {4}, {5}]",
-            (int)Codes.projectileFired,
-            playerOwner,
-            destinationMsg,
-            timeWhenReach,
-            projectileType,
-            playerTarget);
-        SendNetworkMsg(msg);
+        var destinationMsg = new JSONArray();
+        destinationMsg.Add(destination.x);
+        destinationMsg.Add(destination.y);
+
+        var msg = new JSONArray();
+        msg.Add((int)Codes.projectileFired);
+        msg.Add(playerOwner);
+        msg.Add(destinationMsg);
+        msg.Add(timeWhenReach);
+        msg.Add(projectileType);
+        msg.Add(playerTarget);
+        msg.Add(projectileId);
+        SendNetworkMsg(msg.ToString());
 
         var projectile = projectilesMap[projectileType];
         projectile.GetComponentInChildren<ButtonProjectileBehaviour>().OnYourProjectileFired();
@@ -528,6 +544,14 @@ public class NetworkManager : MonoBehaviour
         StartCoroutine(localPlayer.NewAlly(projectileType));
     }
 
+    internal void DestroyProjectile(string projectileId)
+    {
+        var msg = new JSONArray();
+        msg.Add((int)Codes.destroyProjectile);
+        msg.Add(projectileId);
+        SendNetworkMsg(msg.ToString());
+    }
+
     internal void TimerOver()
     {
         matchOver = true;
@@ -565,11 +589,6 @@ public class NetworkManager : MonoBehaviour
     private float timeWhenReach2timeToReach(long timeWhenReach)
     {
         return (timeWhenReach - unixMillis() - serverDelta) / 1000f;
-    }
-
-    private string vector2msg(Vector3 vector)
-    {
-        return string.Format("[{0}, {1}]", vector.x, vector.y);
     }
 
     private void SendNetworkMsg(string msg)

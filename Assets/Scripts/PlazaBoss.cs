@@ -23,6 +23,8 @@ public class PlazaBoss : MonoBehaviour, IProjectile, IPartySupporter
         {
             StartCoroutine(StartConvertingOthers());
         }
+
+        Projectile.RegisterProjectile(projectile.projectileId, gameObject);
     }
 
     private void OnTriggerEnter2D(Collider2D collision)
@@ -34,7 +36,6 @@ public class PlazaBoss : MonoBehaviour, IProjectile, IPartySupporter
         {
             var rigidbody = GetComponent<Rigidbody2D>();
             rigidbody.bodyType = RigidbodyType2D.Static;
-            rigidbody.velocity = Vector2.zero;
         }
         else if (voter != null)
         {
@@ -69,6 +70,7 @@ public class PlazaBoss : MonoBehaviour, IProjectile, IPartySupporter
         if (!isLocal || playerOwner == projectile.playerOwner) return false;
 
         alive = false;
+        NetworkManager.singleton.DestroyProjectile(projectile.projectileId);
         Instantiate(projectile.endAnimationPrefab, transform.position, Quaternion.identity);
         Destroy(transform.root.gameObject);
         return true;

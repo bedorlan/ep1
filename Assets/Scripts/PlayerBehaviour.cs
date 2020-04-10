@@ -82,11 +82,12 @@ public class PlayerBehaviour : MonoBehaviour
         var velocity = currentProjectilePrefab.GetComponentInChildren<Projectile>().AimAtTarget(transform.position, firingTargetPosition, 0f);
         if (velocity == Vector3.zero) return;
 
-        StartCoroutine(Fire(currentProjectilePrefab, velocity, false));
+        StartCoroutine(Fire(currentProjectilePrefab, velocity, false, null));
     }
 
-    private IEnumerator Fire(GameObject projectileToFire, Vector3 velocity, bool immediate)
+    private IEnumerator Fire(GameObject projectileToFire, Vector3 velocity, bool immediate, string projectileId)
     {
+        var newProjectileId = projectileId ?? Projectile.NewId(playerNumber);
         var firingTargetObject = this.firingTargetObject;
         var firingTargetPosition = this.firingTargetPosition;
         this.firingTargetObject = null;
@@ -100,16 +101,24 @@ public class PlayerBehaviour : MonoBehaviour
                 isLocal,
                 transform.position,
                 firingTargetPosition,
-                firingTargetObject);
+                firingTargetObject,
+                newProjectileId);
             yield break;
         }
+
 
         if (isLocal)
         {
             var distance = Mathf.Abs(transform.position.x - firingTargetPosition.x);
             var timeToReach = TIME_ANIMATION_PRE_FIRE + (distance / Mathf.Abs(velocity.x));
             var projectileType = projectileToFire.GetComponentInChildren<Projectile>().projectileTypeId;
-            NetworkManager.singleton.ProjectileFired(playerNumber, firingTargetPosition, timeToReach, projectileType, firingTargetObject);
+            NetworkManager.singleton.ProjectileFired(
+                playerNumber,
+                firingTargetPosition,
+                timeToReach,
+                projectileType,
+                firingTargetObject,
+                newProjectileId);
         }
 
         isFiring = true;
@@ -130,7 +139,8 @@ public class PlayerBehaviour : MonoBehaviour
             transform,
             velocity,
             IsFacingLeft(),
-            firingTargetObject);
+            firingTargetObject,
+            newProjectileId);
 
         yield return new WaitForSeconds(.35f);
         animator.SetBool("firing", false);
@@ -234,7 +244,7 @@ public class PlayerBehaviour : MonoBehaviour
         moveToCurrentDestination(timeToReach);
     }
 
-    public void Remote_FireProjectile(GameObject projectile, Vector3 destination, float timeToReach, GameObject targetObject)
+    public void Remote_FireProjectile(GameObject projectile, Vector3 destination, float timeToReach, GameObject targetObject, string projectileId)
     {
         firingTargetObject = targetObject;
         firingTargetPosition = destination;
@@ -243,7 +253,7 @@ public class PlayerBehaviour : MonoBehaviour
         var velocity = projectile.GetComponentInChildren<Projectile>().AimAtTargetAnyVelocity(transform.position, firingTargetPosition);
         var immediate = timeToReach <= 0;
 
-        StartCoroutine(Fire(projectile, velocity, immediate));
+        StartCoroutine(Fire(projectile, velocity, immediate, projectileId));
     }
 
     private void ChaseAndFireToPosition(Vector3 position)
