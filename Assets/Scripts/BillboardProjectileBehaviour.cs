@@ -12,7 +12,7 @@ public class BillboardProjectileBehaviour : MonoBehaviour, IProjectile
     private int playerTargetNumber;
     private HashSet<VoterBehaviour> votersUnderInfluence = new HashSet<VoterBehaviour>();
     private BoxCollider2D myCollider;
-    private bool influencing = false;
+    private bool influencing = false; // todo: this should be an int
 
     public bool CanYouFireAt(Vector3 position, GameObject target)
     {
@@ -49,7 +49,7 @@ public class BillboardProjectileBehaviour : MonoBehaviour, IProjectile
 
         var rigidbody = GetComponent<Rigidbody2D>();
         rigidbody.velocity = Vector3.zero;
-        rigidbody.bodyType = RigidbodyType2D.Kinematic;
+        rigidbody.bodyType = RigidbodyType2D.Static;
 
         StartCoroutine(StopInfluenceAfter(7));
         if (isLocal) StartCoroutine(SubstractTargetPlayerVotes());
