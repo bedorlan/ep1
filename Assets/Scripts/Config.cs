@@ -11,10 +11,10 @@ public static class Config
     internal static void Load()
     {
         var textFile = Resources.Load<TextAsset>("config");
-        var json = JSON.Parse(textFile.text);
+        var json = JSON.Parse(textFile.text).AsObject;
 
-        serverHost = json.AsObject["serverHost"].ToString();
-        serverPort = json.AsObject["serverPort"].AsInt;
-        matchLength = json.AsObject["matchLength"].AsInt;
+        serverHost = json["serverHost"];
+        serverPort = json["serverPort"].AsInt;
+        matchLength = json["matchLength"].AsInt;
     }
 }
