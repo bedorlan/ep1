@@ -10,7 +10,6 @@ public class BillboardProjectileBehaviour : MonoBehaviour, IProjectile
     private bool isLocal;
     private PlayerBehaviour playerTarget;
     private int playerTargetNumber;
-    private HashSet<VoterBehaviour> votersUnderInfluence = new HashSet<VoterBehaviour>();
     private BoxCollider2D myCollider;
     private bool alive = true;
     private bool playerAtRange = false;
@@ -39,11 +38,9 @@ public class BillboardProjectileBehaviour : MonoBehaviour, IProjectile
     private void OnTriggerEnter2D(Collider2D other)
     {
         var voter = other.GetComponent<VoterBehaviour>();
-        if (voter != null)
+        if (isLocal && voter != null)
         {
-            votersUnderInfluence.Add(voter);
-            voter.BeIndifferent();
-            return;
+            voter.BeUndecided();
         }
 
         var player = other.GetComponent<PlayerBehaviour>();
@@ -66,12 +63,6 @@ public class BillboardProjectileBehaviour : MonoBehaviour, IProjectile
     {
         yield return new WaitForSeconds(seconds);
         alive = false;
-
-        foreach (var voter in votersUnderInfluence)
-        {
-            voter.StopBeingIndifferent();
-        }
-
         Destroy(transform.root.gameObject, 1f);
     }
 
@@ -79,7 +70,7 @@ public class BillboardProjectileBehaviour : MonoBehaviour, IProjectile
     {
         while (alive)
         {
-            if (playerAtRange) playerTarget.AddVotes(-1);
+            if (playerAtRange) playerTarget.DoDamagePercentage(0.05f);
             yield return new WaitForSeconds(.5f);
         }
 

@@ -10,7 +10,6 @@ public class VoterBehaviour : MonoBehaviour, IPartySupporter, ICollectable
 
     private int voterId;
     private int playerOwner = Common.NO_PLAYER;
-    private bool indifferent = false; // todo: this should be an int
 
     void Start()
     {
@@ -35,7 +34,7 @@ public class VoterBehaviour : MonoBehaviour, IPartySupporter, ICollectable
 
     public bool TryConvertTo(int playerOwner, bool isLocal)
     {
-        if (this.playerOwner == playerOwner || indifferent) return false;
+        if (this.playerOwner == playerOwner) return false;
 
         GetComponent<TextMeshPro>().color = Color.gray;
         GetComponent<Jumper>().LastJump();
@@ -87,31 +86,22 @@ public class VoterBehaviour : MonoBehaviour, IPartySupporter, ICollectable
 
     internal void ClaimedBy(int player)
     {
-        StartCoroutine(die());
+        KillSelf();
     }
 
-    private IEnumerator die()
+    private void KillSelf()
     {
-        enabled = false;
-
+        GetComponent<Collider2D>().enabled = false;
         GetComponent<AudioSource>().PlayOneShot(whenClaimedClip);
-        yield return new WaitForSeconds(whenClaimedClip.length);
 
-        Destroy(transform.root.gameObject);
+        Destroy(transform.root.gameObject, whenClaimedClip.length);
     }
 
-    internal void BeIndifferent()
+    internal void BeUndecided()
     {
-        indifferent = true;
         playerOwner = Common.NO_PLAYER;
         GetComponent<TextMeshPro>().color = Common.playerColors[playerOwner];
 
         NetworkManager.singleton.TryConvertVoter(playerOwner, voterId);
-    }
-
-    internal void StopBeingIndifferent()
-    {
-        indifferent = false;
-        GetComponent<TextMeshPro>().color = Color.white;
     }
 }

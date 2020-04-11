@@ -47,7 +47,7 @@ server.on('connection', async (socket) => {
   waitingQueue.push(duplex)
 
   const sendMsgFromDuplexToSocket = (obj: any) => {
-    if (!socket.writable) return
+    if (socket.destroyed || !socket.writable) return
     const msg = toTelepathyMsg(JSON.stringify(obj) + '\n')
     socket.write(msg)
   }
@@ -410,7 +410,7 @@ function GenerateVoterPositionX() {
 }
 
 function sendTo(duplex: Duplex, msg: any[]) {
-  if (!duplex.out.writable) {
+  if (duplex.out.destroyed || !duplex.out.writable) {
     console.info('unable to send msg', msg)
     return
   }
