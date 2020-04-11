@@ -49,7 +49,6 @@ server.on('connection', async (socket) => {
     if (socket.destroyed || !socket.writable) return
     const msg = toTelepathyMsg(JSON.stringify(obj))
     try {
-      console.log({ out: obj })
       socket.write(msg)
     } catch (err) {
       console.info('error writing socket', err)
@@ -70,7 +69,6 @@ server.on('connection', async (socket) => {
     let msg: any[]
     try {
       msg = JSON.parse(raw)
-      console.log({ in: msg })
     } catch (err) {
       console.info(err)
       socket.destroy()
@@ -110,7 +108,6 @@ function safeWaitForHello(socket: net.Socket) {
       }
       if (code !== Codes.hello) return reject('weird data: ' + data)
 
-      socket.pause()
       socket.removeAllListeners()
       resolve()
     })
@@ -426,27 +423,20 @@ function sendTo(duplex: Duplex, msg: any[]) {
 function createTelepathyInterface(input: Readable): Readable {
   const passThrough = new PassThrough({ objectMode: true })
 
-  let buffer = ''
   let msgSize: number | undefined = undefined
-  input.on('data', (data: Buffer) => {
-    buffer += data.toString()
+  input.on('readable', () => {
+    while (true) {
+      if (!msgSize) {
+        const msg: Buffer | null = input.read(4)
+        if (!msg) return
+        msgSize = msg[0] * 256 ** 3 + msg[1] * 256 ** 2 + msg[2] * 256 ** 1 + msg[3] * 256 ** 0
+      }
 
-    if (!msgSize) {
-      if (buffer.length < 4) return
-      const msg = buffer.slice(0, 4)
-      buffer = buffer.slice(4)
-      msgSize =
-        msg.charCodeAt(0) * 256 ** 3 +
-        msg.charCodeAt(1) * 256 ** 2 +
-        msg.charCodeAt(2) * 256 ** 1 +
-        msg.charCodeAt(3) * 256 ** 0
+      const raw = input.read(msgSize)
+      if (!raw) return
+      passThrough.write(raw)
+      msgSize = undefined
     }
-
-    if (buffer.length < msgSize) return
-    const msg = buffer.slice(0, msgSize)
-    buffer = buffer.slice(msgSize)
-    passThrough.write(msg)
-    msgSize = undefined
   })
 
   const onClose = passThrough.end.bind(passThrough)
@@ -455,7 +445,6 @@ function createTelepathyInterface(input: Readable): Readable {
   input.on('end', onClose)
   input.on('error', onError)
 
-  input.resume()
   return passThrough
 }
 
