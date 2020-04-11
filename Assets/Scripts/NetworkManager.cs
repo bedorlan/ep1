@@ -5,6 +5,7 @@ using System.Linq;
 using System.Text;
 using SimpleJSON;
 using UnityEngine;
+using UnityEngine.UI;
 
 enum Codes
 {
@@ -92,6 +93,7 @@ public class NetworkManager : MonoBehaviour
 
         defaultProjectile = projectilesMap[0].GetComponentInChildren<ButtonProjectileBehaviour>().projectilePrefab;
 #if !UNITY_EDITOR
+        projectileButtons.transform.root.GetComponentInChildren<ScrollRect>().enabled = false;
         myCamera.SetActive(false);
 #endif
     }
