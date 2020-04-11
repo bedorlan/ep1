@@ -1,6 +1,6 @@
 import * as lodash from 'lodash'
 import * as net from 'net'
-import { PassThrough, Readable, Writable } from 'stream'
+import { PassThrough, Readable, Writable, pipeline, Transform, TransformCallback } from 'stream'
 
 enum Codes {
   noop = 0, // [0]
@@ -42,53 +42,56 @@ server.on('connection', async (socket) => {
     in: new PassThrough({ objectMode: true }),
     out: new PassThrough({ objectMode: true }),
   }
+
+  pipeline(
+    socket,
+    new TelepathyInputTransformer(),
+    new Transform({
+      objectMode: true,
+      transform(obj, encoding, cb) {
+        let msg: any[]
+        try {
+          msg = JSON.parse(obj)
+        } catch (err) {
+          return cb(err)
+        }
+        const code = msg[0]
+        if (code === Codes.guessTime) {
+          onGuessTime(duplex, msg)
+          return cb()
+        }
+
+        cb(null, msg)
+      },
+    }),
+    duplex.in,
+    socketClosed.bind(null, socket),
+  )
+
+  pipeline(
+    duplex.out,
+    new Transform({
+      objectMode: true,
+      transform(obj, encoding, cb) {
+        if (!process.env.LATENCY) this.push(obj)
+        else setTimeout(() => this.push(obj), Number.parseInt(process.env.LATENCY))
+        cb()
+      },
+    }),
+    new Transform({
+      writableObjectMode: true,
+      readableObjectMode: false,
+      transform(obj, encoding, cb) {
+        const msg = toTelepathyMsg(JSON.stringify(obj))
+        cb(null, msg)
+      },
+    }),
+    socket,
+    socketClosed.bind(null, socket),
+  )
+
   sendTo(duplex, [Codes.hello])
   waitingQueue.push(duplex)
-
-  const sendMsgFromDuplexToSocket = (obj: any) => {
-    if (socket.destroyed || !socket.writable) return
-    const msg = toTelepathyMsg(JSON.stringify(obj))
-    try {
-      socket.write(msg)
-    } catch (err) {
-      console.info('error writing socket', err)
-    }
-  }
-
-  duplex.out.on('data', (obj) => {
-    if (!process.env.LATENCY) {
-      sendMsgFromDuplexToSocket(obj)
-    } else {
-      const latency = Number.parseInt(process.env.LATENCY)
-      setTimeout(sendMsgFromDuplexToSocket.bind(null, obj), latency)
-    }
-  })
-
-  const telepathyInterface = createTelepathyInterface(socket)
-  telepathyInterface.on('data', (raw) => {
-    let msg: any[]
-    try {
-      msg = JSON.parse(raw)
-    } catch (err) {
-      console.info(err)
-      socket.destroy()
-      telepathyInterface.removeAllListeners()
-      duplex.in.destroy()
-      duplex.out.destroy()
-      return
-    }
-
-    const code = msg[0]
-    if (code === Codes.guessTime) {
-      onGuessTime(duplex, msg)
-      return
-    }
-
-    duplex.in.write(msg)
-  })
-
-  socket.on('close', socketClosed.bind(null, socket))
-  socket.on('error', socketClosed.bind(null, socket))
 
   tryStartMatch()
 })
@@ -258,7 +261,7 @@ class Match {
   private readonly Stop = () => {
     this.players.forEach((player) => {
       player.in.destroy()
-      player.out.end()
+      player.out.destroy()
     })
     this.votersCentral.Stop()
   }
@@ -420,32 +423,38 @@ function sendTo(duplex: Duplex, msg: any[]) {
   duplex.out.write(msg)
 }
 
-function createTelepathyInterface(input: Readable): Readable {
-  const passThrough = new PassThrough({ objectMode: true })
+class TelepathyInputTransformer extends Transform {
+  constructor() {
+    super({ writableObjectMode: false, readableObjectMode: true })
+  }
 
-  let msgSize: number | undefined = undefined
-  input.on('readable', () => {
+  private msgSize: number | undefined = undefined
+  private buffer = ''
+
+  _transform(chunk: Buffer, encoding: string, cb: TransformCallback) {
+    this.buffer += chunk.toString()
+
     while (true) {
-      if (!msgSize) {
-        const msg: Buffer | null = input.read(4)
-        if (!msg) return
-        msgSize = msg[0] * 256 ** 3 + msg[1] * 256 ** 2 + msg[2] * 256 ** 1 + msg[3] * 256 ** 0
+      if (!this.msgSize) {
+        if (this.buffer.length < 4) break
+        const msg = this.buffer.slice(0, 4)
+        this.buffer = this.buffer.slice(4)
+        this.msgSize =
+          msg.charCodeAt(0) * 256 ** 3 +
+          msg.charCodeAt(1) * 256 ** 2 +
+          msg.charCodeAt(2) * 256 ** 1 +
+          msg.charCodeAt(3) * 256 ** 0
       }
 
-      const raw = input.read(msgSize)
-      if (!raw) return
-      passThrough.write(raw)
-      msgSize = undefined
+      if (this.buffer.length < this.msgSize) break
+      const msg = this.buffer.slice(0, this.msgSize)
+      this.buffer = this.buffer.slice(this.msgSize)
+      this.push(msg)
+      this.msgSize = undefined
     }
-  })
 
-  const onClose = passThrough.end.bind(passThrough)
-  const onError = passThrough.destroy.bind(passThrough)
-  input.on('close', onClose)
-  input.on('end', onClose)
-  input.on('error', onError)
-
-  return passThrough
+    cb()
+  }
 }
 
 function toTelepathyMsg(data: string) {
