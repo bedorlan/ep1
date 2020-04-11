@@ -40,7 +40,7 @@ public class BillboardProjectileBehaviour : MonoBehaviour, IProjectile
         var voter = other.GetComponent<VoterBehaviour>();
         if (isLocal && voter != null)
         {
-            voter.BeUndecided();
+            voter.BeUndecided(isLocal);
         }
 
         var player = other.GetComponent<PlayerBehaviour>();

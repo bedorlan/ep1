@@ -24,7 +24,7 @@ public static class Common
     internal const int NO_PLAYER = -1;
 
     internal static readonly Dictionary<int, Color> playerColors = new Dictionary<int, Color> {
-        {NO_PLAYER, Color.gray },
+        {NO_PLAYER, Color.white },
         {0, new Color(1, .5f, .5f) },
         {1, new Color(.5f, .5f, 1) },
         {2, new Color(.5f, 1, .5f) },

@@ -97,11 +97,8 @@ public class VoterBehaviour : MonoBehaviour, IPartySupporter, ICollectable
         Destroy(transform.root.gameObject, whenClaimedClip.length);
     }
 
-    internal void BeUndecided()
+    internal void BeUndecided(bool isLocal)
     {
-        playerOwner = Common.NO_PLAYER;
-        GetComponent<TextMeshPro>().color = Common.playerColors[playerOwner];
-
-        NetworkManager.singleton.TryConvertVoter(playerOwner, voterId);
+        TryConvertTo(Common.NO_PLAYER, isLocal);
     }
 }
