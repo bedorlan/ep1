@@ -546,7 +546,6 @@ public class NetworkManager : MonoBehaviour
         msg.Add((int)Codes.newAlly);
         msg.Add(playerNumber);
         msg.Add((int)projectileType);
-        Debug.Log("msg=" + msg.ToString());
         SendNetworkMsg(msg.ToString());
 
         StartCoroutine(localPlayer.NewAlly(projectileType));

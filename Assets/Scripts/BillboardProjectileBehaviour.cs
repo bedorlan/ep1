@@ -11,8 +11,9 @@ public class BillboardProjectileBehaviour : MonoBehaviour, IProjectile
     private PlayerBehaviour playerTarget;
     private int playerTargetNumber;
     private HashSet<VoterBehaviour> votersUnderInfluence = new HashSet<VoterBehaviour>();
-    private EdgeCollider2D myCollider;
+    private BoxCollider2D myCollider;
     private bool alive = true;
+    private bool playerAtRange = false;
 
     public bool CanYouFireAt(Vector3 position, GameObject target)
     {
@@ -26,7 +27,7 @@ public class BillboardProjectileBehaviour : MonoBehaviour, IProjectile
         isLocal = projectile.isLocal;
         playerTarget = projectile.targetObject.GetComponent<PlayerBehaviour>();
         playerTargetNumber = playerTarget.GetPlayerNumber();
-        myCollider = GetComponent<EdgeCollider2D>();
+        myCollider = GetComponent<BoxCollider2D>();
 
         var color = Common.playerColors[playerTargetNumber];
         playerFace.GetComponent<SpriteRenderer>().color = color;
@@ -43,6 +44,21 @@ public class BillboardProjectileBehaviour : MonoBehaviour, IProjectile
             votersUnderInfluence.Add(voter);
             voter.BeIndifferent();
             return;
+        }
+
+        var player = other.GetComponent<PlayerBehaviour>();
+        if (player != null && player.GetPlayerNumber() == playerTargetNumber)
+        {
+            playerAtRange = true;
+        }
+    }
+
+    private void OnTriggerExit2D(Collider2D collision)
+    {
+        var player = collision.GetComponent<PlayerBehaviour>();
+        if (player != null && player.GetPlayerNumber() == playerTargetNumber)
+        {
+            playerAtRange = false;
         }
     }
 
@@ -63,9 +79,7 @@ public class BillboardProjectileBehaviour : MonoBehaviour, IProjectile
     {
         while (alive)
         {
-            var atRange = myCollider.bounds.Contains(playerTarget.transform.root.position);
-            if (atRange) playerTarget.AddVotes(-1);
-
+            if (playerAtRange) playerTarget.AddVotes(-1);
             yield return new WaitForSeconds(.5f);
         }
 

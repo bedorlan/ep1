@@ -2090,7 +2090,7 @@ GameObject:
   - component: {fileID: 991800036}
   - component: {fileID: 991800037}
   - component: {fileID: 991800035}
-  m_Layer: 0
+  m_Layer: 12
   m_Name: Hell
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -2264,7 +2264,7 @@ GameObject:
   - component: {fileID: 1388844335}
   m_Layer: 5
   m_Name: ProjectileButtonsScroll
-  m_TagString: Untagged
+  m_TagString: UI
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -3413,8 +3413,8 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1764468445}
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: -0.42, y: -4.85, z: 0.514407}
-  m_LocalScale: {x: 0.2805, y: 0.2805, z: 0.2805}
+  m_LocalPosition: {x: -0.42, y: -4.85, z: 0}
+  m_LocalScale: {x: 0.2805, y: 0.2805, z: 1}
   m_Children: []
   m_Father: {fileID: 0}
   m_RootOrder: 1
