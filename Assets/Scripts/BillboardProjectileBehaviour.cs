@@ -5,12 +5,9 @@ using UnityEngine;
 
 public class BillboardProjectileBehaviour : MonoBehaviour, IProjectile
 {
-    public GameObject playerFace;
-
     private bool isLocal;
     private PlayerBehaviour playerTarget;
     private int playerTargetNumber;
-    private BoxCollider2D myCollider;
     private bool alive = true;
     private bool playerAtRange = false;
 
@@ -26,9 +23,11 @@ public class BillboardProjectileBehaviour : MonoBehaviour, IProjectile
         isLocal = projectile.isLocal;
         playerTarget = projectile.targetObject.GetComponent<PlayerBehaviour>();
         playerTargetNumber = playerTarget.GetPlayerNumber();
-        myCollider = GetComponent<BoxCollider2D>();
 
+        var party = playerTarget.party;
+        var playerFace = transform.root.GetChild((int)party).gameObject;
         var color = Common.playerColors[playerTargetNumber];
+        playerFace.SetActive(true);
         playerFace.GetComponent<SpriteRenderer>().color = color;
 
         StartCoroutine(StopInfluenceAfter(9));

@@ -14,6 +14,8 @@ public class PlayerBehaviour : MonoBehaviour
     public GameObject changeHeadAnimationPrefab;
     public List<AudioClip> projectileIntroductions;
 
+    internal Common.Parties party { get; private set; }
+
     private GameObject currentProjectilePrefab;
     private int playerNumber;
     private bool isLocal;
@@ -331,6 +333,7 @@ public class PlayerBehaviour : MonoBehaviour
 
     internal void PartyChose(Common.Parties party)
     {
+        this.party = party;
         headsPrefabs[0].SetActive(false);
         headsPrefabs[(int)party].SetActive(true);
         headsPrefabs[(int)party].GetComponent<SpriteRenderer>().color = Common.playerColors[playerNumber];
