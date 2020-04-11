@@ -1,6 +1,5 @@
 import * as lodash from 'lodash'
 import * as net from 'net'
-import { createInterface } from 'readline'
 import { PassThrough, Readable, Writable } from 'stream'
 
 enum Codes {
@@ -48,8 +47,13 @@ server.on('connection', async (socket) => {
 
   const sendMsgFromDuplexToSocket = (obj: any) => {
     if (socket.destroyed || !socket.writable) return
-    const msg = toTelepathyMsg(JSON.stringify(obj) + '\n')
-    socket.write(msg)
+    const msg = toTelepathyMsg(JSON.stringify(obj))
+    try {
+      console.log({ out: obj })
+      socket.write(msg)
+    } catch (err) {
+      console.info('error writing socket', err)
+    }
   }
 
   duplex.out.on('data', (obj) => {
@@ -61,15 +65,16 @@ server.on('connection', async (socket) => {
     }
   })
 
-  const readliner = createInterface({ input: socket, terminal: false })
-  readliner.on('line', (raw) => {
+  const telepathyInterface = createTelepathyInterface(socket)
+  telepathyInterface.on('data', (raw) => {
     let msg: any[]
     try {
-      msg = getTelepathyMsg(raw)
+      msg = JSON.parse(raw)
+      console.log({ in: msg })
     } catch (err) {
       console.info(err)
       socket.destroy()
-      readliner.removeAllListeners()
+      telepathyInterface.removeAllListeners()
       duplex.in.destroy()
       duplex.out.destroy()
       return
@@ -91,7 +96,7 @@ server.on('connection', async (socket) => {
 })
 
 function safeWaitForHello(socket: net.Socket) {
-  const BYTES_TO_READ = 9 // Codes.hello: 000?[11]\n
+  const BYTES_TO_READ = 8 // Codes.hello: 0004[11]
   return new Promise((resolve, reject) => {
     socket.on('readable', () => {
       if (socket.readableLength < BYTES_TO_READ) return
@@ -105,6 +110,7 @@ function safeWaitForHello(socket: net.Socket) {
       }
       if (code !== Codes.hello) return reject('weird data: ' + data)
 
+      socket.pause()
       socket.removeAllListeners()
       resolve()
     })
@@ -417,8 +423,40 @@ function sendTo(duplex: Duplex, msg: any[]) {
   duplex.out.write(msg)
 }
 
-function getTelepathyMsg(data: string) {
-  return JSON.parse(data.slice(4))
+function createTelepathyInterface(input: Readable): Readable {
+  const passThrough = new PassThrough({ objectMode: true })
+
+  let buffer = ''
+  let msgSize: number | undefined = undefined
+  input.on('data', (data: Buffer) => {
+    buffer += data.toString()
+
+    if (!msgSize) {
+      if (buffer.length < 4) return
+      const msg = buffer.slice(0, 4)
+      buffer = buffer.slice(4)
+      msgSize =
+        msg.charCodeAt(0) * 256 ** 3 +
+        msg.charCodeAt(1) * 256 ** 2 +
+        msg.charCodeAt(2) * 256 ** 1 +
+        msg.charCodeAt(3) * 256 ** 0
+    }
+
+    if (buffer.length < msgSize) return
+    const msg = buffer.slice(0, msgSize)
+    buffer = buffer.slice(msgSize)
+    passThrough.write(msg)
+    msgSize = undefined
+  })
+
+  const onClose = passThrough.end.bind(passThrough)
+  const onError = passThrough.destroy.bind(passThrough)
+  input.on('close', onClose)
+  input.on('end', onClose)
+  input.on('error', onError)
+
+  input.resume()
+  return passThrough
 }
 
 function toTelepathyMsg(data: string) {
