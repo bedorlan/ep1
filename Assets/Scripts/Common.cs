@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.EventSystems;
@@ -53,7 +54,7 @@ public static class Common
         Billboard = 11,
     }
 
-    internal static bool IsPointerOverUIObject()
+    static internal bool IsPointerOverUIObject()
     {
         PointerEventData eventDataCurrentPosition = new PointerEventData(EventSystem.current);
         eventDataCurrentPosition.position = new Vector2(Input.mousePosition.x, Input.mousePosition.y);
@@ -68,5 +69,10 @@ public static class Common
             }
         }
         return false;
+    }
+
+    static internal long unixMillis()
+    {
+        return DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
     }
 }

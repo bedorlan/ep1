@@ -412,7 +412,7 @@ public class NetworkManager : MonoBehaviour
 
     private void guessServerTime()
     {
-        var now = timer = unixMillis();
+        var now = timer = Common.unixMillis();
         var msg = string.Format("[{0}, {1}]", (int)Codes.guessTime, now);
         SendNetworkMsg(msg);
     }
@@ -427,7 +427,7 @@ public class NetworkManager : MonoBehaviour
     {
         if (timer == -1) yield break;
 
-        var newLatency = (int)(unixMillis() - timer);
+        var newLatency = (int)(Common.unixMillis() - timer);
         timer = -1;
         if (newLatency < minServerLatency)
         {
@@ -582,20 +582,15 @@ public class NetworkManager : MonoBehaviour
 
 #endregion
 
-    private long unixMillis()
-    {
-        return DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
-    }
-
     private long timeToReach2timeWhenReach(float timeToReach)
     {
         var timeToReachMillis = (int)Mathf.Round(timeToReach * 1000);
-        return unixMillis() + timeToReachMillis + serverDelta;
+        return Common.unixMillis() + timeToReachMillis + serverDelta;
     }
 
     private float timeWhenReach2timeToReach(long timeWhenReach)
     {
-        return (timeWhenReach - unixMillis() - serverDelta) / 1000f;
+        return (timeWhenReach - Common.unixMillis() - serverDelta) / 1000f;
     }
 
     private void SendNetworkMsg(string msg)
