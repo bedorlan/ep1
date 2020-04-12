@@ -284,6 +284,9 @@ public class PlayerBehaviour : MonoBehaviour
 
     public void Remote_FireProjectile(GameObject projectile, Vector3 destination, float timeToReach, GameObject targetObject, string projectileId)
     {
+        var isPowerUp = TryFirePowerUp(projectile);
+        if (isPowerUp) return;
+
         firingTargetObject = targetObject;
         firingTargetPosition = destination;
         timeToReach -= TIME_ANIMATION_PRE_FIRE;
@@ -325,13 +328,18 @@ public class PlayerBehaviour : MonoBehaviour
         currentProjectilePrefab = projectile;
         stop();
 
+        TryFirePowerUp(projectile);
+    }
+
+    private bool TryFirePowerUp(GameObject projectile)
+    {
         var isPowerUp = projectile.GetComponentInChildren<IProjectile>().IsPowerUp();
-        if (isPowerUp)
-        {
-            firingTargetObject = null;
-            firingTargetPosition = Vector3.zero;
-            StartCoroutine(FirePowerUp(projectile));
-        }
+        if (!isPowerUp) return false;
+
+        firingTargetObject = null;
+        firingTargetPosition = Vector3.zero;
+        StartCoroutine(FirePowerUp(projectile));
+        return true;
     }
 
     internal void AddVotes(int votes)

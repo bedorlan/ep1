@@ -14,15 +14,9 @@ public class Abstention : MonoBehaviour, IProjectile, IPowerUp
         return false;
     }
 
-    private Projectile projectile;
-
-    private void Start()
-    {
-        projectile = GetComponent<Projectile>();
-    }
-
     public void Fire()
     {
-        Debug.Log("Firing abstention");
+        // nothing to do here. the server will detect the projectile
+        // and it will start generating voters on my position
     }
 }
