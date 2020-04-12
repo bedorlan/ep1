@@ -149,6 +149,39 @@ public class PlayerBehaviour : MonoBehaviour
         isFiring = false;
     }
 
+    private IEnumerator FirePowerUp(GameObject projectile)
+    {
+        isFiring = true;
+        animator.SetBool("firing", true);
+        stop();
+
+        var newProjectileId = Projectile.NewId(playerNumber);
+        if (isLocal)
+        {
+            var projectileType = projectile.GetComponentInChildren<Projectile>().projectileTypeId;
+            NetworkManager.singleton.ProjectileFired(
+                playerNumber,
+                firingTargetPosition,
+                0f,
+                projectileType,
+                firingTargetObject,
+                newProjectileId);
+        }
+
+        yield return new WaitForSeconds(TIME_ANIMATION_PRE_FIRE);
+        var newProjectile = Instantiate(projectile, transform.root.position, Quaternion.identity);
+        var projectileBehaviour = newProjectile.GetComponentInChildren<Projectile>();
+        projectileBehaviour.FirePowerUp(
+            playerNumber,
+            isLocal,
+            transform.root.gameObject,
+            newProjectileId);
+
+        yield return new WaitForSeconds(.35f);
+        animator.SetBool("firing", false);
+        isFiring = false;
+    }
+
     private void moveToCurrentDestination(float timeToReach)
     {
         if (timeToReach <= 0)
@@ -288,6 +321,14 @@ public class PlayerBehaviour : MonoBehaviour
     {
         currentProjectilePrefab = projectile;
         stop();
+
+        var isPowerUp = projectile.GetComponentInChildren<IProjectile>().IsPowerUp();
+        if (isPowerUp)
+        {
+            firingTargetObject = null;
+            firingTargetPosition = Vector3.zero;
+            StartCoroutine(FirePowerUp(projectile));
+        }
     }
 
     internal void AddVotes(int votes)

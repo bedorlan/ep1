@@ -11,6 +11,11 @@ public class Orange : MonoBehaviour, IProjectile
         return validTarget;
     }
 
+    public bool IsPowerUp()
+    {
+        return false;
+    }
+
     private Projectile projectile;
     private GameObject endAnimationPrefab;
 
@@ -43,7 +48,7 @@ public class Orange : MonoBehaviour, IProjectile
         var voter = collision.gameObject.GetComponentInChildren<IPartySupporter>();
         if (voter != null)
         {
-            voter.TryConvertTo(projectile.playerOwner, projectile.isLocal);
+            voter.TryConvertTo(projectile.playerOwnerNumber, projectile.isLocal);
         }
     }
 

@@ -16,6 +16,11 @@ public class Twitter : MonoBehaviour, IProjectile, IManuallyFiredProjectile
         return validTarget;
     }
 
+    public bool IsPowerUp()
+    {
+        return false;
+    }
+
     public Vector3 AimAtTarget(float distanceX, float distanceY, float minVelocity)
     {
         var velocity = new Vector3(distanceX, distanceY, 0f);
@@ -67,13 +72,13 @@ public class Twitter : MonoBehaviour, IProjectile, IManuallyFiredProjectile
 
         if (player != null)
         {
-            if (player.GetPlayerNumber() == projectile.playerOwner) return;
+            if (player.GetPlayerNumber() == projectile.playerOwnerNumber) return;
             if(projectile.isLocal) player.DoDamagePercentage(playerDamagePercentage);
             maxInfluence = 0;
         }
         else if (voter != null)
         {
-            var playerOwner = projectile.playerOwner;
+            var playerOwner = projectile.playerOwnerNumber;
             var isLocal = projectile.isLocal;
 
             if (voter.TryConvertTo(playerOwner, isLocal))

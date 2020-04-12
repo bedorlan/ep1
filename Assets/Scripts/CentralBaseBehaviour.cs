@@ -14,9 +14,14 @@ public class CentralBaseBehaviour : MonoBehaviour, IProjectile
         return otherBase == null;
     }
 
+    public bool IsPowerUp()
+    {
+        return false;
+    }
+
     private void Start()
     {
-        playerOwnerNumber = GetComponent<Projectile>().playerOwner;
+        playerOwnerNumber = GetComponent<Projectile>().playerOwnerNumber;
         foreach (var sprite in GetComponentsInChildren<SpriteRenderer>())
         {
             sprite.color = Common.playerColors[playerOwnerNumber];

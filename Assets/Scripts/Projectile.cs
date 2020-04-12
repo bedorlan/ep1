@@ -12,7 +12,7 @@ public class Projectile : MonoBehaviour
 
     internal string projectileId;
     internal bool isLocal;
-    internal int playerOwner;
+    internal int playerOwnerNumber;
     internal GameObject targetObject;
 
     public Vector3 AimAtTarget(Vector3 origin, Vector3 currentTarget, float minVelocity)
@@ -75,7 +75,7 @@ public class Projectile : MonoBehaviour
         GameObject targetObject,
         string projectileId)
     {
-        playerOwner = playerNumberOwner;
+        playerOwnerNumber = playerNumberOwner;
         this.isLocal = isLocal;
         this.targetObject = targetObject;
         this.projectileId = projectileId;
@@ -103,7 +103,7 @@ public class Projectile : MonoBehaviour
         GameObject targetObject,
         string projectileId)
     {
-        playerOwner = playerOwnerNumber;
+        this.playerOwnerNumber = playerOwnerNumber;
         this.isLocal = isLocal;
         this.targetObject = targetObject;
         this.projectileId = projectileId;
@@ -114,6 +114,16 @@ public class Projectile : MonoBehaviour
         {
             manuallyFired.FireProjectileImmediate(origin, currentTarget);
         }
+    }
+
+    internal void FirePowerUp(int playerNumber, bool isLocal, GameObject playerOwner, string newProjectileId)
+    {
+        this.playerOwnerNumber = playerNumber;
+        this.isLocal = isLocal;
+        this.targetObject = playerOwner;
+
+        var powerUp = transform.root.GetComponentInChildren<IPowerUp>();
+        powerUp.Fire();
     }
 
     public float CalcMaxReach(float offsetY)

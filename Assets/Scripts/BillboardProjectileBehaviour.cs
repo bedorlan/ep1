@@ -17,6 +17,11 @@ public class BillboardProjectileBehaviour : MonoBehaviour, IProjectile
         return validTarget;
     }
 
+    public bool IsPowerUp()
+    {
+        return false;
+    }
+
     private void Start()
     {
         var projectile = GetComponent<Projectile>();

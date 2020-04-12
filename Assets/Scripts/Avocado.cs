@@ -16,6 +16,11 @@ public class Avocado : MonoBehaviour, IProjectile
         return validTarget;
     }
 
+    public bool IsPowerUp()
+    {
+        return false;
+    }
+
     private HashSet<IPartySupporter> votersAtRange = new HashSet<IPartySupporter>();
     private HashSet<PlayerBehaviour> playersAtRange = new HashSet<PlayerBehaviour>();
     private Projectile projectile;
@@ -41,7 +46,7 @@ public class Avocado : MonoBehaviour, IProjectile
         }
 
         var player = other.GetComponent<PlayerBehaviour>();
-        if (player != null && player.GetPlayerNumber() != projectile.playerOwner)
+        if (player != null && player.GetPlayerNumber() != projectile.playerOwnerNumber)
         {
             playersAtRange.Add(player);
         }
@@ -59,7 +64,7 @@ public class Avocado : MonoBehaviour, IProjectile
 
         foreach (var voter in votersAtRange)
         {
-            voter.TryConvertTo(projectile.playerOwner, projectile.isLocal);
+            voter.TryConvertTo(projectile.playerOwnerNumber, projectile.isLocal);
         }
 
         Instantiate(projectile.endAnimationPrefab, transform.position, Quaternion.identity);

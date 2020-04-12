@@ -10,13 +10,18 @@ public class Book : MonoBehaviour, IProjectile
         return validTarget;
     }
 
+    public bool IsPowerUp()
+    {
+        return false;
+    }
+
     public void OnTriggerEnter2D(Collider2D other)
     {
         var voter = other.gameObject.GetComponentInChildren<IPartySupporter>();
         if (voter == null) return;
 
         var projectile = gameObject.GetComponent<Projectile>();
-        var playerOwner = projectile.playerOwner;
+        var playerOwner = projectile.playerOwnerNumber;
         var isLocal = projectile.isLocal;
         var endAnimationPrefab = projectile.endAnimationPrefab;
 

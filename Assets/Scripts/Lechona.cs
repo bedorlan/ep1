@@ -10,6 +10,11 @@ public class Lechona : MonoBehaviour, IProjectile
         return validTarget;
     }
 
+    public bool IsPowerUp()
+    {
+        return false;
+    }
+
     private HashSet<IPartySupporter> votersAtRange = new HashSet<IPartySupporter>();
 
     public void OnTriggerEnter2D(Collider2D other)
@@ -30,7 +35,7 @@ public class Lechona : MonoBehaviour, IProjectile
     private void Explode()
     {
         var projectile = gameObject.GetComponent<Projectile>();
-        var playerOwner = projectile.playerOwner;
+        var playerOwner = projectile.playerOwnerNumber;
         var isLocal = projectile.isLocal;
         var endAnimationPrefab = projectile.endAnimationPrefab;
 

@@ -10,6 +10,11 @@ public class PlazaBoss : MonoBehaviour, IProjectile, IPartySupporter
         return true;
     }
 
+    public bool IsPowerUp()
+    {
+        return false;
+    }
+
     private Projectile projectile;
     Queue<GameObject> votersInRange = new Queue<GameObject>();
     private bool alive = true;
@@ -17,7 +22,7 @@ public class PlazaBoss : MonoBehaviour, IProjectile, IPartySupporter
     private void Start()
     {
         projectile = transform.root.GetComponent<Projectile>();
-        transform.root.GetComponent<SpriteRenderer>().color = Common.playerColors[projectile.playerOwner];
+        transform.root.GetComponent<SpriteRenderer>().color = Common.playerColors[projectile.playerOwnerNumber];
 
         if (projectile.isLocal)
         {
@@ -48,18 +53,18 @@ public class PlazaBoss : MonoBehaviour, IProjectile, IPartySupporter
             }
             if (voter == null) continue;
 
-            voter.GetComponentInChildren<IPartySupporter>().TryConvertTo(projectile.playerOwner, projectile.isLocal);
+            voter.GetComponentInChildren<IPartySupporter>().TryConvertTo(projectile.playerOwnerNumber, projectile.isLocal);
             var collectable = voter.GetComponent<ICollectable>();
             if (collectable == null) continue;
 
             yield return new WaitForSeconds(1f);
-            collectable.TryClaim(projectile.playerOwner);
+            collectable.TryClaim(projectile.playerOwnerNumber);
         }
     }
 
     public bool TryConvertTo(int playerOwner, bool isLocal)
     {
-        if (!isLocal || playerOwner == projectile.playerOwner) return false;
+        if (!isLocal || playerOwner == projectile.playerOwnerNumber) return false;
 
         alive = false;
         NetworkManager.singleton.DestroyProjectile(projectile.projectileId);
