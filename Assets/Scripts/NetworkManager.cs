@@ -398,11 +398,6 @@ public class NetworkManager : MonoBehaviour
         {
             var collider = player.GetComponent<Collider2D>();
             Physics2D.IgnoreCollision(collider, background.GetComponent<Collider2D>());
-
-            foreach (var remotePlayer in players)
-            {
-                Physics2D.IgnoreCollision(collider, remotePlayer.GetComponent<Collider2D>());
-            }
         }
     }
 
