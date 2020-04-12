@@ -228,7 +228,7 @@ public class NetworkManager : MonoBehaviour
 
     private IEnumerator ShowPartySelection()
     {
-        yield return new WaitForSecondsRealtime(30f);
+        yield return new WaitForSecondsRealtime(20f);
 
         projectileButtons.transform.GetChild((int)Common.Projectiles.CentroDemocraticoBase).gameObject.SetActive(true);
         projectileButtons.transform.GetChild((int)Common.Projectiles.ColombiaHumanaBase).gameObject.SetActive(true);
@@ -274,6 +274,16 @@ public class NetworkManager : MonoBehaviour
 
     private IEnumerator StartGamePlan()
     {
+        // 0:20 ShowPartySelection & PartyChose
+        // 0:30 level 1
+        // 1:15 level 2
+        // 2:00 level 3
+        // 3:00 clocks off
+        // 3:00 debate?
+        // 4:00 end match
+
+        yield return new WaitForSecondsRealtime(10f);
+
         var projectileLevels = mapPartyToProjectiles[playerParty];
         for (var level = 0; level < 2; ++level)
         {
@@ -288,7 +298,7 @@ public class NetworkManager : MonoBehaviour
                 alliesInMatch[projectile] = newAlliesInMatch;
             }
 
-            yield return new WaitForSecondsRealtime(30f);
+            yield return new WaitForSecondsRealtime(45f);
         }
     }
 
