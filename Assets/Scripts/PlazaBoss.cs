@@ -44,7 +44,7 @@ public class PlazaBoss : MonoBehaviour, IProjectile, IPartySupporter
     {
         while (alive)
         {
-            yield return new WaitForSeconds(1f);
+            yield return new WaitForSeconds(0.75f);
 
             GameObject voter = null;
             while (votersInRange.Count > 0 && voter == null)
@@ -57,7 +57,7 @@ public class PlazaBoss : MonoBehaviour, IProjectile, IPartySupporter
             var collectable = voter.GetComponent<ICollectable>();
             if (collectable == null) continue;
 
-            yield return new WaitForSeconds(1f);
+            yield return new WaitForSeconds(0.75f);
             collectable.TryClaim(projectile.playerOwnerNumber);
         }
     }
