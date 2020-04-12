@@ -16,6 +16,7 @@ public class AllyBehaviour : MonoBehaviour, IPartySupporter, ICollectable
         { Common.Projectiles.PlazaBoss, Common.CAPITALIST_CODE },
         { Common.Projectiles.Billboard, Common.SELLER_CODE },
         { Common.Projectiles.Avocado, Common.AVOCADO_GIRL_CODE },
+        { Common.Projectiles.Abstention, Common.PEOPLE_CODE },
     };
 
     private void Start()

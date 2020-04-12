@@ -10,6 +10,7 @@ public static class Common
 
     internal const char SELLER_CODE = '\uf114';
     internal const char CHEF_CODE = '\uf119';
+    internal const char PEOPLE_CODE = '\uf11e';
     internal const char PLAZA_BOSS_CODE = '\uf12f';
     internal const char FARMER_CODE = '\uf133';
     internal const char GIRL_DANCING_CODE = '\uf13d';

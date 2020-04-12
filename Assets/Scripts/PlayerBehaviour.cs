@@ -337,7 +337,7 @@ public class PlayerBehaviour : MonoBehaviour
         if (!isPowerUp) return false;
 
         firingTargetObject = null;
-        firingTargetPosition = Vector3.zero;
+        firingTargetPosition = transform.root.position;
         StartCoroutine(FirePowerUp(projectile));
         return true;
     }

@@ -366,19 +366,34 @@ class VotersCentral {
   }
 
   public readonly ProjectileFired = (player: number, msg: any[]) => {
-    const [code, playerOwner, destination, timeWhenReach, projectileType, targetPlayer, projectileId] = msg
-
     const CENTRAL_BASE_PROJECTILE_TYPES = [4, 5, 6]
-    if (!CENTRAL_BASE_PROJECTILE_TYPES.includes(projectileType)) return
+    const ABSTENTION_PROJECTILE_TYPE = 13
 
-    const [centralPositionX, centralPositionY] = destination
-    this.centralBases[playerOwner] = centralPositionX
+    const [code, playerOwner, destination, timeWhenReach, projectileType, targetPlayer, projectileId] = msg
+    const [projectilePositionX, projectilePositionY] = destination
 
-    lodash
-      .times(3)
-      .fill(centralPositionX)
-      .map(this.GenerateVoterCloseTo)
-      .forEach(this.SendVoterConverted.bind(null, playerOwner))
+    console.log({ projectileType, projectilePositionX })
+    if (CENTRAL_BASE_PROJECTILE_TYPES.includes(projectileType)) {
+      this.centralBases[playerOwner] = projectilePositionX
+
+      lodash
+        .times(3)
+        .fill(projectilePositionX)
+        .map(this.GenerateVoterCloseTo)
+        .forEach(this.SendVoterConverted.bind(null, playerOwner))
+
+      return
+    }
+
+    if (projectileType === ABSTENTION_PROJECTILE_TYPE) {
+      const generateVoters = () =>
+        this.SendVotersToAll(lodash.times(5).fill(projectilePositionX).map(this.GenerateVoterCloseTo))
+
+      generateVoters()
+      // todo: check that the match has not ended
+      setTimeout(generateVoters, 1000)
+      setTimeout(generateVoters, 2000)
+    }
   }
 
   private readonly SendVoterConverted = (playerOwner: number, voter: readonly [number, number]) => {
