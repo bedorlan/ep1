@@ -259,7 +259,7 @@ public class NetworkManager : MonoBehaviour
         },
         { Common.Parties.ColombiaHumana, new Common.Projectiles[][] {
                 new Common.Projectiles[] { Common.Projectiles.Twitter, Common.Projectiles.Lechona },
-                new Common.Projectiles[] { Common.Projectiles.Billboard },
+                new Common.Projectiles[] { Common.Projectiles.Avocado, Common.Projectiles.Billboard },
             }
         },
         { Common.Parties.CompromisoCiudadano, new Common.Projectiles[][] {

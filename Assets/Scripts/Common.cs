@@ -52,6 +52,7 @@ public static class Common
         Book = 9,
         PlazaBoss = 10,
         Billboard = 11,
+        Avocado = 12,
     }
 
     static internal bool IsPointerOverUIObject()
