@@ -169,6 +169,9 @@ public class PlayerBehaviour : MonoBehaviour
         }
 
         yield return new WaitForSeconds(TIME_ANIMATION_PRE_FIRE);
+
+        MagicFlame.createFlameBurst(transform.root.gameObject);
+
         var newProjectile = Instantiate(projectile, transform.root.position, Quaternion.identity);
         var projectileBehaviour = newProjectile.GetComponentInChildren<Projectile>();
         projectileBehaviour.FirePowerUp(

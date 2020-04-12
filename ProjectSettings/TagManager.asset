@@ -48,6 +48,9 @@ TagManager:
   - name: Billboards
     uniqueID: 2145051109
     locked: 0
+  - name: PlayerFlames
+    uniqueID: 86281421
+    locked: 0
   - name: Player
     uniqueID: 4072276877
     locked: 0
