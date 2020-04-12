@@ -99,6 +99,7 @@ public class PlayerBehaviour : MonoBehaviour
         {
             var immediateProjectile = Instantiate(projectileToFire);
             immediateProjectile.GetComponentInChildren<Projectile>().FireProjectileImmediate(
+                this,
                 playerNumber,
                 isLocal,
                 transform.position,
@@ -136,6 +137,7 @@ public class PlayerBehaviour : MonoBehaviour
         yield return new WaitForSeconds(TIME_ANIMATION_PRE_FIRE);
         var newProjectile = Instantiate(projectileToFire);
         newProjectile.GetComponentInChildren<Projectile>().FireProjectile(
+            this,
             playerNumber,
             isLocal,
             transform,
@@ -175,9 +177,9 @@ public class PlayerBehaviour : MonoBehaviour
         var newProjectile = Instantiate(projectile, transform.root.position, Quaternion.identity);
         var projectileBehaviour = newProjectile.GetComponentInChildren<Projectile>();
         projectileBehaviour.FirePowerUp(
+            this,
             playerNumber,
             isLocal,
-            transform.root.gameObject,
             newProjectileId);
 
         yield return new WaitForSeconds(.35f);
@@ -407,9 +409,10 @@ public class PlayerBehaviour : MonoBehaviour
         audioSource.PlayOneShot(clip);
     }
 
-    internal void DoDamagePercentage(float playerDamagePercentage)
+    internal int DoDamagePercentage(float playerDamagePercentage)
     {
-        var votesLost = -(int)Mathf.Ceil(votesCount * playerDamagePercentage);
-        AddVotes(votesLost);
+        var votesLost = (int)Mathf.Ceil(votesCount * playerDamagePercentage);
+        AddVotes(-votesLost);
+        return votesLost;
     }
 }

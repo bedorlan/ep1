@@ -10,10 +10,11 @@ public class Projectile : MonoBehaviour
     public GameObject endAnimationPrefab;
     public int projectileTypeId;
 
-    internal string projectileId;
-    internal bool isLocal;
-    internal int playerOwnerNumber;
-    internal GameObject targetObject;
+    internal string projectileId { get; private set; }
+    internal bool isLocal { get; private set; }
+    internal PlayerBehaviour playerOwner { get; private set; }
+    internal int playerOwnerNumber { get; private set; }
+    internal GameObject targetObject { get; private set; }
 
     public Vector3 AimAtTarget(Vector3 origin, Vector3 currentTarget, float minVelocity)
     {
@@ -67,7 +68,8 @@ public class Projectile : MonoBehaviour
     }
 
     public void FireProjectile(
-        int playerNumberOwner,
+        PlayerBehaviour playerOwner,
+        int playerOwnerNumber,
         bool isLocal,
         Transform playerOrigin,
         Vector3 velocity,
@@ -75,7 +77,8 @@ public class Projectile : MonoBehaviour
         GameObject targetObject,
         string projectileId)
     {
-        playerOwnerNumber = playerNumberOwner;
+        this.playerOwner = playerOwner;
+        this.playerOwnerNumber = playerOwnerNumber;
         this.isLocal = isLocal;
         this.targetObject = targetObject;
         this.projectileId = projectileId;
@@ -96,6 +99,7 @@ public class Projectile : MonoBehaviour
     }
 
     public void FireProjectileImmediate(
+        PlayerBehaviour playerOwner,
         int playerOwnerNumber,
         bool isLocal,
         Vector3 origin,
@@ -103,6 +107,7 @@ public class Projectile : MonoBehaviour
         GameObject targetObject,
         string projectileId)
     {
+        this.playerOwner = playerOwner;
         this.playerOwnerNumber = playerOwnerNumber;
         this.isLocal = isLocal;
         this.targetObject = targetObject;
@@ -116,11 +121,12 @@ public class Projectile : MonoBehaviour
         }
     }
 
-    internal void FirePowerUp(int playerNumber, bool isLocal, GameObject playerOwner, string newProjectileId)
+    internal void FirePowerUp(PlayerBehaviour playerOwner, int playerOwnerNumber, bool isLocal, string newProjectileId)
     {
-        this.playerOwnerNumber = playerNumber;
+        this.playerOwner = playerOwner;
+        this.playerOwnerNumber = playerOwnerNumber;
         this.isLocal = isLocal;
-        this.targetObject = playerOwner;
+        this.targetObject = playerOwner.transform.root.gameObject;
 
         var powerUp = transform.root.GetComponentInChildren<IPowerUp>();
         powerUp.Fire();
