@@ -372,7 +372,6 @@ class VotersCentral {
     const [code, playerOwner, destination, timeWhenReach, projectileType, targetPlayer, projectileId] = msg
     const [projectilePositionX, projectilePositionY] = destination
 
-    console.log({ projectileType, projectilePositionX })
     if (CENTRAL_BASE_PROJECTILE_TYPES.includes(projectileType)) {
       this.centralBases[playerOwner] = projectilePositionX
 
