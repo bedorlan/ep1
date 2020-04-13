@@ -2,5 +2,5 @@ using UnityEngine;
 
 interface ICollectable
 {
-    void TryClaim(int playerNumber);
+    void TryClaim(int playerNumber, bool force);
 }

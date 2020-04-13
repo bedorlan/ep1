@@ -78,9 +78,9 @@ public class VoterBehaviour : MonoBehaviour, IPartySupporter, ICollectable
         GetComponent<Jumper>().LastJump();
     }
 
-    public void TryClaim(int playerNumber)
+    public void TryClaim(int playerNumber, bool force)
     {
-        if (playerOwner != playerNumber) return;
+        if (!(playerOwner == playerNumber || force)) return;
         NetworkManager.singleton.TryClaimVoter(voterId);
     }
 

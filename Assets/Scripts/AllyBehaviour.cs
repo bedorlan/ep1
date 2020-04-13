@@ -54,9 +54,9 @@ public class AllyBehaviour : MonoBehaviour, IPartySupporter, ICollectable
         return true;
     }
 
-    public void TryClaim(int playerNumber)
+    public void TryClaim(int playerNumber, bool force)
     {
-        if (!converted) return;
+        if (!(converted || force)) return;
 
         NetworkManager.singleton.NewAlly(projectileType);
         GetComponent<AudioSource>().Play();

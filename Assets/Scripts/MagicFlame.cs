@@ -14,6 +14,17 @@ public class MagicFlame : MonoBehaviour
         return behaviour;
     }
 
+    static internal MagicFlame createFlameUribe(GameObject player)
+    {
+        var gameObject = Instantiate(Index.singleton.magicFlame);
+        var behaviour = gameObject.GetComponentInChildren<MagicFlame>();
+        behaviour.player = player;
+        behaviour.uribeSprite.SetActive(true);
+        return behaviour;
+    }
+
+    public GameObject uribeSprite;
+
     private GameObject player;
     private Animator animator;
     private bool flameBurst = false;
@@ -36,6 +47,11 @@ public class MagicFlame : MonoBehaviour
         position.x += -0.2f;
         position.y = -0.43f;
         transform.position = position;
+    }
+
+    internal void Shutdown()
+    {
+        animator.SetBool("end", true);
     }
 
     private void MagicFlame_OnExit()

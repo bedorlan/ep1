@@ -58,7 +58,7 @@ public class PlazaBoss : MonoBehaviour, IProjectile, IPartySupporter
             if (collectable == null) continue;
 
             yield return new WaitForSeconds(0.75f);
-            collectable.TryClaim(projectile.playerOwnerNumber);
+            collectable.TryClaim(projectile.playerOwnerNumber, false);
         }
     }
 

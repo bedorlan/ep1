@@ -58,6 +58,7 @@ public static class Common
         Avocado = 12,
         Abstention = 13,
         Gavel = 14,
+        Uribe = 15,
     }
 
     static internal bool IsPointerOverUIObject()

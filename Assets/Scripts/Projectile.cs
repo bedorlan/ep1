@@ -129,7 +129,7 @@ public class Projectile : MonoBehaviour
         this.targetObject = playerOwner.transform.root.gameObject;
 
         var powerUp = transform.root.GetComponentInChildren<IPowerUp>();
-        powerUp.Fire();
+        powerUp.FirePowerUp();
     }
 
     public float CalcMaxReach(float offsetY)

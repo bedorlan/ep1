@@ -5,7 +5,7 @@ using UnityEngine;
 
 public class PlayerBehaviour : MonoBehaviour
 {
-    const float VELOCITY_RUNNING = 10f;
+    const float DEFAULT_VELOCITY_RUNNING = 10f;
     const float TIME_ANIMATION_PRE_FIRE = .15f;
 
     public GameObject votesChangesIndicatorPrefab;
@@ -16,10 +16,11 @@ public class PlayerBehaviour : MonoBehaviour
 
     internal Common.Parties party { get; private set; }
 
-    private GameObject currentProjectilePrefab;
     private int playerNumber;
     private bool isLocal;
     private int votesCount = 0;
+    private float currentVelocityRunning = DEFAULT_VELOCITY_RUNNING;
+    private GameObject currentProjectilePrefab;
     private Rigidbody2D myRigidbody;
     private Animator animator;
     private AudioSource audioSource;
@@ -27,6 +28,7 @@ public class PlayerBehaviour : MonoBehaviour
     private GameObject firingTargetObject;
     private Vector3 firingTargetPosition;
     private bool isFiring = false;
+    private bool uribeIsHelping = false;
 
     internal int GetPlayerNumber()
     {
@@ -172,8 +174,6 @@ public class PlayerBehaviour : MonoBehaviour
 
         yield return new WaitForSeconds(TIME_ANIMATION_PRE_FIRE);
 
-        MagicFlame.createFlameBurst(transform.root.gameObject);
-
         var newProjectile = Instantiate(projectile, transform.root.position, Quaternion.identity);
         var projectileBehaviour = newProjectile.GetComponentInChildren<Projectile>();
         projectileBehaviour.FirePowerUp(
@@ -198,7 +198,7 @@ public class PlayerBehaviour : MonoBehaviour
         var distance = Mathf.Abs(transform.position.x - movingDestination);
         var velocityToReach = distance / timeToReach;
 
-        var newVelocityX = Mathf.Max(VELOCITY_RUNNING, velocityToReach);
+        var newVelocityX = Mathf.Max(currentVelocityRunning, velocityToReach);
         if (movingDestination < transform.position.x) newVelocityX *= -1;
         setVelocityX(newVelocityX);
     }
@@ -274,7 +274,7 @@ public class PlayerBehaviour : MonoBehaviour
         moveToCurrentDestination(float.MaxValue);
 
         var distance = Mathf.Abs(movingDestination - transform.position.x);
-        var timeToReach = distance / VELOCITY_RUNNING;
+        var timeToReach = distance / currentVelocityRunning;
         NetworkManager.singleton.NewLocalPlayerDestination(movingDestination, timeToReach);
     }
 
@@ -319,10 +319,18 @@ public class PlayerBehaviour : MonoBehaviour
     {
         if (!isLocal) return;
 
-        var collectable = collision.GetComponent<ICollectable>();
+        var other = collision.transform.root.gameObject;
+        if (uribeIsHelping)
+        {
+            var voter = other.GetComponentInChildren<IPartySupporter>();
+            if (other != null) voter.TryConvertTo(playerNumber, isLocal);
+        }
+
+        var collectable = other.GetComponentInChildren<ICollectable>();
         if (collectable == null) return;
 
-        collectable.TryClaim(playerNumber);
+        var byForce = uribeIsHelping;
+        collectable.TryClaim(playerNumber, byForce);
     }
 
     internal void ChangeProjectile(GameObject projectile)
@@ -414,5 +422,17 @@ public class PlayerBehaviour : MonoBehaviour
         var votesLost = (int)Mathf.Ceil(votesCount * playerDamagePercentage);
         AddVotes(-votesLost);
         return votesLost;
+    }
+
+    internal void UribeIsHelping()
+    {
+        currentVelocityRunning = DEFAULT_VELOCITY_RUNNING * 1.2f;
+        uribeIsHelping = true;
+    }
+
+    internal void UribeIsNotHelpingAnymore()
+    {
+        currentVelocityRunning = DEFAULT_VELOCITY_RUNNING;
+        uribeIsHelping = false;
     }
 }
