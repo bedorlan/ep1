@@ -255,6 +255,7 @@ public class NetworkManager : MonoBehaviour
         { Common.Parties.CentroDemocratico, new Common.Projectiles[][] {
                 new Common.Projectiles[] { Common.Projectiles.Orange, Common.Projectiles.Lechona },
                 new Common.Projectiles[] { Common.Projectiles.PlazaBoss, Common.Projectiles.Billboard },
+                new Common.Projectiles[] { Common.Projectiles.Uribe },
             }
         },
         { Common.Parties.ColombiaHumana, new Common.Projectiles[][] {
@@ -266,6 +267,7 @@ public class NetworkManager : MonoBehaviour
         { Common.Parties.CompromisoCiudadano, new Common.Projectiles[][] {
                 new Common.Projectiles[] { Common.Projectiles.Book, Common.Projectiles.Lechona },
                 new Common.Projectiles[] { Common.Projectiles.Abstention, Common.Projectiles.Billboard },
+                new Common.Projectiles[] { },
             }
         },
     };

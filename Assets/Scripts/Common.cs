@@ -24,6 +24,7 @@ public static class Common
     internal const char CLOCK_CODE = '\ue900';
     internal const char WOMAN_CODE = '\ue901';
     internal const char JUDGE_CODE = '\ue902';
+    internal const char MAN_SWEARING_CODE = '\ue903';
 
     internal const int NO_PLAYER = -1;
 
