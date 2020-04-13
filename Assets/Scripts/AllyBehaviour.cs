@@ -9,7 +9,7 @@ public class AllyBehaviour : MonoBehaviour, IPartySupporter, ICollectable
     private Common.Projectiles projectileType;
     private bool converted = false;
     Dictionary<Common.Projectiles, char> mapProjectileIcon = new Dictionary<Common.Projectiles, char>() {
-        { Common.Projectiles.Orange, Common.SHAKESPEARE_CODE },
+        { Common.Projectiles.Orange, Common.ARTIST_CODE },
         { Common.Projectiles.Twitter, Common.MAN_DISTRACTED_WITH_PHONE_CODE },
         { Common.Projectiles.Book, Common.MAN_READING_BOOK_CODE },
         { Common.Projectiles.Lechona, Common.CHEF_CODE },
@@ -17,6 +17,7 @@ public class AllyBehaviour : MonoBehaviour, IPartySupporter, ICollectable
         { Common.Projectiles.Billboard, Common.SELLER_CODE },
         { Common.Projectiles.Avocado, Common.AVOCADO_GIRL_CODE },
         { Common.Projectiles.Abstention, Common.PEOPLE_CODE },
+        { Common.Projectiles.Gavel, Common.JUDGE_CODE },
     };
 
     private void Start()

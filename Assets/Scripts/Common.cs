@@ -18,10 +18,12 @@ public static class Common
     internal const char MAN_READING_BOOK_CODE = '\uf180';
     internal const char MAN_DISTRACTED_WITH_PHONE_CODE = '\uf18e';
     internal const char SHAKESPEARE_CODE = '\uf190';
+    internal const char ARTIST_CODE = '\uf1a0';
     internal const char MAN_CODE = '\uf1bb';
     internal const char AVOCADO_GIRL_CODE = '\uf1d5';
-    internal const char WOMAN_CODE = '\ue901';
     internal const char CLOCK_CODE = '\ue900';
+    internal const char WOMAN_CODE = '\ue901';
+    internal const char JUDGE_CODE = '\ue902';
 
     internal const int NO_PLAYER = -1;
 

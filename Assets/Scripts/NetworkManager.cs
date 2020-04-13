@@ -260,6 +260,7 @@ public class NetworkManager : MonoBehaviour
         { Common.Parties.ColombiaHumana, new Common.Projectiles[][] {
                 new Common.Projectiles[] { Common.Projectiles.Twitter, Common.Projectiles.Lechona },
                 new Common.Projectiles[] { Common.Projectiles.Avocado, Common.Projectiles.Billboard },
+                new Common.Projectiles[] { Common.Projectiles.Gavel },
             }
         },
         { Common.Parties.CompromisoCiudadano, new Common.Projectiles[][] {
@@ -285,7 +286,7 @@ public class NetworkManager : MonoBehaviour
         yield return new WaitForSecondsRealtime(10f);
 
         var projectileLevels = mapPartyToProjectiles[playerParty];
-        for (var level = 0; level < 2; ++level)
+        for (var level = 0; level < 3; ++level)
         {
             var projectiles = projectileLevels[level];
             var newAlliesInMatch = new List<(Common.Projectiles, AllyBehaviour)>();
