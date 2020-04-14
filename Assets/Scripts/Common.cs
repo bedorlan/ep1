@@ -15,6 +15,7 @@ public static class Common
     internal const char FARMER_CODE = '\uf133';
     internal const char GIRL_DANCING_CODE = '\uf13d';
     internal const char CAPITALIST_CODE = '\uf150';
+    internal const char MONK_CODE = '\uf151';
     internal const char MAN_READING_BOOK_CODE = '\uf180';
     internal const char MAN_DISTRACTED_WITH_PHONE_CODE = '\uf18e';
     internal const char SHAKESPEARE_CODE = '\uf190';

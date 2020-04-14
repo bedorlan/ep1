@@ -435,4 +435,24 @@ public class PlayerBehaviour : MonoBehaviour
         currentVelocityRunning = DEFAULT_VELOCITY_RUNNING;
         uribeIsHelping = false;
     }
+
+    internal void BeTransparent(bool isLocal)
+    {
+        foreach (var child in GetComponentsInChildren<SpriteRenderer>())
+        {
+            var color = child.color;
+            color.a = isLocal ? 0.25f : 0f;
+            child.color = color;
+        }
+    }
+
+    internal void StopBeingTransparent()
+    {
+        foreach (var child in GetComponentsInChildren<SpriteRenderer>())
+        {
+            var color = child.color;
+            color.a = 1f;
+            child.color = color;
+        }
+    }
 }

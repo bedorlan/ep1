@@ -5,12 +5,13 @@ using UnityEngine;
 
 public class MagicFlame : MonoBehaviour
 {
-    static internal MagicFlame createFlameBurst(GameObject player)
+    static internal MagicFlame createFlameBurst(GameObject player, float duration)
     {
         var gameObject = Instantiate(Index.singleton.magicFlame);
         var behaviour = gameObject.GetComponentInChildren<MagicFlame>();
         behaviour.player = player;
         behaviour.flameBurst = true;
+        behaviour.flameDuration = duration;
         return behaviour;
     }
 
@@ -28,11 +29,15 @@ public class MagicFlame : MonoBehaviour
     private GameObject player;
     private Animator animator;
     private bool flameBurst = false;
+    private float flameDuration;
 
     private void Start()
     {
         animator = GetComponent<Animator>();
-        if (flameBurst) animator.SetBool("end", true);
+        if (flameBurst)
+        {
+            StartCoroutine(ShutdownDelay(flameDuration));
+        }
 
         var playerNumber = player.GetComponent<PlayerBehaviour>().GetPlayerNumber();
         var color = Common.playerColors[playerNumber];
@@ -47,6 +52,12 @@ public class MagicFlame : MonoBehaviour
         position.x += -0.2f;
         position.y = -0.43f;
         transform.position = position;
+    }
+
+    private IEnumerator ShutdownDelay(float delay)
+    {
+        if (delay > 0f) yield return new WaitForSeconds(delay);
+        Shutdown();
     }
 
     internal void Shutdown()

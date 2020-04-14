@@ -17,7 +17,7 @@ public class Abstention : MonoBehaviour, IProjectile, IPowerUp
     public void FirePowerUp()
     {
         var playerOwner = GetComponent<Projectile>().playerOwner;
-        MagicFlame.createFlameBurst(playerOwner.transform.root.gameObject);
+        MagicFlame.createFlameBurst(playerOwner.transform.root.gameObject, 2f);
 
         // nothing else to do here. the server will detect the projectile
         // and it will start generating voters on my position
