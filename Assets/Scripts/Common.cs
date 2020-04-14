@@ -61,6 +61,7 @@ public static class Common
         Abstention = 13,
         Gavel = 14,
         Uribe = 15,
+        Transparency = 16,
     }
 
     static internal bool IsPointerOverUIObject()

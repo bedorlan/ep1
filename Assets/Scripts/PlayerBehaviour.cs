@@ -15,6 +15,7 @@ public class PlayerBehaviour : MonoBehaviour
     public List<AudioClip> projectileIntroductions;
 
     internal Common.Parties party { get; private set; }
+    internal event Action OnProjectileFired;
 
     private int playerNumber;
     private bool isLocal;
@@ -124,6 +125,7 @@ public class PlayerBehaviour : MonoBehaviour
                 projectileType,
                 firingTargetObject,
                 newProjectileId);
+            OnProjectileFired?.Invoke();
         }
 
         isFiring = true;
@@ -153,13 +155,13 @@ public class PlayerBehaviour : MonoBehaviour
         isFiring = false;
     }
 
-    private IEnumerator FirePowerUp(GameObject projectile)
+    private IEnumerator FirePowerUp(GameObject projectile, string projectileId)
     {
         isFiring = true;
         animator.SetBool("firing", true);
         stop();
 
-        var newProjectileId = Projectile.NewId(playerNumber);
+        var newProjectileId = projectileId ?? Projectile.NewId(playerNumber);
         if (isLocal)
         {
             var projectileType = projectile.GetComponentInChildren<Projectile>().projectileTypeId;
@@ -170,6 +172,7 @@ public class PlayerBehaviour : MonoBehaviour
                 projectileType,
                 firingTargetObject,
                 newProjectileId);
+            OnProjectileFired?.Invoke();
         }
 
         yield return new WaitForSeconds(TIME_ANIMATION_PRE_FIRE);
@@ -286,7 +289,7 @@ public class PlayerBehaviour : MonoBehaviour
 
     public void Remote_FireProjectile(GameObject projectile, Vector3 destination, float timeToReach, GameObject targetObject, string projectileId)
     {
-        var isPowerUp = TryFirePowerUp(projectile);
+        var isPowerUp = TryFirePowerUp(projectile, projectileId);
         if (isPowerUp) return;
 
         firingTargetObject = targetObject;
@@ -323,7 +326,7 @@ public class PlayerBehaviour : MonoBehaviour
         if (uribeIsHelping)
         {
             var voter = other.GetComponentInChildren<IPartySupporter>();
-            if (other != null) voter.TryConvertTo(playerNumber, isLocal);
+            if (voter != null) voter.TryConvertTo(playerNumber, isLocal);
         }
 
         var collectable = other.GetComponentInChildren<ICollectable>();
@@ -341,14 +344,14 @@ public class PlayerBehaviour : MonoBehaviour
         TryFirePowerUp(projectile);
     }
 
-    private bool TryFirePowerUp(GameObject projectile)
+    private bool TryFirePowerUp(GameObject projectile, string projectileId = null)
     {
         var isPowerUp = projectile.GetComponentInChildren<IProjectile>().IsPowerUp();
         if (!isPowerUp) return false;
 
         firingTargetObject = null;
         firingTargetPosition = transform.root.position;
-        StartCoroutine(FirePowerUp(projectile));
+        StartCoroutine(FirePowerUp(projectile, projectileId));
         return true;
     }
 
@@ -438,6 +441,7 @@ public class PlayerBehaviour : MonoBehaviour
 
     internal void BeTransparent(bool isLocal)
     {
+        transform.root.gameObject.layer = LayerMask.NameToLayer("PlayerTransparent");
         foreach (var child in GetComponentsInChildren<SpriteRenderer>())
         {
             var color = child.color;
@@ -448,6 +452,7 @@ public class PlayerBehaviour : MonoBehaviour
 
     internal void StopBeingTransparent()
     {
+        transform.root.gameObject.layer = LayerMask.NameToLayer("Player");
         foreach (var child in GetComponentsInChildren<SpriteRenderer>())
         {
             var color = child.color;

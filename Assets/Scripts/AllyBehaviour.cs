@@ -19,6 +19,7 @@ public class AllyBehaviour : MonoBehaviour, IPartySupporter, ICollectable
         { Common.Projectiles.Abstention, Common.PEOPLE_CODE },
         { Common.Projectiles.Gavel, Common.JUDGE_CODE },
         { Common.Projectiles.Uribe, Common.MAN_SWEARING_CODE },
+        { Common.Projectiles.Transparency, Common.MONK_CODE },
     };
 
     private void Start()

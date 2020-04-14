@@ -34,6 +34,8 @@ public class PlazaBoss : MonoBehaviour, IProjectile, IPartySupporter
 
     private void OnTriggerEnter2D(Collider2D collision)
     {
+        if (!projectile.isLocal) return;
+
         var voter = collision.GetComponentInChildren<IPartySupporter>();
         if (voter == null) return;
 

@@ -63,8 +63,9 @@ public class Projectile : MonoBehaviour
 
     static internal void DestroyProjectile(string projectileId)
     {
-        // todo: IDestroyable ?
-        Destroy(projectiles[projectileId].transform.root.gameObject);
+        var projectile = projectiles[projectileId];
+        projectile.GetComponentInChildren<IDestroyable>()?.Destroy();
+        Destroy(projectile.transform.root.gameObject);
     }
 
     public void FireProjectile(
@@ -123,6 +124,7 @@ public class Projectile : MonoBehaviour
 
     internal void FirePowerUp(PlayerBehaviour playerOwner, int playerOwnerNumber, bool isLocal, string newProjectileId)
     {
+        this.projectileId = newProjectileId;
         this.playerOwner = playerOwner;
         this.playerOwnerNumber = playerOwnerNumber;
         this.isLocal = isLocal;

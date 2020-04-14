@@ -11,11 +11,12 @@ public class MainCamera : MonoBehaviour
 
     private void Start()
     {
-        Camera.main.eventMask = 0
-            | 1 << LayerMask.NameToLayer("Default")
-            | 1 << LayerMask.NameToLayer("Player")
-            | 1 << LayerMask.NameToLayer("UI")
-            | 1 << LayerMask.NameToLayer("Voters");
+        Camera.main.eventMask = LayerMask.GetMask(new string[] {
+            "Default",
+            "Player",
+            "UI",
+            "Voters",
+        });
     }
 
     void Update()

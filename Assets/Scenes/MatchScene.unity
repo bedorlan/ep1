@@ -122,7 +122,7 @@ GameObject:
   m_Component:
   - component: {fileID: 273908614}
   - component: {fileID: 273908613}
-  m_Layer: 0
+  m_Layer: 11
   m_Name: WallRight
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -1621,7 +1621,7 @@ GameObject:
   m_Component:
   - component: {fileID: 671007276}
   - component: {fileID: 671007275}
-  m_Layer: 0
+  m_Layer: 11
   m_Name: WallLeft
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -3102,7 +3102,7 @@ PrefabInstance:
     - target: {fileID: 955274967738283091, guid: 6a2aa7ed072444749b3f5a9b73601e36,
         type: 3}
       propertyPath: cooldown
-      value: 20
+      value: 15
       objectReference: {fileID: 0}
     - target: {fileID: 955274967738283092, guid: 6a2aa7ed072444749b3f5a9b73601e36,
         type: 3}
