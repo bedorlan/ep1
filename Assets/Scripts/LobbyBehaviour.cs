@@ -6,7 +6,7 @@ using UnityEngine.SceneManagement;
 using UnityEngine.UI;
 using UnityEngine.Video;
 
-public class WaitingForMatchBehaviour : MonoBehaviour
+public class LobbyBehaviour : MonoBehaviour
 {
     public GameObject myCamera;
     public GameObject buttonPlayGameObject;
