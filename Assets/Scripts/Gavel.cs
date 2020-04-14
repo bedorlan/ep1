@@ -21,6 +21,12 @@ public class Gavel : MonoBehaviour, IProjectile
     private void Start()
     {
         projectile = GetComponent<Projectile>();
+
+        var rigidbody = GetComponent<Rigidbody2D>();
+        var direction = Mathf.Sign(rigidbody.velocity.x);
+        var scale = transform.localScale;
+        scale.x *= -direction;
+        transform.localScale = scale;
     }
 
     private void OnTriggerEnter2D(Collider2D collision)
