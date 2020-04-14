@@ -41,6 +41,7 @@ public class MagicFlame : MonoBehaviour
 
         var playerNumber = player.GetComponent<PlayerBehaviour>().GetPlayerNumber();
         var color = Common.playerColors[playerNumber];
+        color.a = 0.4f;
         GetComponent<SpriteRenderer>().color = color;
 
         animator.GetBehaviour<OnTransitionStateExitDetector>().OnExit += MagicFlame_OnExit;
