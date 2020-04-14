@@ -25,6 +25,11 @@ public class WaitingForMatchBehaviour : MonoBehaviour
         videoPlayer = GetComponentInChildren<VideoPlayer>();
     }
 
+    public void OnExit()
+    {
+        Application.Quit();
+    }
+
     public void OnPlay()
     {
         buttonPlayGameObject.GetComponent<Button>().interactable = false;
