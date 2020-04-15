@@ -103,7 +103,7 @@ public class NetworkManager : MonoBehaviour
     internal event Action<bool> OnConnection;
     internal event Action OnMatchReady;
     internal event Action OnMatchQuit;
-    internal event Action<bool, bool> OnMatchEnd;
+    internal event Action<MatchResult> OnMatchEnd;
 
     internal void TryConnect()
     {
@@ -592,19 +592,15 @@ public class NetworkManager : MonoBehaviour
         client.Disconnect();
 
         // todo: votes count should come from the server
-        var playerVotes = votesCounters
+        var playerResultsOrdered = votesCounters
             .Where(voter => voter.activeSelf)
             .Select(voter => voter.GetComponent<VotesCountBehaviour>().GetVotes())
+            .Select((votes, index) => new PlayerResult() { playerNumber = index, votes = votes })
+            .OrderByDescending(a => a.votes)
             .ToList();
 
-        var myVotes = playerVotes[playerNumber];
-        playerVotes.Sort();
-        playerVotes.Reverse();
-
-        var maxVotes = playerVotes[0];
-        var iWin = myVotes == maxVotes;
-        var draw = playerVotes[0] == playerVotes[1];
-        OnMatchEnd?.Invoke(draw, iWin);
+        var matchResult = new MatchResult() { playerResultsOrdered = playerResultsOrdered };
+        OnMatchEnd?.Invoke(matchResult);
     }
 
 #endregion

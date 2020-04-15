@@ -11,6 +11,8 @@ public class LobbyBehaviour : MonoBehaviour
     public GameObject myCamera;
     public GameObject buttonPlayGameObject;
     public GameObject statusGameObject;
+    public GameObject lobbyObject;
+    public GameObject matchResultObject;
 
     const string MATCH_SCENE = "MatchScene";
     private Scene matchScene;
@@ -23,6 +25,8 @@ public class LobbyBehaviour : MonoBehaviour
         statusText = statusGameObject.GetComponentInChildren<Text>();
         audioPlayer = GetComponentInChildren<AudioSource>();
         videoPlayer = GetComponentInChildren<VideoPlayer>();
+
+        matchResultObject.GetComponent<MatchResultBehaviour>().OnFinished += MatchResult_OnFinished;
     }
 
     public void OnExit()
@@ -69,8 +73,6 @@ public class LobbyBehaviour : MonoBehaviour
     private void NetworkManager_OnMatchQuit()
     {
         Restart();
-        statusText.text = "";
-        statusGameObject.SetActive(false);
     }
 
     private void NetworkManager_OnConnection(bool success)
@@ -92,24 +94,31 @@ public class LobbyBehaviour : MonoBehaviour
         myCamera.SetActive(false);
     }
 
-    private void NetworkManager_OnMatchEnd(bool draw, bool iWin)
+    private void NetworkManager_OnMatchEnd(MatchResult matchResult)
     {
+        SceneManager.UnloadSceneAsync(matchScene);
+        lobbyObject.SetActive(false);
+        matchResultObject.SetActive(true);
         myCamera.SetActive(true);
-        string text;
-        if (iWin && draw) text = "Empate! a segunda vuelta.";
-        else
-        {
-            if (iWin) text = "Ganador!";
-            else text = "Perdiste.";
-        }
-        statusText.text = text;
 
+        if (!videoPlayer.isPlaying)
+        {
+            videoPlayer.time = 0;
+            videoPlayer.Play();
+        }
+        matchResultObject.GetComponent<MatchResultBehaviour>().ShowMatchResult(matchResult);
+    }
+
+    private void MatchResult_OnFinished()
+    {
         Restart();
     }
 
     private void Restart()
     {
-        SceneManager.UnloadSceneAsync(matchScene);
+        if (matchScene.isLoaded) SceneManager.UnloadSceneAsync(matchScene);
+        lobbyObject.SetActive(true);
+        matchResultObject.SetActive(false);
 
         if (!audioPlayer.isPlaying)
         {
@@ -121,7 +130,11 @@ public class LobbyBehaviour : MonoBehaviour
             videoPlayer.time = 0;
             videoPlayer.Play();
         }
+
         myCamera.SetActive(true);
         buttonPlayGameObject.GetComponent<Button>().interactable = true;
+
+        statusText.text = "";
+        statusGameObject.SetActive(false);
     }
 }
