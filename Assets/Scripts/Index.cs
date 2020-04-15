@@ -4,7 +4,8 @@ using UnityEngine;
 
 public class Index : MonoBehaviour
 {
-    public GameObject magicFlame;
+    public GameObject magicFlamePrefab;
+    public GameObject menuObject;
 
     internal static Index singleton { get; private set; }
     private void Start()

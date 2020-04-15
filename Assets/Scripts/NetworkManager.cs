@@ -43,6 +43,7 @@ public class NetworkManager : MonoBehaviour
 
     private int playerNumber;
     private Common.Parties playerParty;
+    private bool matchQuit = false;
     private bool matchOver = false;
     private Dictionary<Codes, Action<JSONNode>> codesMap;
     private Dictionary<int, GameObject> projectilesMap;
@@ -101,6 +102,7 @@ public class NetworkManager : MonoBehaviour
     private Telepathy.Client client;
     internal event Action<bool> OnConnection;
     internal event Action OnMatchReady;
+    internal event Action OnMatchQuit;
     internal event Action<bool, bool> OnMatchEnd;
 
     internal void TryConnect()
@@ -393,14 +395,14 @@ public class NetworkManager : MonoBehaviour
     private void OnDisconnected()
     {
         var timeLeft = TimerBehaviour.singleton.GetTimeLeft();
-        if (!matchOver && timeLeft > 5)
+        if (!(matchOver || matchQuit) && timeLeft > 5)
         {
             // intentar reconectar!
             OnConnection?.Invoke(false);
             return;
         }
 
-        TimerOver();
+        if (!matchQuit) TimerOver();
     }
 
 #endregion
@@ -565,6 +567,23 @@ public class NetworkManager : MonoBehaviour
         msg.Add((int)Codes.destroyProjectile);
         msg.Add(projectileId);
         SendNetworkMsg(msg.ToString());
+    }
+
+    public void OnShowMenu()
+    {
+        Index.singleton.menuObject.SetActive(true);
+    }
+
+    public void OnHideMenu()
+    {
+        Index.singleton.menuObject.SetActive(false);
+    }
+
+    public void OnExitMatch()
+    {
+        matchQuit = true;
+        client.Disconnect();
+        OnMatchQuit?.Invoke();
     }
 
     internal void TimerOver()

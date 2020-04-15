@@ -7,7 +7,7 @@ public class MagicFlame : MonoBehaviour
 {
     static internal MagicFlame createFlameBurst(GameObject player, float duration)
     {
-        var gameObject = Instantiate(Index.singleton.magicFlame);
+        var gameObject = Instantiate(Index.singleton.magicFlamePrefab);
         var behaviour = gameObject.GetComponentInChildren<MagicFlame>();
         behaviour.player = player;
         behaviour.flameBurst = true;
@@ -17,7 +17,7 @@ public class MagicFlame : MonoBehaviour
 
     static internal MagicFlame createFlameUribe(GameObject player)
     {
-        var gameObject = Instantiate(Index.singleton.magicFlame);
+        var gameObject = Instantiate(Index.singleton.magicFlamePrefab);
         var behaviour = gameObject.GetComponentInChildren<MagicFlame>();
         behaviour.player = player;
         behaviour.uribeSprite.SetActive(true);

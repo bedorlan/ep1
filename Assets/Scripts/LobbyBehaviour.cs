@@ -60,9 +60,17 @@ public class LobbyBehaviour : MonoBehaviour
 
         NetworkManager.singleton.OnConnection += NetworkManager_OnConnection;
         NetworkManager.singleton.OnMatchReady += NetworkManager_OnMatchReady;
+        NetworkManager.singleton.OnMatchQuit += NetworkManager_OnMatchQuit;
         NetworkManager.singleton.OnMatchEnd += NetworkManager_OnMatchEnd;
 
         NetworkManager.singleton.TryConnect();
+    }
+
+    private void NetworkManager_OnMatchQuit()
+    {
+        Restart();
+        statusText.text = "";
+        statusGameObject.SetActive(false);
     }
 
     private void NetworkManager_OnConnection(bool success)
