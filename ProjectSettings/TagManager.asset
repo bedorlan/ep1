@@ -42,6 +42,9 @@ TagManager:
   - name: Background
     uniqueID: 312574025
     locked: 0
+  - name: LimitSign
+    uniqueID: 51240617
+    locked: 0
   - name: CentralBases
     uniqueID: 1095837031
     locked: 0
