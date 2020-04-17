@@ -1,6 +1,7 @@
 ﻿using System;
 using TMPro;
 using UnityEngine;
+using UnityEngine.UI;
 
 internal class MatchResultBehaviour : MonoBehaviour
 {
@@ -16,14 +17,21 @@ internal class MatchResultBehaviour : MonoBehaviour
         for (var i = 0; i < resultsObject.transform.childCount; ++i)
         {
             var active = i < playersCount;
-            var resultUI = resultsObject.transform.GetChild(i).gameObject;
+            var playerNameUI = resultsObject.transform.GetChild(i * 2).gameObject;
+            var resultUI = resultsObject.transform.GetChild(i * 2 + 1).gameObject;
+            playerNameUI.SetActive(active);
             resultUI.SetActive(active);
             if (!active) continue;
 
             var playerResult = playerResultsOrdered[i];
-            var tmPro = resultUI.GetComponent<TextMeshProUGUI>();
-            tmPro.text = string.Format("{0}{1} {2}", Common.MAN_CODE, Common.WOMAN_CODE, playerResult.votes);
-            tmPro.color = Common.playerColors[playerResult.playerNumber];
+            var playerColor = Common.playerColors[playerResult.playerNumber];
+            var nameText = playerNameUI.GetComponent<Text>();
+            nameText.text = string.Format("Player {0}", i + 1);
+            nameText.color = playerColor;
+
+            var votesTmPro = resultUI.GetComponent<TextMeshProUGUI>();
+            votesTmPro.text = string.Format("{0} {1}<size=40%>,000</size>", Common.MAN_CODE, playerResult.votes);
+            votesTmPro.color = playerColor;
         }
     }
 

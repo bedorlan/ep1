@@ -6,10 +6,11 @@ using UnityEngine;
 
 public class SocialBehaviour : MonoBehaviour
 {
+    internal string shortName { get; private set; }
+    internal event Action OnLoggedIn;
+
     private bool? initialized;
     private AccessToken aToken;
-
-    internal event Action OnLoggedIn;
 
     void Awake()
     {
@@ -30,7 +31,11 @@ public class SocialBehaviour : MonoBehaviour
             FB.ActivateApp();
             initialized = true;
 
-            if (FB.IsLoggedIn) OnLoggedIn?.Invoke();
+            if (FB.IsLoggedIn)
+            {
+                OnLoggedIn?.Invoke();
+                GetUserData();
+            }
         }
         else
         {
@@ -40,6 +45,7 @@ public class SocialBehaviour : MonoBehaviour
 
     internal void Login()
     {
+        if (FB.IsLoggedIn) return;
         StartCoroutine(LoginRoutine());
     }
 
@@ -48,24 +54,23 @@ public class SocialBehaviour : MonoBehaviour
         yield return new WaitUntil(() => initialized.HasValue);
         if (!initialized.Value) yield break;
 
-        var perms = new List<string>() { "public_profile", "user_friends" };
-        FB.LogInWithReadPermissions(perms, AuthCallback);
+        var perms = new List<string>() {
+            "public_profile",
+            //"user_friends",
+        };
+        FB.LogInWithReadPermissions(perms, (result) => {
+            if (FB.IsLoggedIn)
+            {
+                aToken = AccessToken.CurrentAccessToken;
+                GetUserData();
+            }
+        });
     }
 
-    private void AuthCallback(ILoginResult result)
+    private void GetUserData()
     {
-        if (FB.IsLoggedIn)
-        {
-            aToken = AccessToken.CurrentAccessToken;
-            Debug.Log(aToken.UserId);
-            foreach (string perm in aToken.Permissions)
-            {
-                Debug.Log(perm);
-            }
-        }
-        else
-        {
-            Debug.Log("User cancelled login");
-        }
+        FB.API("me?fields=short_name", HttpMethod.GET, (result) => {
+            shortName = result.ResultDictionary["short_name"].ToString();
+        });
     }
 }

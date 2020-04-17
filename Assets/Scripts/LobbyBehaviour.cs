@@ -37,7 +37,7 @@ public class LobbyBehaviour : MonoBehaviour
 
     public void OnShowRanks()
     {
-        Debug.Log("OnShowRanks");
+        socialBehaviour.Login();
     }
 
     public void OnPlay()
