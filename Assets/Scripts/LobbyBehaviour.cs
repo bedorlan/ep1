@@ -1,7 +1,4 @@
-﻿using System;
-using System.Collections;
-using System.Collections.Generic;
-using UnityEngine;
+﻿using UnityEngine;
 using UnityEngine.SceneManagement;
 using UnityEngine.UI;
 using UnityEngine.Video;
@@ -10,11 +7,14 @@ public class LobbyBehaviour : MonoBehaviour
 {
     public GameObject myCamera;
     public GameObject buttonPlayGameObject;
+    public GameObject buttonRanks;
     public GameObject statusGameObject;
     public GameObject lobbyObject;
     public GameObject matchResultObject;
 
     const string MATCH_SCENE = "MatchScene";
+
+    private SocialBehaviour socialBehaviour;
     private Scene matchScene;
     private Text statusText;
     private AudioSource audioPlayer;
@@ -22,6 +22,7 @@ public class LobbyBehaviour : MonoBehaviour
 
     private void Start()
     {
+        socialBehaviour = GetComponent<SocialBehaviour>();
         statusText = statusGameObject.GetComponentInChildren<Text>();
         audioPlayer = GetComponentInChildren<AudioSource>();
         videoPlayer = GetComponentInChildren<VideoPlayer>();
@@ -32,6 +33,11 @@ public class LobbyBehaviour : MonoBehaviour
     public void OnExit()
     {
         Application.Quit();
+    }
+
+    public void OnShowRanks()
+    {
+        Debug.Log("OnShowRanks");
     }
 
     public void OnPlay()
