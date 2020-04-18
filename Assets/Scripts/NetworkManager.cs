@@ -259,13 +259,11 @@ public class NetworkManager : MonoBehaviour
 
     internal void PartyChose(int playerNumber, Common.Parties party)
     {
-        this.playerParty = party;
-
         var player = players[playerNumber];
         player.GetComponent<PlayerBehaviour>().PartyChose(party);
-
         if (playerNumber != this.playerNumber) return;
 
+        this.playerParty = party;
         projectileButtons.transform.GetChild((int)Common.Projectiles.CentroDemocraticoBase).gameObject.SetActive(false);
         projectileButtons.transform.GetChild((int)Common.Projectiles.ColombiaHumanaBase).gameObject.SetActive(false);
         projectileButtons.transform.GetChild((int)Common.Projectiles.CompromisoCiudadanoBase).gameObject.SetActive(false);
