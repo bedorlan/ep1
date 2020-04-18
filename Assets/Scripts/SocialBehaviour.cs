@@ -10,7 +10,6 @@ public class SocialBehaviour : MonoBehaviour
     static internal SocialBehaviour singleton { get; private set; }
 
     internal string shortName { get; private set; }
-    internal event Action OnLoggedIn;
 
     private bool? initialized;
 
@@ -19,32 +18,24 @@ public class SocialBehaviour : MonoBehaviour
         singleton = this;
         shortName = "";
 
-        if (!FB.IsInitialized)
-        {
-            FB.Init(FBInitCallback);
-        }
-        else
-        {
-            FB.ActivateApp();
-        }
+        if (!FB.IsInitialized) FB.Init(FBInitCallback);
+        else FBInitCallback();
     }
 
     private void FBInitCallback()
     {
-        if (FB.IsInitialized)
-        {
-            FB.ActivateApp();
-            initialized = true;
+        initialized = FB.IsInitialized;
+        if (!FB.IsInitialized) return;
 
-            if (FB.IsLoggedIn)
-            {
-                OnLoggedIn?.Invoke();
-                GetUserData();
-            }
-        }
-        else
+        FB.ActivateApp();
+        LoginCallback();
+    }
+
+    void LoginCallback()
+    {
+        if (FB.IsLoggedIn && HasGrantedAllPermissions())
         {
-            initialized = false;
+            GetUserData();
         }
     }
 
@@ -64,17 +55,12 @@ public class SocialBehaviour : MonoBehaviour
         StartCoroutine(LoginRoutine());
     }
 
-    internal IEnumerator LoginRoutine()
+    IEnumerator LoginRoutine()
     {
         yield return new WaitUntil(() => initialized.HasValue);
         if (!initialized.Value) yield break;
 
-        FB.LogInWithReadPermissions(permissions, (result) => {
-            if (FB.IsLoggedIn && HasGrantedAllPermissions())
-            {
-                GetUserData();
-            }
-        });
+        FB.LogInWithReadPermissions(permissions, (result) => LoginCallback());
     }
 
     private void GetUserData()
