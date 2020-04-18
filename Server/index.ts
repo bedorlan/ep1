@@ -54,7 +54,8 @@ server.on('connection', async (socket) => {
         try {
           msg = JSON.parse(obj)
         } catch (err) {
-          return cb(new Error(err + '\n' + obj.toString()))
+          console.info(err + '\nmsg=' + obj.toString())
+          return cb()
         }
         const code = msg[0]
         if (code === Codes.guessTime) {
