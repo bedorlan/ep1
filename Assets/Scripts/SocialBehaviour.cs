@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 using Facebook.Unity;
 using UnityEngine;
 
@@ -12,7 +13,6 @@ public class SocialBehaviour : MonoBehaviour
     internal event Action OnLoggedIn;
 
     private bool? initialized;
-    private AccessToken aToken;
 
     void Awake()
     {
@@ -48,9 +48,19 @@ public class SocialBehaviour : MonoBehaviour
         }
     }
 
+    readonly List<string> permissions = new List<string>() {
+        "public_profile",
+        //"user_friends",
+    };
+
+    bool HasGrantedAllPermissions()
+    {
+        return permissions.All((it) => AccessToken.CurrentAccessToken.Permissions.Contains(it));
+    }
+
     internal void Login()
     {
-        if (FB.IsLoggedIn) return;
+        if (FB.IsLoggedIn && HasGrantedAllPermissions()) return;
         StartCoroutine(LoginRoutine());
     }
 
@@ -59,14 +69,9 @@ public class SocialBehaviour : MonoBehaviour
         yield return new WaitUntil(() => initialized.HasValue);
         if (!initialized.Value) yield break;
 
-        var perms = new List<string>() {
-            "public_profile",
-            //"user_friends",
-        };
-        FB.LogInWithReadPermissions(perms, (result) => {
-            if (FB.IsLoggedIn)
+        FB.LogInWithReadPermissions(permissions, (result) => {
+            if (FB.IsLoggedIn && HasGrantedAllPermissions())
             {
-                aToken = AccessToken.CurrentAccessToken;
                 GetUserData();
             }
         });
