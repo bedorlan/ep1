@@ -10,6 +10,8 @@ public class SocialBehaviour : MonoBehaviour
     static internal SocialBehaviour singleton { get; private set; }
 
     internal string shortName { get; private set; }
+    internal event Action OnError;
+    readonly internal Queue<String> errors = new Queue<String>();
 
     private bool? initialized;
 
@@ -63,7 +65,8 @@ public class SocialBehaviour : MonoBehaviour
         FB.LogInWithReadPermissions(permissions, (result) => {
             if (result.Error != null)
             {
-                Debug.LogError(result.Error);
+                errors.Enqueue(result.Error);
+                OnError?.Invoke();
                 return;
             }
             LoginCallback();
@@ -75,7 +78,8 @@ public class SocialBehaviour : MonoBehaviour
         FB.API("me?fields=short_name", HttpMethod.GET, (result) => {
             if (result.Error != null)
             {
-                Debug.LogError(result.Error);
+                errors.Enqueue(result.Error);
+                OnError?.Invoke();
                 return;
             }
             shortName = result.ResultDictionary["short_name"].ToString();

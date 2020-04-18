@@ -167,6 +167,17 @@ public class NetworkManager : MonoBehaviour
 
         OnConnection?.Invoke(true);
         guessServerTime();
+
+        SocialBehaviour.singleton.OnError += SendSocialErrors;
+        SendSocialErrors();
+    }
+
+    private void SendSocialErrors()
+    {
+        while (SocialBehaviour.singleton.errors.Count > 0)
+        {
+            Debug.LogError(SocialBehaviour.singleton.errors.Dequeue());
+        }
     }
 
     private void Application_logMessageReceived(string condition, string stackTrace, LogType type)
