@@ -60,12 +60,24 @@ public class SocialBehaviour : MonoBehaviour
         yield return new WaitUntil(() => initialized.HasValue);
         if (!initialized.Value) yield break;
 
-        FB.LogInWithReadPermissions(permissions, (result) => LoginCallback());
+        FB.LogInWithReadPermissions(permissions, (result) => {
+            if (result.Error != null)
+            {
+                Debug.LogError(result.Error);
+                return;
+            }
+            LoginCallback();
+        });
     }
 
     private void GetUserData()
     {
         FB.API("me?fields=short_name", HttpMethod.GET, (result) => {
+            if (result.Error != null)
+            {
+                Debug.LogError(result.Error);
+                return;
+            }
             shortName = result.ResultDictionary["short_name"].ToString();
         });
     }
