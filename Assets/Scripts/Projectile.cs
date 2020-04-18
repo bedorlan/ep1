@@ -70,6 +70,8 @@ public class Projectile : MonoBehaviour
         }
 
         var projectile = projectiles[projectileId];
+        if (projectile == null) return;
+
         var destroyable = projectile.GetComponentInChildren<IDestroyable>();
         if (destroyable != null) destroyable.Destroy();
         Destroy(projectile.transform.root.gameObject);
