@@ -19,6 +19,7 @@ enum Codes {
   log = 14, // [(14), (condition: string), (stackTrace: string), (type: string)]
   newAlly = 15, // [(15), (playerNumber: int), (projectileType: int)]
   destroyProjectile = 16, // [(16), (projectileId: string)]
+  introduce = 17, // [(17), (playerNumber: int), (playerName: string)]
 }
 
 const MAP_WIDTH = 200
@@ -225,6 +226,7 @@ class Match {
       [Codes.log]: this.logReceived,
       [Codes.newAlly]: this.resendToOthers,
       [Codes.destroyProjectile]: this.resendToOthers,
+      [Codes.introduce]: this.resendToOthers,
     } as const
 
     this.players.forEach((player, index) => {

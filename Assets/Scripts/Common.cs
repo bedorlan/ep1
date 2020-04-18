@@ -5,6 +5,7 @@ using UnityEngine.EventSystems;
 
 public static class Common
 {
+    internal const int MAX_PLAYERS_NUMBER = 4;
     internal const int MAP_WIDTH = 200;
     internal const float NEW_ALLY_CLIP_DURATION = 1.897f;
 

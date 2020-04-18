@@ -14,7 +14,7 @@ internal class MatchResultBehaviour : MonoBehaviour
         var playerResultsOrdered = matchResult.playerResultsOrdered;
         var playersCount = playerResultsOrdered.Count;
 
-        for (var i = 0; i < resultsObject.transform.childCount; ++i)
+        for (var i = 0; i < Common.MAX_PLAYERS_NUMBER; ++i)
         {
             var active = i < playersCount;
             var playerNameUI = resultsObject.transform.GetChild(i * 2).gameObject;
@@ -26,7 +26,8 @@ internal class MatchResultBehaviour : MonoBehaviour
             var playerResult = playerResultsOrdered[i];
             var playerColor = Common.playerColors[playerResult.playerNumber];
             var nameText = playerNameUI.GetComponent<Text>();
-            nameText.text = string.Format("Player {0}", i + 1);
+            var playerName = playerResult.name != string.Empty ? playerResult.name : string.Format("Player {0}", i + 1);
+            nameText.text = playerName;
             nameText.color = playerColor;
 
             var votesTmPro = resultUI.GetComponent<TextMeshProUGUI>();

@@ -6,6 +6,8 @@ using UnityEngine;
 
 public class SocialBehaviour : MonoBehaviour
 {
+    static internal SocialBehaviour singleton { get; private set; }
+
     internal string shortName { get; private set; }
     internal event Action OnLoggedIn;
 
@@ -14,6 +16,9 @@ public class SocialBehaviour : MonoBehaviour
 
     void Awake()
     {
+        singleton = this;
+        shortName = "";
+
         if (!FB.IsInitialized)
         {
             FB.Init(FBInitCallback);

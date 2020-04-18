@@ -25,6 +25,7 @@ enum Codes
     log = 14, // [(14), (condition: string), (stackTrace: string), (type: string)]
     newAlly = 15, // [(15), (playerNumber: int), (projectileType: int)]
     destroyProjectile = 16, // [(16), (projectileId: string)]
+    introduce = 17, // [(17), (playerNumber: int), (playerName: string)]
 }
 
 public class NetworkManager : MonoBehaviour
@@ -51,6 +52,7 @@ public class NetworkManager : MonoBehaviour
 
     private PlayerBehaviour localPlayer;
     private List<GameObject> players = new List<GameObject>();
+    private List<string> playersNames = new List<string>();
 
 
     void Awake()
@@ -79,6 +81,7 @@ public class NetworkManager : MonoBehaviour
             { Codes.votesAdded, OnVotesAdded },
             { Codes.newAlly, OnNewAlly },
             { Codes.destroyProjectile, OnDestroyProjectile },
+            { Codes.introduce, OnIntroduce },
         };
 
         projectilesMap = new Dictionary<int, GameObject>();
@@ -199,7 +202,9 @@ public class NetworkManager : MonoBehaviour
             }
 
             players.Add(player);
+            playersNames.Add(string.Empty);
         }
+        playersNames[playerNumber] = SocialBehaviour.singleton.shortName;
 
         ignoreCollisions();
 
@@ -223,6 +228,24 @@ public class NetworkManager : MonoBehaviour
         OnMatchReady?.Invoke();
         myCamera.SetActive(true);
         TimerBehaviour.singleton.StartTimer();
+
+        Introduce();
+    }
+
+    private void Introduce()
+    {
+        var msg = new JSONArray();
+        msg.Add((int)Codes.introduce);
+        msg.Add(playerNumber);
+        msg.Add(SocialBehaviour.singleton.shortName);
+        SendNetworkMsg(msg.ToString());
+    }
+
+    private void OnIntroduce(JSONNode data)
+    {
+        var remotePlayerNumber = data[1].AsInt;
+        var remotePlayerName = (string)data[2];
+        playersNames[remotePlayerNumber] = remotePlayerName;
     }
 
     private IEnumerator ShowPartySelection()
@@ -592,7 +615,11 @@ public class NetworkManager : MonoBehaviour
         var playerResultsOrdered = votesCounters
             .Where(voter => voter.activeSelf)
             .Select(voter => voter.GetComponent<VotesCountBehaviour>().GetVotes())
-            .Select((votes, index) => new PlayerResult() { playerNumber = index, votes = votes })
+            .Select((votes, index) => new PlayerResult() {
+                playerNumber = index,
+                name = playersNames[index],
+                votes = votes,
+            })
             .OrderByDescending(a => a.votes)
             .ToList();
 
