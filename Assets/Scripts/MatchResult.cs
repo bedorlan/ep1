@@ -9,5 +9,6 @@ internal class MatchResult
 internal class PlayerResult
 {
     internal int playerNumber;
+    internal string name;
     internal int votes;
 }

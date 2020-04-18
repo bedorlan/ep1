@@ -158,9 +158,6 @@ public class NetworkManager : MonoBehaviour
 
     private void OnHello(JSONNode data)
     {
-        // yay!
-        // should i validate the server somehow?
-
 #if !UNITY_EDITOR
         Application.logMessageReceived += Application_logMessageReceived;
 #endif

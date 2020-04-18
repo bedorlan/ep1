@@ -43,6 +43,7 @@ public class LobbyBehaviour : MonoBehaviour
     public void OnPlay()
     {
         buttonPlayGameObject.GetComponent<Button>().interactable = false;
+        buttonRanks.GetComponentInChildren<Button>().interactable = false;
         statusGameObject.SetActive(true);
 
         LoadMatch();
@@ -86,7 +87,7 @@ public class LobbyBehaviour : MonoBehaviour
         if (!success)
         {
             statusText.text = "No se pudo conectar al servidor. Revisa tu conexion a internet.";
-            Restart();
+            Restart(false);
             return;
         }
 
@@ -120,7 +121,7 @@ public class LobbyBehaviour : MonoBehaviour
         Restart();
     }
 
-    private void Restart()
+    private void Restart(bool clearStatusText = true)
     {
         if (matchScene.isLoaded) SceneManager.UnloadSceneAsync(matchScene);
         lobbyObject.SetActive(true);
@@ -139,8 +140,12 @@ public class LobbyBehaviour : MonoBehaviour
 
         myCamera.SetActive(true);
         buttonPlayGameObject.GetComponent<Button>().interactable = true;
+        buttonRanks.GetComponentInChildren<Button>().interactable = true;
 
-        statusText.text = "";
-        statusGameObject.SetActive(false);
+        if (clearStatusText)
+        {
+            statusText.text = "";
+            statusGameObject.SetActive(false);
+        }
     }
 }
