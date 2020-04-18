@@ -63,6 +63,12 @@ public class Projectile : MonoBehaviour
 
     static internal void DestroyProjectile(string projectileId)
     {
+        if (!projectiles.ContainsKey(projectileId))
+        {
+            Debug.LogWarningFormat("projectile not found in dictionary: {0}", projectileId);
+            return;
+        }
+
         var projectile = projectiles[projectileId];
         var destroyable = projectile.GetComponentInChildren<IDestroyable>();
         if (destroyable != null) destroyable.Destroy();
