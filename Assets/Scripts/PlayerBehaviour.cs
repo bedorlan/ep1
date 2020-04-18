@@ -280,6 +280,7 @@ public class PlayerBehaviour : MonoBehaviour
 
     private void OnNewDestination(float positionX)
     {
+        if (float.IsNaN(positionX)) return;
         if (isLocal && isFiring) return;
 
         movingDestination = positionX;
