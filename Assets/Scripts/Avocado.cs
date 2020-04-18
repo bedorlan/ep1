@@ -64,6 +64,7 @@ public class Avocado : MonoBehaviour, IProjectile
 
         foreach (var voter in votersAtRange)
         {
+            if (voter == null) continue;
             voter.TryConvertTo(projectile.playerOwnerNumber, projectile.isLocal);
         }
 
