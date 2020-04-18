@@ -99,6 +99,7 @@ public class LobbyBehaviour : MonoBehaviour
         audioPlayer.Stop();
         videoPlayer.Stop();
         myCamera.SetActive(false);
+        GetComponent<GraphicRaycaster>().enabled = false;
     }
 
     private void NetworkManager_OnMatchEnd(MatchResult matchResult)
@@ -107,6 +108,7 @@ public class LobbyBehaviour : MonoBehaviour
         lobbyObject.SetActive(false);
         matchResultObject.SetActive(true);
         myCamera.SetActive(true);
+        GetComponent<GraphicRaycaster>().enabled = true;
 
         if (!videoPlayer.isPlaying)
         {
@@ -139,6 +141,7 @@ public class LobbyBehaviour : MonoBehaviour
         }
 
         myCamera.SetActive(true);
+        GetComponent<GraphicRaycaster>().enabled = true;
         buttonPlayGameObject.GetComponent<Button>().interactable = true;
         buttonRanks.GetComponentInChildren<Button>().interactable = true;
 
