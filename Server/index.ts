@@ -161,7 +161,10 @@ function onGuessTime(player: Duplex, msg: any[]) {
 }
 
 function socketClosed(socket: net.Socket, err: any) {
-  console.info('socket closed', err)
+  console.info('socket closed')
+  if (err && err.code !== 'ERR_STREAM_PREMATURE_CLOSE') {
+    console.info({ err })
+  }
   if (!socket.destroyed) socket.destroy()
   clearBadSockets()
 }
