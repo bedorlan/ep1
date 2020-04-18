@@ -72,6 +72,15 @@ public class PlayerBehaviour : MonoBehaviour
         {
             newPosition.x = 2.5f;
         }
+        else if (playerNumber == 2)
+        {
+            newPosition.x = -5f;
+            Flip();
+        }
+        else if (playerNumber == 3)
+        {
+            newPosition.x = 5f;
+        }
         transform.position = newPosition;
 
         foreach (var child in GetComponentsInChildren<SpriteRenderer>())
