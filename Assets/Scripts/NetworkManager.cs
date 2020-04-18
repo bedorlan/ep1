@@ -502,7 +502,12 @@ public class NetworkManager : MonoBehaviour
         GameObject targetObject,
         string projectileId)
     {
-        var playerTarget = targetObject?.GetComponent<PlayerBehaviour>()?.GetPlayerNumber() ?? null;
+        int? playerTargetNumber = null;
+        if (targetObject)
+        {
+            var playerTarget = targetObject.GetComponent<PlayerBehaviour>();
+            if (playerTarget) playerTargetNumber = playerTarget.GetPlayerNumber();
+        }
         var timeWhenReach = timeToReach2timeWhenReach(timeToReach);
         var destinationMsg = new JSONArray();
         destinationMsg.Add(destination.x);
@@ -514,7 +519,7 @@ public class NetworkManager : MonoBehaviour
         msg.Add(destinationMsg);
         msg.Add(timeWhenReach);
         msg.Add(projectileType);
-        msg.Add(playerTarget);
+        msg.Add(playerTargetNumber);
         msg.Add(projectileId);
         SendNetworkMsg(msg.ToString());
 

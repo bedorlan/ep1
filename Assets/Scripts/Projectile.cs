@@ -64,7 +64,8 @@ public class Projectile : MonoBehaviour
     static internal void DestroyProjectile(string projectileId)
     {
         var projectile = projectiles[projectileId];
-        projectile.GetComponentInChildren<IDestroyable>()?.Destroy();
+        var destroyable = projectile.GetComponentInChildren<IDestroyable>();
+        if (destroyable != null) destroyable.Destroy();
         Destroy(projectile.transform.root.gameObject);
     }
 

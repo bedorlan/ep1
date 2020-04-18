@@ -10,8 +10,7 @@ public class CentralBaseBehaviour : MonoBehaviour, IProjectile
 
     public bool CanYouFireAt(Vector3 position, GameObject target)
     {
-        var otherBase = target?.GetComponentInChildren<CentralBaseBehaviour>() ?? null;
-        return otherBase == null;
+        return target == null || target.GetComponentInChildren<CentralBaseBehaviour>() == null;
     }
 
     public bool IsPowerUp()
