@@ -37,7 +37,8 @@ public class VoterBehaviour : MonoBehaviour, IPartySupporter, ICollectable
         if (this.playerOwner == playerOwner) return false;
 
         GetComponent<TextMeshPro>().color = Color.gray;
-        GetComponent<Jumper>().LastJump();
+        var jumper = GetComponent<Jumper>();
+        if (jumper != null) jumper.LastJump();
 
         if (isLocal)
         {
