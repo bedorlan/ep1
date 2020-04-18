@@ -13,11 +13,16 @@ public class VotesChangesBehaviour : MonoBehaviour
         textMesh = GetComponent<TextMeshPro>();
         myRigidbody = GetComponent<Rigidbody2D>();
 
+        var localScale = transform.root.localScale;
+        var scale = 1f + Mathf.Abs(votes / 10f);
+        localScale *= scale;
+        transform.root.localScale = localScale;
+
         var votesStr = votes.ToString().PadLeft(2, '+');
         votesStr = string.Format("{0}<size=40%>,000</size>", votesStr);
         textMesh.text = votesStr;
 
-        var color = votes > 0 ? Color.white : Color.red;
+        var color = votes >= 0 ? Color.white : Color.red;
         textMesh.color = color;
 
         myRigidbody.velocity = new Vector3(0, 1, 0);
@@ -26,7 +31,7 @@ public class VotesChangesBehaviour : MonoBehaviour
     void Update()
     {
         var color = textMesh.color;
-        var newColor = new Color(color.r, color.g, color.b, color.a - 0.01f);
+        var newColor = new Color(color.r, color.g, color.b, color.a - 0.005f);
         textMesh.color = newColor;
 
         if (newColor.a <= 0) Destroy(gameObject);
