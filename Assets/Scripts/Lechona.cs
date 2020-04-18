@@ -41,6 +41,7 @@ public class Lechona : MonoBehaviour, IProjectile
 
         foreach (var voter in votersAtRange)
         {
+            if (voter == null) continue;
             voter.TryConvertTo(playerOwner, isLocal);
         }
 
