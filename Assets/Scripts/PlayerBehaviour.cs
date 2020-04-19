@@ -402,7 +402,9 @@ public class PlayerBehaviour : MonoBehaviour
             CurrentTargetIndicatorBehaviour.singleton.NewTargetPosition(position);
             return;
         }
+
         firingTargetObject = target;
+        CurrentTargetIndicatorBehaviour.singleton.NewTargetObject(target);
         ChaseAndFireToPosition(position);
     }
 
