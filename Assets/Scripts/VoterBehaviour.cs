@@ -20,7 +20,6 @@ public class VoterBehaviour : MonoBehaviour, IPartySupporter, ICollectable, IPoo
         }
 
         GetComponent<Renderer>().sortingLayerName = "Voters";
-        Init();
     }
 
     public void Spawn() { }
