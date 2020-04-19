@@ -3461,6 +3461,8 @@ MonoBehaviour:
   magicFlamePrefab: {fileID: 1454184544696679872, guid: fb89ca2cca604417db7a574f92096052,
     type: 3}
   menuObject: {fileID: 183676921}
+  votesChangesIndicatorPrefab: {fileID: 4760397698154483531, guid: 4db95640b673541989f20e9b68764bf5,
+    type: 3}
 --- !u!4 &1440188185
 Transform:
   m_ObjectHideFlags: 0

@@ -8,7 +8,6 @@ public class PlayerBehaviour : MonoBehaviour
     const float DEFAULT_VELOCITY_RUNNING = 10f;
     const float TIME_ANIMATION_PRE_FIRE = .15f;
 
-    public GameObject votesChangesIndicatorPrefab;
     public List<GameObject> headsPrefabs;
     public List<AudioClip> partyIntroductions;
     public GameObject changeHeadAnimationPrefab;
@@ -376,8 +375,8 @@ public class PlayerBehaviour : MonoBehaviour
 
         var position = transform.position;
         position.y += 2f;
-        var votesIndicator = Instantiate(votesChangesIndicatorPrefab, position, Quaternion.identity);
-        votesIndicator.GetComponent<VotesChangesBehaviour>().Show(votes);
+        var votesIndicator = Index.singleton.votesChangesPool.Spawn(position, Quaternion.identity);
+        votesIndicator.Show(votes);
     }
 
     private void OnMouseDown()
