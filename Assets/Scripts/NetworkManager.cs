@@ -46,6 +46,8 @@ public class NetworkManager : MonoBehaviour
     private Common.Parties playerParty;
     private bool matchQuit = false;
     private bool matchOver = false;
+    private Dictionary<int, GameObject> votersMap = new Dictionary<int, GameObject>();
+    private ObjectPool<VoterBehaviour> voterPool;
     private Dictionary<Codes, Action<JSONNode>> codesMap;
     private Dictionary<int, GameObject> projectilesMap;
     private GameObject defaultProjectile;
@@ -83,6 +85,8 @@ public class NetworkManager : MonoBehaviour
             { Codes.destroyProjectile, OnDestroyProjectile },
             { Codes.introduce, OnIntroduce },
         };
+
+        voterPool = new ObjectPool<VoterBehaviour>(voterPrefab);
 
         projectilesMap = new Dictionary<int, GameObject>();
         for (var i = 0; i < projectileButtons.transform.childCount; ++i)
@@ -346,8 +350,6 @@ public class NetworkManager : MonoBehaviour
         remotePlayer.GetComponent<PlayerBehaviour>().Remote_NewDestination(newDestination, timeToReach);
     }
 
-    private Dictionary<int, GameObject> votersMap = new Dictionary<int, GameObject>();
-
     private void OnNewVoters(JSONNode data)
     {
         data.Remove(0);
@@ -357,10 +359,10 @@ public class NetworkManager : MonoBehaviour
             var voterPositionX = voter[1].AsFloat;
 
             var voterPosition = new Vector3(voterPositionX, FLOOR_LEVEL_Y + .3f, 0f);
-            var newVoter = Instantiate(voterPrefab, voterPosition, Quaternion.identity);
-            newVoter.GetComponent<VoterBehaviour>().SetId(voterId);
+            var newVoter = voterPool.Spawn(voterPosition, Quaternion.identity);
+            newVoter.SetId(voterId);
 
-            votersMap.Add(voterId, newVoter);
+            votersMap.Add(voterId, newVoter.transform.root.gameObject);
         }
     }
 

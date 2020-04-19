@@ -4,9 +4,10 @@ using System.Collections.Generic;
 using TMPro;
 using UnityEngine;
 
-public class VoterBehaviour : MonoBehaviour, IPartySupporter, ICollectable
+public class VoterBehaviour : MonoBehaviour, IPartySupporter, ICollectable, IPoolable
 {
     public AudioClip whenClaimedClip;
+    public event Action<GameObject> Despawn;
 
     private int voterId;
     private int playerOwner = Common.NO_PLAYER;
@@ -19,6 +20,17 @@ public class VoterBehaviour : MonoBehaviour, IPartySupporter, ICollectable
         }
 
         GetComponent<Renderer>().sortingLayerName = "Voters";
+        Init();
+    }
+
+    public void Spawn() { }
+
+    private void Init()
+    {
+        playerOwner = Common.NO_PLAYER;
+        GetComponent<Collider2D>().enabled = true;
+        GetComponent<TextMeshPro>().color = Color.white;
+        GetComponent<Jumper>().StartJumpingAgain();
     }
 
     public void SetId(int voterId)
@@ -87,15 +99,18 @@ public class VoterBehaviour : MonoBehaviour, IPartySupporter, ICollectable
 
     internal void ClaimedBy(int player)
     {
-        KillSelf();
+        StartCoroutine(KillSelf());
     }
 
-    private void KillSelf()
+    private IEnumerator KillSelf()
     {
         GetComponent<Collider2D>().enabled = false;
         GetComponent<AudioSource>().PlayOneShot(whenClaimedClip);
 
-        Destroy(transform.root.gameObject, whenClaimedClip.length);
+        yield return new WaitForSeconds(whenClaimedClip.length);
+
+        Init();
+        Despawn?.Invoke(transform.root.gameObject);
     }
 
     internal void BeUndecided(bool isLocal)

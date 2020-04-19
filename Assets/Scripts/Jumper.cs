@@ -23,7 +23,6 @@ public class Jumper : MonoBehaviour
     {
         if (x == 0f && lastJump)
         {
-            enabled = false;
             return;
         }
 
@@ -48,8 +47,13 @@ public class Jumper : MonoBehaviour
         return JUMP_HIGH - Mathf.Pow(x - Mathf.Sqrt(JUMP_HIGH), 2) + groundY;
     }
 
-    public void LastJump()
+    internal void LastJump()
     {
         lastJump = true;
+    }
+
+    internal void StartJumpingAgain()
+    {
+        lastJump = false;
     }
 }
