@@ -399,6 +399,7 @@ public class PlayerBehaviour : MonoBehaviour
             firingTargetPosition = Vector3.zero;
             firingTargetObject = null;
             OnNewDestination(position.x);
+            CurrentTargetIndicatorBehaviour.singleton.NewTargetPosition(position);
             return;
         }
         firingTargetObject = target;

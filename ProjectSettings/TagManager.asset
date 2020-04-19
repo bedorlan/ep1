@@ -21,7 +21,7 @@ TagManager:
   - Hell
   - Player
   - PlayerTransparent
-  - 
+  - Floor Sensors
   - 
   - 
   - 
@@ -50,6 +50,9 @@ TagManager:
     locked: 0
   - name: Billboards
     uniqueID: 2145051109
+    locked: 0
+  - name: TargetIndicator
+    uniqueID: 4267011843
     locked: 0
   - name: PlayerFlames
     uniqueID: 86281421
