@@ -46,6 +46,7 @@ public class VoterBehaviour : MonoBehaviour, IPartySupporter, ICollectable, IPoo
 
     public bool TryConvertTo(int playerOwner, bool isLocal)
     {
+        if (!transform.root.gameObject.activeSelf) return false;
         if (this.playerOwner == playerOwner) return false;
 
         GetComponent<TextMeshPro>().color = Color.gray;
@@ -93,6 +94,7 @@ public class VoterBehaviour : MonoBehaviour, IPartySupporter, ICollectable, IPoo
 
     public void TryClaim(int playerNumber, bool force)
     {
+        if (!transform.root.gameObject.activeSelf) return;
         if (!(playerOwner == playerNumber || force)) return;
         NetworkManager.singleton.TryClaimVoter(voterId);
     }
