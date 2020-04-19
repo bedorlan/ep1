@@ -1,11 +1,13 @@
 ﻿using System;
+using System.Collections;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 
 internal class MatchResultBehaviour : MonoBehaviour
 {
-    public GameObject resultsObject;    
+    public GameObject resultsObject;
+    public GameObject continueButton;
 
     internal event Action OnFinished;
 
@@ -34,6 +36,16 @@ internal class MatchResultBehaviour : MonoBehaviour
             votesTmPro.text = string.Format("{0} {1}<size=40%>,000</size>", Common.MAN_CODE, playerResult.votes);
             votesTmPro.color = playerColor;
         }
+
+        StartCoroutine(EnableContinue());
+    }
+
+    private IEnumerator EnableContinue()
+    {
+        continueButton.SetActive(false);
+        yield return new WaitForSeconds(2f);
+
+        continueButton.SetActive(true);
     }
 
     public void OnContine()
