@@ -3,64 +3,56 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-public class BillboardProjectileBehaviour : MonoBehaviour, IProjectile
+public class BillboardProjectileBehaviour : MonoBehaviour, IProjectile, IPowerUp
 {
-    private bool isLocal;
-    private PlayerBehaviour playerTarget;
-    private int playerTargetNumber;
-    private bool alive = true;
-    private bool playerAtRange = false;
-
-    public bool CanYouFireAt(Vector3 position, GameObject target)
+    public bool IsPowerUp()
     {
-        var validTarget = target != null && target.GetComponentInChildren<PlayerBehaviour>() != null;
-        return validTarget;
+        return true;
     }
 
-    public bool IsPowerUp()
+    public bool CanYouFireAt(Vector3 position, GameObject target)
     {
         return false;
     }
 
+    private Projectile projectile;
+    private HashSet<PlayerBehaviour> playersAtRange = new HashSet<PlayerBehaviour>();
+    private bool alive = true;
+
     private void Start()
     {
-        var projectile = GetComponent<Projectile>();
-        isLocal = projectile.isLocal;
-        playerTarget = projectile.targetObject.GetComponent<PlayerBehaviour>();
-        playerTargetNumber = playerTarget.GetPlayerNumber();
-
-        var party = playerTarget.party;
-        var playerFace = transform.root.GetChild((int)party).gameObject;
-        var color = Common.playerColors[playerTargetNumber];
-        playerFace.SetActive(true);
-        playerFace.GetComponent<SpriteRenderer>().color = color;
+        projectile = GetComponent<Projectile>();
 
         StartCoroutine(StopInfluenceAfter(9));
-        if (isLocal) StartCoroutine(SubstractTargetPlayerVotes());
+        if (projectile.isLocal) StartCoroutine(SubstractEnemyPlayerVotes());
+
+        var position = transform.position;
+        position.y = 0f;
+        transform.position = position;
     }
+
+    public void FirePowerUp() {}
 
     private void OnTriggerEnter2D(Collider2D other)
     {
         var voter = other.GetComponent<VoterBehaviour>();
-        if (isLocal && voter != null)
+        if (projectile.isLocal && voter != null)
         {
-            voter.BeUndecided(isLocal);
+            voter.BeUndecided(projectile.isLocal);
+            return;
         }
 
         var player = other.GetComponent<PlayerBehaviour>();
-        if (player != null && player.GetPlayerNumber() == playerTargetNumber)
+        if (player != null && player.GetPlayerNumber() != projectile.playerOwnerNumber)
         {
-            playerAtRange = true;
+            playersAtRange.Add(player);
         }
     }
 
     private void OnTriggerExit2D(Collider2D collision)
     {
         var player = collision.GetComponent<PlayerBehaviour>();
-        if (player != null && player.GetPlayerNumber() == playerTargetNumber)
-        {
-            playerAtRange = false;
-        }
+        if (player != null) playersAtRange.Remove(player);
     }
 
     private IEnumerator StopInfluenceAfter(int seconds)
@@ -70,12 +62,15 @@ public class BillboardProjectileBehaviour : MonoBehaviour, IProjectile
         Destroy(transform.root.gameObject, 1f);
     }
 
-    private IEnumerator SubstractTargetPlayerVotes()
+    private IEnumerator SubstractEnemyPlayerVotes()
     {
         while (alive)
         {
-            if (playerAtRange) playerTarget.DoDamagePercentage(0.05f);
-            yield return new WaitForSeconds(.5f);
+            foreach (var playerAtRange in playersAtRange)
+            {
+                if (playerAtRange) playerAtRange.DoDamagePercentage(0.05f);
+            }
+            yield return new WaitForSeconds(1f / 3f);
         }
 
     }
