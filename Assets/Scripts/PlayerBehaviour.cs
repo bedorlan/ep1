@@ -8,6 +8,7 @@ public class PlayerBehaviour : MonoBehaviour
     const float DEFAULT_VELOCITY_RUNNING = 10f;
     const float TIME_ANIMATION_PRE_FIRE = .15f;
 
+    public GameObject playerIndicatorObject;
     public List<GameObject> headsPrefabs;
     public List<AudioClip> partyIntroductions;
     public GameObject changeHeadAnimationPrefab;
@@ -85,6 +86,8 @@ public class PlayerBehaviour : MonoBehaviour
             newPosition.x = 5f;
         }
         transform.position = newPosition;
+
+        if (isLocal) playerIndicatorObject.SetActive(true);
 
         foreach (var child in GetComponentsInChildren<SpriteRenderer>())
         {
