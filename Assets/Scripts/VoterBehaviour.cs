@@ -69,7 +69,7 @@ public class VoterBehaviour : MonoBehaviour, IPartySupporter, ICollectable, IPoo
 
     private IEnumerator ConvertOthers(int playerOwner, bool isLocal)
     {
-        yield return new WaitForSeconds(.5f);
+        yield return new WaitForSeconds(.25f);
 
         var collider = GetComponent<CircleCollider2D>();
         var others = new Collider2D[10];

@@ -395,6 +395,7 @@ class VotersCentral {
         this.SendVotersToAll(lodash.times(5).fill(projectilePositionX).map(this.GenerateVoterCloseTo))
 
       generateVoters()
+      generateVoters()
       // todo: check that the match has not ended
       setTimeout(generateVoters, 1000)
       setTimeout(generateVoters, 2000)

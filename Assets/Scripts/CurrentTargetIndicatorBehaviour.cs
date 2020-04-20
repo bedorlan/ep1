@@ -19,6 +19,7 @@ public class CurrentTargetIndicatorBehaviour : MonoBehaviour
 
         myRigidbody.bodyType = RigidbodyType2D.Dynamic;
         myRigidbody.velocity = Vector2.zero;
+        newPosition.y = -2f;
         newPosition.z = 0f;
         transform.position = newPosition;
         currentTarget = null;
