@@ -48,10 +48,14 @@ public class PlayerBehaviour : MonoBehaviour
 
         if (isLocal)
         {
+            if (firingTargetObject != null)
+            {
+                firingTargetPosition = firingTargetObject.transform.root.position;
+            }
             tryFireAtCurrentTarget();
         }
 
-        stopWhenArriveToDestination();
+        stopWhenArrivedToDestinationOrKeepChasing();
     }
 
     public void Initialize(int playerNumber, bool isLocal)
@@ -229,15 +233,19 @@ public class PlayerBehaviour : MonoBehaviour
         stop();
     }
 
-    private void stopWhenArriveToDestination()
+    private void stopWhenArrivedToDestinationOrKeepChasing()
     {
         var distanceToDestination = movingDestination - transform.position.x;
         var direction = Mathf.Sign(myRigidbody.velocity.x);
-        if (direction > 0 && distanceToDestination <= 0
-            || direction < 0 && distanceToDestination >= 0)
+        var arrived = direction > 0 && distanceToDestination <= 0
+            || direction < 0 && distanceToDestination >= 0;
+        if (!arrived) return;
+
+        if (isLocal && firingTargetPosition != Vector3.zero)
         {
-            stop();
+            ChaseAndFireToPosition(firingTargetPosition);
         }
+        else stop();
     }
 
     private void stop()
