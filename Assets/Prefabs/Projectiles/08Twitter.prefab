@@ -12,8 +12,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 7a2ff851b1a994ccd92589d32dcdf340, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  maxInfluence: 7
-  playerDamagePercentage: 0.1
+  maxInfluence: 99
+  playerDamagePercentage: 0.15
 --- !u!1001 &7964455843827692701
 PrefabInstance:
   m_ObjectHideFlags: 0
