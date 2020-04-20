@@ -85,6 +85,7 @@ public class PlayerBehaviour : MonoBehaviour
         {
             newPosition.x = 5f;
         }
+        newPosition.x += -33f;
         transform.position = newPosition;
 
         if (isLocal) playerIndicatorObject.SetActive(true);

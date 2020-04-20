@@ -6,17 +6,27 @@ public class MainCamera : MonoBehaviour
 {
     public GameObject objectToFollow;
 
-    private const float speed = 2f;
-    private const float offsetSideOfView = 7f;
+    private Camera myCamera;
+    private int cameraLimitOffset;
+
+    const float speed = 2f;
+    const float offsetSideOfView = 7f;
+    const float limitLeft = -104.2f;
+    const float limitRight = 102.5f;
 
     private void Start()
     {
-        Camera.main.eventMask = LayerMask.GetMask(new string[] {
+        myCamera = GetComponent<Camera>();
+        myCamera.eventMask = LayerMask.GetMask(new string[] {
             "Default",
             "Player",
             "UI",
             "Voters",
         });
+
+        var halfHeight = myCamera.orthographicSize;
+        var halfWidth = myCamera.aspect * halfHeight;
+        cameraLimitOffset = (int)halfWidth + 1;
     }
 
     void Update()
@@ -29,6 +39,8 @@ public class MainCamera : MonoBehaviour
 
         var newCameraPosition = transform.position;
         newCameraPosition.x = Mathf.Lerp(transform.position.x, desiredCameraPosition, speed * Time.deltaTime);
+        newCameraPosition.x = Mathf.Max(newCameraPosition.x, limitLeft + cameraLimitOffset);
+        newCameraPosition.x = Mathf.Min(newCameraPosition.x, limitRight - cameraLimitOffset);
         transform.position = newCameraPosition;
     }
 }
