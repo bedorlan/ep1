@@ -23,12 +23,12 @@ public class BillboardProjectileBehaviour : MonoBehaviour, IProjectile, IPowerUp
     {
         projectile = GetComponent<Projectile>();
 
-        StartCoroutine(StopInfluenceAfter(9));
-        if (projectile.isLocal) StartCoroutine(SubstractEnemyPlayerVotes());
-
         var position = transform.position;
         position.y = 0f;
         transform.position = position;
+
+        StartCoroutine(StopInfluenceAfter(9f));
+        if (projectile.isLocal) StartCoroutine(SubstractEnemyPlayerVotes());
     }
 
     public void FirePowerUp() {}
@@ -55,7 +55,7 @@ public class BillboardProjectileBehaviour : MonoBehaviour, IProjectile, IPowerUp
         if (player != null) playersAtRange.Remove(player);
     }
 
-    private IEnumerator StopInfluenceAfter(int seconds)
+    private IEnumerator StopInfluenceAfter(float seconds)
     {
         yield return new WaitForSeconds(seconds);
         alive = false;
