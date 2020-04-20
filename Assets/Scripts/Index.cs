@@ -7,14 +7,13 @@ public class Index : MonoBehaviour
     public GameObject magicFlamePrefab;
     public GameObject menuObject;
     public GameObject votesChangesIndicatorPrefab;
+    public ObjectPool voterPool;
+    public ObjectPool votesChangesIndicatorPool;
 
     internal static Index singleton { get; private set; }
-
-    internal ObjectPool<VotesChangesBehaviour> votesChangesPool { get; private set; }
 
     private void Start()
     {
         singleton = this;
-        votesChangesPool = new ObjectPool<VotesChangesBehaviour>(votesChangesIndicatorPrefab);
     }
 }

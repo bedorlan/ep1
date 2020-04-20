@@ -3587,6 +3587,8 @@ GameObject:
   m_Component:
   - component: {fileID: 1440188185}
   - component: {fileID: 1440188184}
+  - component: {fileID: 1440188187}
+  - component: {fileID: 1440188186}
   m_Layer: 0
   m_Name: Index
   m_TagString: Untagged
@@ -3611,6 +3613,8 @@ MonoBehaviour:
   menuObject: {fileID: 183676921}
   votesChangesIndicatorPrefab: {fileID: 4760397698154483531, guid: 4db95640b673541989f20e9b68764bf5,
     type: 3}
+  voterPool: {fileID: 1440188187}
+  votesChangesIndicatorPool: {fileID: 1440188186}
 --- !u!4 &1440188185
 Transform:
   m_ObjectHideFlags: 0
@@ -3625,6 +3629,34 @@ Transform:
   m_Father: {fileID: 0}
   m_RootOrder: 0
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &1440188186
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1440188183}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 8093b4bf0a9c54efea50b02629b946fc, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  prefab: {fileID: 4760397698154483531, guid: 4db95640b673541989f20e9b68764bf5, type: 3}
+  minPoolSize: 20
+--- !u!114 &1440188187
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1440188183}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 8093b4bf0a9c54efea50b02629b946fc, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  prefab: {fileID: 2201240699575442311, guid: da89b24872e454bc39e02cbb62057b2e, type: 3}
+  minPoolSize: 40
 --- !u!1 &1520950832
 GameObject:
   m_ObjectHideFlags: 0

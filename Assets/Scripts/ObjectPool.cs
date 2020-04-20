@@ -1,17 +1,24 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-internal class ObjectPool<T>
+public class ObjectPool : MonoBehaviour
 {
-    GameObject prefab;
+    public GameObject prefab;
+    public int minPoolSize;
+
     Queue<GameObject> pool = new Queue<GameObject>();
 
-    internal ObjectPool(GameObject prefab)
+    private void Update()
     {
-        this.prefab = prefab;
+        if (pool.Count >= minPoolSize) return;
+
+        var obj = Instantiate(prefab);
+        obj.SetActive(false);
+
+        pool.Enqueue(obj);
     }
 
-    internal T Spawn(Vector3 position, Quaternion rotation)
+    internal T Spawn<T>(Vector3 position, Quaternion rotation)
     {
         GameObject newObject;
         if (pool.Count > 0)
@@ -20,7 +27,7 @@ internal class ObjectPool<T>
         }
         else
         {
-            newObject = MonoBehaviour.Instantiate(prefab);
+            newObject = Instantiate(prefab);
         }
 
         newObject.SetActive(true);

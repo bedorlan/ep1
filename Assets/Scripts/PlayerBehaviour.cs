@@ -383,7 +383,7 @@ public class PlayerBehaviour : MonoBehaviour
 
         var position = transform.position;
         position.y += 2f;
-        var votesIndicator = Index.singleton.votesChangesPool.Spawn(position, Quaternion.identity);
+        var votesIndicator = Index.singleton.votesChangesIndicatorPool.Spawn<VotesChangesBehaviour>(position, Quaternion.identity);
         votesIndicator.Show(votes);
     }
 
