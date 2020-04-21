@@ -61,7 +61,7 @@ public class PlayerBehaviour : MonoBehaviour
 
     public void Initialize(int playerNumber, bool isLocal)
     {
-        var PLAYER_INITIAL_POSITION = new Vector3(0, -2.7f, 0);
+        var PLAYER_INITIAL_POSITION = new Vector3(0f, -2.7f, transform.position.z);
 
         this.playerNumber = playerNumber;
         this.isLocal = isLocal;

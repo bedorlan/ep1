@@ -18,7 +18,7 @@ public class ObjectPool : MonoBehaviour
         pool.Enqueue(obj);
     }
 
-    internal T Spawn<T>(Vector3 position, Quaternion rotation)
+    internal T Spawn<T>(Vector2 position, Quaternion rotation)
     {
         GameObject newObject;
         if (pool.Count > 0)
@@ -31,7 +31,9 @@ public class ObjectPool : MonoBehaviour
         }
 
         newObject.SetActive(true);
-        newObject.transform.position = position;
+
+        var newPosition = new Vector3(position.x, position.y, newObject.transform.position.z);
+        newObject.transform.position = newPosition;
         newObject.transform.rotation = rotation;
 
         var poolObject = newObject.GetComponentInChildren<IPoolable>();

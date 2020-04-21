@@ -93,9 +93,9 @@ public class Projectile : MonoBehaviour
         this.targetObject = targetObject;
         this.projectileId = projectileId;
 
-        var position = playerOrigin.position;
+        Vector2 position = playerOrigin.position;
         position.y += initialPositionOffsetY;
-        transform.position = position;
+        transform.position = new Vector3(position.x, position.y, transform.position.z);
 
         var direction = toTheLeft ? -1 : 1;
         velocity.x *= direction;
@@ -113,7 +113,7 @@ public class Projectile : MonoBehaviour
         int playerOwnerNumber,
         bool isLocal,
         Vector3 origin,
-        Vector3 currentTarget,
+        Vector2 currentTarget,
         GameObject targetObject,
         string projectileId)
     {
@@ -122,7 +122,7 @@ public class Projectile : MonoBehaviour
         this.isLocal = isLocal;
         this.targetObject = targetObject;
         this.projectileId = projectileId;
-        transform.position = currentTarget;
+        transform.position = new Vector3(currentTarget.x, currentTarget.y, transform.position.z);
 
         var manuallyFired = GetComponent<IManuallyFiredProjectile>();
         if (manuallyFired != null)

@@ -38,6 +38,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: b6c0884d008064abf943b4851d66ab84, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  party: 0
 --- !u!1001 &8964457847287310691
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -73,7 +74,7 @@ PrefabInstance:
     - target: {fileID: 8429717348609787906, guid: 836a63ae02519488ab511a63e8fa0756,
         type: 3}
       propertyPath: m_SortingLayer
-      value: -3
+      value: -5
       objectReference: {fileID: 0}
     - target: {fileID: 8429717348609787906, guid: 836a63ae02519488ab511a63e8fa0756,
         type: 3}
@@ -104,7 +105,7 @@ PrefabInstance:
     - target: {fileID: 8429717348609787917, guid: 836a63ae02519488ab511a63e8fa0756,
         type: 3}
       propertyPath: m_LocalPosition.z
-      value: 0
+      value: 120
       objectReference: {fileID: 0}
     - target: {fileID: 8429717348609787917, guid: 836a63ae02519488ab511a63e8fa0756,
         type: 3}
