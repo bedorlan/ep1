@@ -1,6 +1,6 @@
 {
   "name": "ep1_server",
-  "version": "420.1",
+  "version": "420.2",
   "private": true,
   "engines": {
     "node": "12.x"
