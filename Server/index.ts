@@ -22,7 +22,7 @@ enum Codes {
   introduce = 17, // [(17), (playerNumber: int), (playerName: string)]
 }
 
-const MAP_WIDTH = 200
+const MAP_WIDTH = 190
 
 const server = net.createServer()
 
