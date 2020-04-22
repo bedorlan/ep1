@@ -3,6 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using Facebook.Unity;
+using SimpleJSON;
 using UnityEngine;
 
 public class SocialBehaviour : MonoBehaviour
@@ -35,7 +36,7 @@ public class SocialBehaviour : MonoBehaviour
 
     void LoginCallback()
     {
-        if (FB.IsLoggedIn && HasGrantedAllPermissions())
+        if (FB.IsLoggedIn)
         {
             GetUserData();
         }
@@ -43,12 +44,28 @@ public class SocialBehaviour : MonoBehaviour
 
     readonly List<string> permissions = new List<string>() {
         "public_profile",
-        //"user_friends",
+        "user_friends",
     };
+
+    bool PermissionPublicProfile
+    {
+        get
+        {
+            return AccessToken.CurrentAccessToken.Permissions.Contains("public_profile");
+        }
+    }
+
+    bool PermissionUserFriends
+    {
+        get
+        {
+            return AccessToken.CurrentAccessToken.Permissions.Contains("user_friends");
+        }
+    }
 
     bool HasGrantedAllPermissions()
     {
-        return permissions.All((it) => AccessToken.CurrentAccessToken.Permissions.Contains(it));
+        return PermissionPublicProfile && PermissionUserFriends;
     }
 
     internal void Login()
@@ -75,14 +92,36 @@ public class SocialBehaviour : MonoBehaviour
 
     private void GetUserData()
     {
-        FB.API("me?fields=short_name", HttpMethod.GET, (result) => {
-            if (result.Error != null)
+        if (PermissionPublicProfile)
+        {
+            FB.API("/me?fields=short_name", HttpMethod.GET, (result) => {
+                if (result.Error != null)
+                {
+                    errors.Enqueue(result.Error);
+                    OnError?.Invoke();
+                    return;
+                }
+                shortName = result.ResultDictionary["short_name"].ToString();
+            });
+        }
+
+        if (PermissionUserFriends)
+        {
+            FB.API("/me/friends", HttpMethod.GET, (result) =>
             {
-                errors.Enqueue(result.Error);
-                OnError?.Invoke();
-                return;
-            }
-            shortName = result.ResultDictionary["short_name"].ToString();
-        });
+                if (result.Error != null)
+                {
+                    errors.Enqueue(result.Error);
+                    OnError?.Invoke();
+                    return;
+                }
+                Debug.Log(result.RawResult);
+                var data = JSON.Parse(result.RawResult)["data"].AsArray;
+            });
+        }
+        else
+        {
+            Debug.Log("no friends permission.");
+        }
     }
 }
