@@ -428,7 +428,6 @@ public class NetworkManager : MonoBehaviour
 
   private void OnMatchOver(JSONNode data)
   {
-    Debug.Log("OnMatchOver");
     TimerOver();
   }
 
@@ -454,7 +453,6 @@ public class NetworkManager : MonoBehaviour
   private void OnDisconnected()
   {
     if (matchOver) return;
-    Debug.Log("OnDisconnected");
     OnConnection?.Invoke(false);
   }
 

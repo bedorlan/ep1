@@ -82,9 +82,8 @@ server.on('connection', async (socket) => {
     new Transform({
       objectMode: true,
       transform(obj, encoding, cb) {
-        if (!process.env.LATENCY) this.push(obj)
-        else setTimeout(() => this.push(obj), Number.parseInt(process.env.LATENCY))
-        cb()
+        if (!process.env.LATENCY) cb(null, obj)
+        else setTimeout(() => cb(null, obj), Number.parseInt(process.env.LATENCY))
       },
     }),
     new Transform({
@@ -306,10 +305,8 @@ class Match {
     const matchResult = newScores.sort((a, b) => a.playerNumber - b.playerNumber).map((it) => [it.votes, it.newScore])
     const msg = [Codes.newScores, ...matchResult]
     console.log({ msg })
-    this.resendToOthers(-1, msg)
     this.players.forEach((it) => {
-      it.out.once('drain', () => it.out.end())
-      // todo: is not closing the connections when the match end
+      it.out.end(msg)
       // todo: is sending the votes results in bad order
     })
   }
