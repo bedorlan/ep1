@@ -15,9 +15,10 @@ internal class MatchResultBehaviour : MonoBehaviour
   {
     continueButton.SetActive(false);
 
-    for (var i = 0; i < transform.childCount; ++i)
+    for (var i = 0; i < Common.MAX_PLAYERS_NUMBER; ++i)
     {
-      resultsObject.transform.GetChild(i).gameObject.SetActive(false);
+      resultsObject.transform.GetChild(i * 2).gameObject.SetActive(false);
+      resultsObject.transform.GetChild(i * 2 + 1).gameObject.SetActive(false);
     }
 
     // todo: loading perhaps?

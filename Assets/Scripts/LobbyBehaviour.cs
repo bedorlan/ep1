@@ -107,7 +107,6 @@ public class LobbyBehaviour : MonoBehaviour
   private void NetworkManager_OnMatchEnd()
   {
     lobbyObject.SetActive(false);
-    matchResultObject.SetActive(true);
     myCamera.SetActive(true);
     GetComponent<GraphicRaycaster>().enabled = true;
 
@@ -118,6 +117,7 @@ public class LobbyBehaviour : MonoBehaviour
     }
 
     matchResultObject.GetComponent<MatchResultBehaviour>().ShowWaitingForMatchResult();
+    matchResultObject.SetActive(true);
   }
 
   private void NetworkManager_OnMatchResults(MatchResult matchResult)
