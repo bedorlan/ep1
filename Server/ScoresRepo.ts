@@ -11,7 +11,12 @@ const db = new AWS.DynamoDB(conf)
 
 const TableName = 'scores'
 
-export function putScore(item: { fb_id: string; score: number }) {
+export interface IScore {
+  fb_id: string
+  score: number
+}
+
+export function putScore(item: IScore) {
   const Item = { fb_id: { S: item.fb_id }, score: { N: item.score.toString() } }
   return new Promise((resolve, reject) => {
     db.putItem({ TableName, Item }, (err) => {
@@ -21,12 +26,14 @@ export function putScore(item: { fb_id: string; score: number }) {
   })
 }
 
-export function getScore(fb_id: string) {
+export function getScore(fb_id: string): Promise<IScore | null> {
   const Key = { fb_id: { S: fb_id } }
   return new Promise((resolve, reject) => {
     db.getItem({ TableName, Key }, (err, data) => {
       if (err) return reject(err)
-      const Item = { fb_id: data.Item!.fb_id.S, score: Number.parseInt(data.Item!.score.N!) }
+      if (!data || !data.Item) return resolve(null)
+
+      const Item = { fb_id: data.Item.fb_id.S!, score: Number.parseInt(data.Item.score.N!) }
       resolve(Item)
     })
   })

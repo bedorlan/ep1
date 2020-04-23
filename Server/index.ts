@@ -1,8 +1,9 @@
 import * as lodash from 'lodash'
 import * as net from 'net'
 import { PassThrough, Readable, Writable, pipeline, Transform, TransformCallback } from 'stream'
-// import { putScore, getScore } from './ScoresRepo'
-// import { multiElo } from './Elo'
+
+import * as ScoresRepo from './ScoresRepo'
+import { multiElo, initialScore } from './Elo'
 
 enum Codes {
   noop = 0, // [0]
@@ -21,15 +22,19 @@ enum Codes {
   log = 14, // [(14), (condition: string), (stackTrace: string), (type: string)]
   newAlly = 15, // [(15), (playerNumber: int), (projectileType: int)]
   destroyProjectile = 16, // [(16), (projectileId: string)]
-  introduce = 17, // [(17), (playerNumber: int), (playerName: string)]
+  introduce = 17, // [(17), (playerNumber: int), (playerName: string), (fbId?: string)]
+  matchOver = 18, // [(18)]
+  newScores = 19, // [(19), ([votesPlayer1: number, scorePlayer1: number]), ...]
 }
 
 const MAP_WIDTH = 190
+const MATCH_TIME = 0.1 * 60 * 1000
 
 const server = net.createServer()
 
-type Duplex = { in: Readable; out: Writable }
-let waitingQueue: (Duplex & { socket: net.Socket })[] = []
+type Player = { inactive?: boolean; in: Readable; out: Writable; fbId?: string }
+type PlayerWithSocket = Player & { socket: net.Socket }
+let waitingQueue: PlayerWithSocket[] = []
 
 server.on('connection', async (socket) => {
   try {
@@ -69,7 +74,7 @@ server.on('connection', async (socket) => {
       },
     }),
     duplex.in,
-    socketClosed.bind(null, socket),
+    socketClosed.bind(null, duplex),
   )
 
   pipeline(
@@ -91,7 +96,7 @@ server.on('connection', async (socket) => {
       },
     }),
     socket,
-    socketClosed.bind(null, socket),
+    socketClosed.bind(null, duplex),
   )
 
   sendTo(duplex, [Codes.hello])
@@ -148,27 +153,25 @@ function tryStartMatch(timeout?: boolean) {
   if (waitingForPlayersTimeout) clearTimeout(waitingForPlayersTimeout)
   waitingForPlayersTimeout = undefined
 
-  waitingQueue.forEach((it) => {
-    it.socket.on('close', matchOver.bind(null, waitingQueue))
-    it.socket.on('error', matchOver.bind(null, waitingQueue))
-  })
-
   new Match(waitingQueue).Start()
   waitingQueue = []
 }
 
-function onGuessTime(player: Duplex, msg: any[]) {
+function onGuessTime(player: Player, msg: any[]) {
   const playerGuess = msg[1] as number
   const offset = Date.now() - playerGuess
   sendTo(player, [Codes.guessTime, offset])
 }
 
-function socketClosed(socket: net.Socket, err: any) {
+function socketClosed(player: PlayerWithSocket, err: any) {
+  if (player.inactive) return
+
   console.info('socket closed')
-  if (err && err.code !== 'ERR_STREAM_PREMATURE_CLOSE') {
+  if (err) {
     console.info({ err })
+    if (!player.socket.destroyed) player.socket.destroy()
   }
-  if (!socket.destroyed) socket.destroy()
+
   clearBadSockets()
 }
 
@@ -180,15 +183,6 @@ function clearBadSockets() {
     it.in.destroy()
     it.out.destroy()
     return false
-  })
-}
-
-function matchOver(players: typeof waitingQueue, err: any) {
-  console.info('match over', err)
-  players.forEach((it) => {
-    if (!it.socket.destroyed) it.socket.destroy()
-    it.in.destroy()
-    it.out.destroy()
   })
 }
 
@@ -205,24 +199,20 @@ server.on('error', (err) => {
 server.listen(PORT)
 
 class Match {
-  private players: Duplex[]
+  private players: Player[]
   private votersCentral: VotersCentral
+  private matchTimer?: NodeJS.Timeout
+  private matchEnded = false
 
-  constructor(players: Duplex[]) {
+  constructor(players: Player[]) {
     this.players = players = lodash.shuffle(players)
     this.votersCentral = new VotersCentral(players)
   }
 
   Start() {
-    this.players.forEach((player, index) => {
-      sendTo(player, [Codes.start, index, this.players.length])
-    })
-
-    this.votersCentral.Start()
-
-    const codesMap: { [code in Codes]?: (player: number, msg: any[]) => void } = {
+    const codesMap = {
       [Codes.newPlayerDestination]: this.resendToOthers,
-      [Codes.projectileFired]: (player: number, msg: any[]) => {
+      [Codes.projectileFired]: (player, msg) => {
         this.resendToOthers(player, msg)
         this.votersCentral.ProjectileFired(player, msg)
       },
@@ -232,13 +222,17 @@ class Match {
       [Codes.log]: this.logReceived,
       [Codes.newAlly]: this.resendToOthers,
       [Codes.destroyProjectile]: this.resendToOthers,
-      [Codes.introduce]: this.resendToOthers,
-    } as const
+      [Codes.introduce]: (player, msg) => {
+        this.onIntroduce(player, msg)
+        this.resendToOthers(player, msg)
+      },
+    } as { [code in Codes]: (player: number, msg: any[]) => void }
 
     this.players.forEach((player, index) => {
-      player.in.on('end', this.Stop)
-      player.in.on('close', this.Stop)
-      player.in.on('error', this.Stop)
+      const stopPlayer = this.StopPlayer.bind(this, index)
+      player.in.on('end', stopPlayer)
+      player.in.on('close', stopPlayer)
+      player.in.on('error', stopPlayer)
 
       player.in.on('data', (msg) => {
         const code = msg[0] as Codes
@@ -247,11 +241,22 @@ class Match {
           return
         }
 
-        codesMap[code]!(index, msg)
+        codesMap[code](index, msg)
       })
     })
 
+    this.players.forEach((player, index) => {
+      sendTo(player, [Codes.start, index, this.players.length])
+    })
+
+    this.votersCentral.Start()
+    this.matchTimer = setTimeout(this.TryEndMatch, MATCH_TIME)
     console.info('new match started!')
+  }
+
+  private readonly onIntroduce = (player: number, msg: any[]) => {
+    const [code, playerNumber, playerName, fbId] = msg
+    if (fbId) this.players[player].fbId = fbId
   }
 
   private readonly resendToOthers = (player: number, msg: any[]) => {
@@ -266,12 +271,86 @@ class Match {
     console.info({ player, msg })
   }
 
-  private readonly Stop = () => {
-    this.players.forEach((player) => {
+  private readonly StopPlayer = (playerNumber: number, err: any) => {
+    const player = this.players[playerNumber]
+
+    if (err) {
+      console.info(err)
       player.in.destroy()
       player.out.destroy()
-    })
+    }
+
+    player.inactive = true
+
+    // todo: if only 1 player left, match over!
+    // todo: punish player lefting
+  }
+
+  private readonly TryEndMatch = async () => {
+    const matchEnded = this.votersCentral.isThereAWinner()
+    if (!matchEnded) {
+      console.info('draw! 10 more seconds')
+      this.matchTimer = setTimeout(this.TryEndMatch, 10000)
+      return
+    }
+    this.matchTimer = undefined
     this.votersCentral.Stop()
+    this.resendToOthers(-1, [Codes.matchOver])
+
+    const newScores = await this.CalcEloScores()
+    const scoresToSave = newScores
+      .filter((it) => this.players[it.playerNumber].fbId)
+      .map((it) => ({ fb_id: this.players[it.playerNumber].fbId!, score: it.newScore }))
+    await this.savePlayersScores(scoresToSave)
+
+    const matchResult = newScores.sort((a, b) => a.playerNumber - b.playerNumber).map((it) => [it.votes, it.newScore])
+    const msg = [Codes.newScores, ...matchResult]
+    console.log({ msg })
+    this.resendToOthers(-1, msg)
+    this.players.forEach((it) => {
+      it.out.once('drain', () => it.out.end())
+      // todo: is not closing the connections when the match end
+      // todo: is sending the votes results in bad order
+    })
+  }
+
+  private getPlayersScores() {
+    return Promise.all(
+      this.players.map(async (p) => {
+        if (!p.fbId) return initialScore
+        const score = await ScoresRepo.getScore(p.fbId)
+        if (!score) return initialScore
+        return score.score
+      }),
+    )
+  }
+
+  private savePlayersScores(scores: ScoresRepo.IScore[]) {
+    return Promise.all(
+      this.players.map((player, index) => {
+        if (!player.fbId) return
+        const score = { fb_id: player.fbId, score: scores[index].score }
+        return ScoresRepo.putScore(score)
+      }),
+    )
+  }
+
+  private async CalcEloScores() {
+    const results = this.votersCentral.getVotesResults()
+    const playerPrevScores = await this.getPlayersScores()
+
+    const eloInputs = this.players.map((_, index) => ({
+      id: index,
+      prevScore: playerPrevScores[index],
+      result: results[index],
+    }))
+
+    const newScores = multiElo(eloInputs)
+    return newScores.map((it) => ({
+      ...it,
+      playerNumber: it.id,
+      votes: results[it.id],
+    }))
   }
 }
 
@@ -284,13 +363,16 @@ interface Voter {
 
 class VotersCentral {
   private myInterval?: NodeJS.Timeout
+  private matchEnded = false
 
   private voterSeq = 0
   private readonly voters: Voter[] = []
+  private readonly votesCounts: number[]
   private readonly centralBases: (number | undefined)[]
 
-  constructor(private players: Duplex[]) {
-    this.centralBases = Array(this.players.length).fill(undefined)
+  constructor(private players: Player[]) {
+    this.votesCounts = Array(players.length).fill(0)
+    this.centralBases = Array(players.length).fill(undefined)
   }
 
   public Start() {
@@ -298,11 +380,14 @@ class VotersCentral {
   }
 
   public Stop() {
+    this.matchEnded = true
     if (this.myInterval) clearInterval(this.myInterval)
     this.myInterval = undefined
   }
 
   private readonly PeriodicTasks = () => {
+    if (this.matchEnded) return this.Stop()
+
     this.SendVotersPack()
     this.SendVotersToCentrals()
   }
@@ -356,6 +441,8 @@ class VotersCentral {
     voter.player = player
     voter.claimed = true
 
+    ++this.votesCounts[player]
+
     const reply = [Codes.voterClaimed, voterId, player]
     this.players.forEach((it) => {
       sendTo(it, reply)
@@ -365,7 +452,7 @@ class VotersCentral {
   public readonly TryAddVotes = (player: number, msg: any[]) => {
     const [code, playerNumberToAddVotes, votes] = msg
 
-    // todo: count the votes!
+    this.votesCounts[player] += votes
 
     const reply = [Codes.votesAdded, playerNumberToAddVotes, votes]
     this.players.forEach((it) => {
@@ -393,12 +480,13 @@ class VotersCentral {
     }
 
     if (projectileType === ABSTENTION_PROJECTILE_TYPE) {
-      const generateVoters = () =>
+      const generateVoters = () => {
+        if (this.matchEnded) return
         this.SendVotersToAll(lodash.times(5).fill(projectilePositionX).map(this.GenerateVoterCloseTo))
+      }
 
       generateVoters()
       generateVoters()
-      // todo: check that the match has not ended
       setTimeout(generateVoters, 1000)
       setTimeout(generateVoters, 2000)
     }
@@ -417,6 +505,15 @@ class VotersCentral {
     const voter = { positionX, lastHitTime: 0, player: -1, claimed: false }
     this.voters.push(voter)
     return [this.voterSeq++, positionX] as const
+  }
+
+  public isThereAWinner() {
+    const sortedVotes = this.votesCounts.sort((a, b) => b - a)
+    return sortedVotes[0] > sortedVotes[1]
+  }
+
+  public getVotesResults() {
+    return Object.fromEntries(this.votesCounts.map((votes, index) => [index, votes] as const))
   }
 }
 
@@ -438,7 +535,8 @@ function GenerateVoterPositionX() {
   return (voterPosition - 0.5) * MAP_WIDTH
 }
 
-function sendTo(duplex: Duplex, msg: any[]) {
+function sendTo(duplex: Player, msg: any[]) {
+  if (duplex.inactive) return
   if (duplex.out.destroyed || !duplex.out.writable) {
     console.info('unable to send msg', msg)
     return

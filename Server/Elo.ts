@@ -1,5 +1,5 @@
-type EloInput = { id: string; prevScore: number; result: number }
-type EloResult = { id: string; newScore: number }
+type EloInput = { id: number; prevScore: number; result: number }
+type EloResult = { id: number; newScore: number }
 
 export const initialScore = 1700
 
@@ -13,8 +13,8 @@ export function multiElo(scores: EloInput[]): EloResult[] {
     for (let i = 0; i < scores.length - 1; ++i) {
       for (let j = i + 1; j < scores.length; ++j) {
         yield [
-          { id: scores[i].id, prevScore: scores[i].prevScore },
-          { id: scores[j].id, prevScore: scores[j].prevScore },
+          { id: scores[i].id, prevScore: scores[i].prevScore, result: scores[i].result },
+          { id: scores[j].id, prevScore: scores[j].prevScore, result: scores[j].result },
         ]
       }
     }
@@ -24,14 +24,15 @@ export function multiElo(scores: EloInput[]): EloResult[] {
     const [a, b] = tuple
     resultsMap[a.id].expectedResult += calcExpectedResult(a.prevScore, b.prevScore)
     resultsMap[b.id].expectedResult += calcExpectedResult(b.prevScore, a.prevScore)
-    resultsMap[a.id].actualResult += 1
-    resultsMap[b.id].actualResult += 0
+    // todo: test this
+    resultsMap[a.id].actualResult += a.result === b.result ? 0.5 : 1
+    resultsMap[b.id].actualResult += a.result === b.result ? 0.5 : 0
   })
 
   return Object.keys(resultsMap).map((id) => {
     const result = resultsMap[id]
     const newScore = calcNewScore(result.prevScore, result.expectedResult, result.actualResult)
-    return { id, newScore }
+    return { id: Number.parseInt(id), newScore }
   })
 }
 
