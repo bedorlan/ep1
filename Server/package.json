@@ -17,7 +17,7 @@
     "ts-node-dev": "^1.0.0-pre.44"
   },
   "scripts": {
-    "build": "yarn tsc",
+    "build": "yarn tsc && tar cf dist.tar *.js",
     "start": "node index.js"
   }
 }
