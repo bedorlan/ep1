@@ -14,6 +14,7 @@ public class SocialBehaviour : MonoBehaviour
   internal string userId { get; private set; }
 
   readonly internal Queue<String> errors = new Queue<String>();
+  internal event Action OnLogged;
   internal event Action OnError;
 
   private bool? initialized;
@@ -108,6 +109,7 @@ public class SocialBehaviour : MonoBehaviour
           return;
         }
         shortName = result.ResultDictionary["short_name"].ToString();
+        OnLogged?.Invoke();
       });
     }
 

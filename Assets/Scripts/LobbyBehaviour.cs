@@ -28,7 +28,14 @@ public class LobbyBehaviour : MonoBehaviour
     audioPlayer = GetComponentInChildren<AudioSource>();
     videoPlayer = GetComponentInChildren<VideoPlayer>();
 
+    socialBehaviour.OnLogged += OnLogged;
     matchResultObject.GetComponent<MatchResultBehaviour>().OnFinished += MatchResult_OnFinished;
+  }
+
+  private void OnLogged()
+  {
+    statusGameObject.SetActive(true);
+    statusText.text = string.Format("Hola {0}", socialBehaviour.shortName);
   }
 
   public void OnExit()
