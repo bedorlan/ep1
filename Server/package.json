@@ -6,11 +6,11 @@
     "node": "12.x"
   },
   "dependencies": {
-    "@types/lodash": "^4.14.149",
-    "@types/node": "12",
-    "aws-sdk": "^2.660.0",
+    "@types/lodash": "^4.14.150",
+    "@types/node": "13.13.2",
+    "aws-sdk": "^2.662.0",
     "lodash": "^4.17.15",
-    "pm2": "^4.2.3",
+    "pm2": "^4.4.0",
     "typescript": "^3.8.3"
   },
   "devDependencies": {
