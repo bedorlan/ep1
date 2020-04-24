@@ -28,7 +28,7 @@ enum Codes {
 }
 
 const MAP_WIDTH = 190
-const MATCH_TIME = 4 * 60 * 1000
+const MATCH_TIME = Number.parseInt(process.env.MATCH_TIME || '4') * 60 * 1000
 
 const server = net.createServer()
 
@@ -326,9 +326,9 @@ class Match {
 
   private savePlayersScores(scores: ScoresRepo.IScore[]) {
     return Promise.all(
-      this.players.map((player, index) => {
-        if (!player.fbId) return
-        const score = { fb_id: player.fbId, score: scores[index].score }
+      scores.map((it) => {
+        if (!it.fb_id) return
+        const score = { fb_id: it.fb_id, score: it.score }
         return ScoresRepo.putScore(score)
       }),
     )
