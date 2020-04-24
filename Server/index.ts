@@ -28,7 +28,7 @@ enum Codes {
 }
 
 const MAP_WIDTH = 190
-const MATCH_TIME = 0.1 * 60 * 1000
+const MATCH_TIME = 4 * 60 * 1000
 
 const server = net.createServer()
 
@@ -302,12 +302,14 @@ class Match {
       .map((it) => ({ fb_id: this.players[it.playerNumber].fbId!, score: it.newScore }))
     await this.savePlayersScores(scoresToSave)
 
-    const matchResult = newScores.sort((a, b) => a.playerNumber - b.playerNumber).map((it) => [it.votes, it.newScore])
+    const matchResult = newScores
+      .slice()
+      .sort((a, b) => a.playerNumber - b.playerNumber)
+      .map((it) => [it.votes, it.newScore])
+
     const msg = [Codes.newScores, ...matchResult]
-    console.log({ msg })
     this.players.forEach((it) => {
       it.out.end(msg)
-      // todo: is sending the votes results in bad order
     })
   }
 
@@ -505,7 +507,7 @@ class VotersCentral {
   }
 
   public isThereAWinner() {
-    const sortedVotes = this.votesCounts.sort((a, b) => b - a)
+    const sortedVotes = this.votesCounts.slice().sort((a, b) => b - a)
     return sortedVotes[0] > sortedVotes[1]
   }
 

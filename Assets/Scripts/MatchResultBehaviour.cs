@@ -41,7 +41,7 @@ internal class MatchResultBehaviour : MonoBehaviour
       var playerResult = playerResultsOrdered[i];
       var playerColor = Common.playerColors[playerResult.playerNumber];
       var nameText = playerNameUI.GetComponent<Text>();
-      var playerName = playerResult.name != string.Empty ? playerResult.name : string.Format("Player {0}", i + 1);
+      var playerName = playerResult.name != string.Empty ? playerResult.name : string.Format("Player {0}", playerResult.playerNumber + 1);
       nameText.text = playerName;
       nameText.color = playerColor;
 

@@ -1,13 +1,19 @@
 import * as AWS from 'aws-sdk'
 
-AWS.config.update({
-  region: 'us-east-1',
-  accessKeyId: 'AKIAVQP6QK3UBHX5JVJ5',
-  secretAccessKey: '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',
-})
+const awsConf = { region: 'us-east-1' }
+const dynamoConf = {}
 
-const conf = process.env.DYNAMO_ENDPOINT ? { endpoint: process.env.DYNAMO_ENDPOINT } : undefined
-const db = new AWS.DynamoDB(conf)
+if (process.env.DYNAMO_ENDPOINT) {
+  Object.assign(dynamoConf, { endpoint: process.env.DYNAMO_ENDPOINT })
+} else {
+  Object.assign(awsConf, {
+    accessKeyId: 'AKIAVQP6QK3UBHX5JVJ5',
+    secretAccessKey: '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',
+  })
+}
+
+AWS.config.update(awsConf)
+const db = new AWS.DynamoDB(dynamoConf)
 
 const TableName = 'scores'
 
