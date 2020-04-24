@@ -24,7 +24,7 @@ enum Codes {
   destroyProjectile = 16, // [(16), (projectileId: string)]
   introduce = 17, // [(17), (playerNumber: int), (playerName: string), (fbId?: string)]
   matchOver = 18, // [(18)]
-  newScores = 19, // [(19), ([votesPlayer1: number, scorePlayer1: number]), ...]
+  newScores = 19, // [(19), ([votesPlayer1: number, scorePlayer1: number, diffScorePlayer1: number]), ...]
 }
 
 const MAP_WIDTH = 190
@@ -305,7 +305,7 @@ class Match {
     const matchResult = newScores
       .slice()
       .sort((a, b) => a.playerNumber - b.playerNumber)
-      .map((it) => [it.votes, it.newScore])
+      .map((it) => [it.votes, it.newScore, it.scoreDiff])
 
     const msg = [Codes.newScores, ...matchResult]
     this.players.forEach((it) => {
@@ -349,6 +349,7 @@ class Match {
       ...it,
       playerNumber: it.id,
       votes: results[it.id],
+      scoreDiff: it.newScore - playerPrevScores[it.id],
     }))
   }
 }

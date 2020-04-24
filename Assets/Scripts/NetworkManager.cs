@@ -5,7 +5,6 @@ using System.Linq;
 using System.Text;
 using SimpleJSON;
 using UnityEngine;
-using UnityEngine.UI;
 
 enum Codes
 {
@@ -27,7 +26,7 @@ enum Codes
   destroyProjectile = 16, // [(16), (projectileId: string)]
   introduce = 17, // [(17), (playerNumber: int), (playerName: string), (fbId?: string)]
   matchOver = 18, // [(18)]
-  newScores = 19, // [(19), ([votesPlayer1: number, scorePlayer1: number]), ...]
+  newScores = 19, // [(19), ([votesPlayer1: number, scorePlayer1: number, diffScorePlayer1: number]), ...]
 }
 
 public class NetworkManager : MonoBehaviour
@@ -441,7 +440,9 @@ public class NetworkManager : MonoBehaviour
       {
         playerNumber = index,
         name = this.playersNames[index],
-        votes = it.Value.AsArray[0].AsInt
+        votes = it.Value.AsArray[0].AsInt,
+        score = it.Value.AsArray[1].AsInt,
+        scoreDiff = it.Value.AsArray[2].AsInt,
       })
       .ToList();
 
