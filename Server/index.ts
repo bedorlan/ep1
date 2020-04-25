@@ -35,6 +35,7 @@ const server = net.createServer()
 type Player = { inactive?: boolean; in: Readable; out: Writable; fbId?: string }
 type PlayerWithSocket = Player & { socket: net.Socket }
 let waitingQueue: PlayerWithSocket[] = []
+let matchesRunning = 0
 
 server.on('connection', async (socket) => {
   try {
@@ -250,7 +251,9 @@ class Match {
 
     this.votersCentral.Start()
     this.matchTimer = setTimeout(this.TryEndMatch, MATCH_TIME)
-    console.info('new match started!')
+
+    ++matchesRunning
+    console.info({ matchesRunning })
   }
 
   private readonly onIntroduce = (player: number, msg: any[]) => {
@@ -272,7 +275,6 @@ class Match {
 
   private readonly StopPlayer = (playerNumber: number, err: any) => {
     const player = this.players[playerNumber]
-
     if (err) {
       console.info(err)
       player.in.destroy()
@@ -280,19 +282,33 @@ class Match {
     }
 
     player.inactive = true
+    if (this.matchEnded) return
 
-    // todo: if only 1 player left, match over!
-    // todo: punish player lefting
+    // todo: send to others that player disconnected perhaps?
+    this.votersCentral.PunishPlayer(playerNumber)
+    const playersPlaying = this.playersPlayingNumber()
+    if (playersPlaying < 2) this.TryEndMatch()
+  }
+
+  private playersPlayingNumber() {
+    return this.players.reduce((accum, next) => accum + (next.inactive ? 0 : 1), 0)
   }
 
   private readonly TryEndMatch = async () => {
-    const matchEnded = this.votersCentral.isThereAWinner()
-    if (!matchEnded) {
+    const playersPlaying = this.playersPlayingNumber()
+    const isThereAWinner = this.votersCentral.isThereAWinner()
+    if (playersPlaying >= 2 && !isThereAWinner) {
       console.info('draw! 10 more seconds')
-      this.matchTimer = setTimeout(this.TryEndMatch, 10000)
+      this.matchTimer = setTimeout(() => this.TryEndMatch(), 10000)
       return
     }
-    this.matchTimer = undefined
+
+    if (this.matchTimer) {
+      clearTimeout(this.matchTimer)
+      this.matchTimer = undefined
+    }
+
+    this.matchEnded = true
     this.votersCentral.Stop()
     this.resendToOthers(-1, [Codes.matchOver])
 
@@ -311,6 +327,9 @@ class Match {
     this.players.forEach((it) => {
       it.out.end(msg)
     })
+
+    --matchesRunning
+    console.info({ matchesRunning })
   }
 
   private getPlayersScores() {
@@ -458,6 +477,10 @@ class VotersCentral {
     this.players.forEach((it) => {
       sendTo(it, reply)
     })
+  }
+
+  PunishPlayer(playerNumber: number) {
+    this.votesCounts[playerNumber] = 0
   }
 
   public readonly ProjectileFired = (player: number, msg: any[]) => {
