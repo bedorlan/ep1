@@ -28,7 +28,7 @@ enum Codes {
 }
 
 const MAP_WIDTH = 190
-const MATCH_TIME = Number.parseInt(process.env.MATCH_TIME || '4') * 60 * 1000
+const MATCH_TIME = Number.parseFloat(process.env.MATCH_TIME || '4') * 60 * 1000
 
 const server = net.createServer()
 
@@ -166,7 +166,6 @@ function onGuessTime(player: Player, msg: any[]) {
 function socketClosed(player: PlayerWithSocket, err: any) {
   if (player.inactive) return
 
-  console.info('socket closed')
   if (err) {
     console.info({ err })
     if (!player.socket.destroyed) player.socket.destroy()
@@ -298,7 +297,6 @@ class Match {
     const playersPlaying = this.playersPlayingNumber()
     const isThereAWinner = this.votersCentral.isThereAWinner()
     if (playersPlaying >= 2 && !isThereAWinner) {
-      console.info('draw! 10 more seconds')
       this.matchTimer = setTimeout(() => this.TryEndMatch(), 10000)
       return
     }
@@ -471,7 +469,7 @@ class VotersCentral {
   public readonly TryAddVotes = (player: number, msg: any[]) => {
     const [code, playerNumberToAddVotes, votes] = msg
 
-    this.votesCounts[player] += votes
+    this.votesCounts[playerNumberToAddVotes] += votes
 
     const reply = [Codes.votesAdded, playerNumberToAddVotes, votes]
     this.players.forEach((it) => {
