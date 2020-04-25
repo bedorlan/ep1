@@ -1,4 +1,5 @@
 import * as AWS from 'aws-sdk'
+import { AttributeMap } from 'aws-sdk/clients/dynamodb'
 
 const awsConf = { region: 'us-east-1' }
 const dynamoConf = {}
@@ -23,7 +24,11 @@ export interface IScore {
 }
 
 export function putScore(item: IScore) {
-  const Item = { fb_id: { S: item.fb_id }, score: { N: item.score.toString() } }
+  const Item = {
+    fb_id: { S: item.fb_id },
+    score: { N: item.score.toString() },
+    active: { N: '1' },
+  }
   return new Promise((resolve, reject) => {
     db.putItem({ TableName, Item }, (err) => {
       if (err) return reject(err)
@@ -38,9 +43,31 @@ export function getScore(fb_id: string): Promise<IScore | null> {
     db.getItem({ TableName, Key }, (err, data) => {
       if (err) return reject(err)
       if (!data || !data.Item) return resolve(null)
-
-      const Item = { fb_id: data.Item.fb_id.S!, score: Number.parseInt(data.Item.score.N!) }
-      resolve(Item)
+      resolve(itemToScore(data.Item))
     })
   })
+}
+
+export function getTop3() {
+  return new Promise<IScore[]>((resolve, reject) => {
+    db.query(
+      {
+        TableName,
+        IndexName: 'active-score-index',
+        ScanIndexForward: false,
+        KeyConditions: {
+          active: { ComparisonOperator: 'EQ', AttributeValueList: [{ N: '1' }] },
+        },
+        Limit: 3,
+      },
+      (err, data) => {
+        if (err) return reject(err)
+        resolve(data.Items?.map(itemToScore) ?? [])
+      },
+    )
+  })
+}
+
+function itemToScore(Item: AttributeMap): IScore {
+  return { fb_id: Item.fb_id.S!, score: Number.parseInt(Item.score.N!) }
 }
