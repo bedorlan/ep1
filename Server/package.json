@@ -17,7 +17,7 @@
     "ts-node-dev": "^1.0.0-pre.44"
   },
   "scripts": {
-    "build": "yarn tsc && zip dist.zip *.js",
+    "build": "yarn tsc && zip dist.zip *.js && rm *.js",
     "start": "node index.js"
   }
 }
