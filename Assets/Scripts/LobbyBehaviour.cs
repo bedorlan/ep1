@@ -50,7 +50,7 @@ public class LobbyBehaviour : MonoBehaviour
 
   public void OnPlay()
   {
-    buttonPlayGameObject.GetComponent<Button>().interactable = false;
+    buttonPlayGameObject.GetComponentInChildren<Button>().interactable = false;
     buttonRanks.GetComponentInChildren<Button>().interactable = false;
     statusGameObject.SetActive(true);
 
