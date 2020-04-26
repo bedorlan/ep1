@@ -17,21 +17,29 @@ public class SocialBehaviour : MonoBehaviour
   internal event Action<bool> OnLogged;
   internal event Action OnError;
 
-  private bool? initialized;
-
-  void Awake()
+  void Start()
   {
     singleton = this;
     shortName = "";
     userId = "";
 
-    if (!FB.IsInitialized) FB.Init(FBInitCallback);
+    if (!FB.IsInitialized)
+    {
+      try
+      {
+        FB.Init(FBInitCallback);
+      }
+      catch (NotSupportedException)
+      {
+        Debug.Log("FB not supported");
+        OnLogged?.Invoke(false);
+      }
+    }
     else FBInitCallback();
   }
 
   private void FBInitCallback()
   {
-    initialized = FB.IsInitialized;
     if (!FB.IsInitialized)
     {
       OnLogged?.Invoke(false);
@@ -84,13 +92,12 @@ public class SocialBehaviour : MonoBehaviour
   internal void Login()
   {
     if (FB.IsLoggedIn && HasGrantedAllPermissions()) return;
-    StartCoroutine(LoginRoutine());
+    LoginRoutine();
   }
 
-  IEnumerator LoginRoutine()
+  void LoginRoutine()
   {
-    yield return new WaitUntil(() => initialized.HasValue);
-    if (!initialized.Value) yield break;
+    if (!FB.IsInitialized) return;
 
     FB.LogInWithReadPermissions(permissions, (result) =>
     {

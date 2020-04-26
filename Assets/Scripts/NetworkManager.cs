@@ -28,6 +28,7 @@ enum Codes
   introduce = 17, // [(17), (playerNumber: int), (playerName: string), (fbId?: string)]
   matchOver = 18, // [(18)]
   newScores = 19, // [(19), ([votesPlayer1: number, scorePlayer1: number, diffScorePlayer1: number]), ...]
+  joinAllQueue = 20, // [(20)]
 }
 
 public class NetworkManager : MonoBehaviour
@@ -176,6 +177,7 @@ public class NetworkManager : MonoBehaviour
 
     SocialBehaviour.singleton.OnError += SendSocialErrors;
     SendSocialErrors();
+    JoinAllQueue();
   }
 
   private void SendSocialErrors()
@@ -198,6 +200,13 @@ public class NetworkManager : MonoBehaviour
 
     var msg = array.ToString();
     SendNetworkMsg(msg);
+  }
+
+  private void JoinAllQueue()
+  {
+    var msg = new JSONArray();
+    msg.Add((int)Codes.joinAllQueue);
+    SendNetworkMsg(msg.ToString());
   }
 
   private void StartGame(JSONNode data)

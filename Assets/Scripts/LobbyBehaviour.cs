@@ -7,6 +7,7 @@ using UnityEngine.Video;
 public class LobbyBehaviour : MonoBehaviour
 {
   public GameObject myCamera;
+
   public GameObject lobbyButtonsObject;
   public GameObject buttonPlayGameObject;
   public GameObject buttonRanks;
@@ -24,7 +25,7 @@ public class LobbyBehaviour : MonoBehaviour
   private AudioSource audioPlayer;
   private VideoPlayer videoPlayer;
 
-  private void Start()
+  private void Awake()
   {
     socialBehaviour = GetComponent<SocialBehaviour>();
     statusText = statusGameObject.GetComponentInChildren<Text>();

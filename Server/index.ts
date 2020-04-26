@@ -25,6 +25,7 @@ enum Codes {
   introduce = 17, // [(17), (playerNumber: int), (playerName: string), (fbId?: string)]
   matchOver = 18, // [(18)]
   newScores = 19, // [(19), ([votesPlayer1: number, scorePlayer1: number, diffScorePlayer1: number]), ...]
+  joinAllQueue = 20, // [(20)]
 }
 
 const MAP_WIDTH = 190
@@ -32,10 +33,18 @@ const MATCH_TIME = Number.parseFloat(process.env.MATCH_TIME || '4') * 60 * 1000
 
 const server = net.createServer()
 
-type Player = { inactive?: boolean; in: Readable; out: Writable; fbId?: string }
+type Player = {
+  inactive?: boolean
+  in: Readable
+  out: Writable
+  fbId?: string
+  playWithFriends?: boolean
+}
 type PlayerWithSocket = Player & { socket: net.Socket }
 let waitingQueue: PlayerWithSocket[] = []
 let matchesRunning = 0
+
+setInterval(tryStartMatch, Number.parseFloat(process.env.LOBBY_WAIT_TIME || '60') * 1000)
 
 server.on('connection', async (socket) => {
   try {
@@ -69,6 +78,9 @@ server.on('connection', async (socket) => {
         if (code === Codes.guessTime) {
           onGuessTime(duplex, msg)
           return cb()
+        } else if (code === Codes.joinAllQueue) {
+          waitingQueue.push(duplex)
+          return cb()
         }
 
         cb(null, msg)
@@ -100,9 +112,6 @@ server.on('connection', async (socket) => {
   )
 
   sendTo(duplex, [Codes.hello])
-  waitingQueue.push(duplex)
-
-  tryStartMatch()
 })
 
 function safeWaitForHello(socket: net.Socket) {
@@ -133,28 +142,16 @@ function safeWaitForHello(socket: net.Socket) {
   })
 }
 
-let waitingForPlayersTimeout: NodeJS.Timeout | undefined
-function tryStartMatch(timeout?: boolean) {
+function tryStartMatch() {
   clearBadSockets()
 
-  if ((!timeout && waitingQueue.length < 4) || (timeout && waitingQueue.length < 2)) {
-    if (!waitingForPlayersTimeout || timeout) {
-      if (waitingQueue.length === 0) {
-        waitingForPlayersTimeout = undefined
-        return
-      }
-      console.info('not enough players. waiting')
-      const waitTime = process.env.LOBBY_WAIT_TIME ? Number.parseInt(process.env.LOBBY_WAIT_TIME) : 60000
-      waitingForPlayersTimeout = setTimeout(tryStartMatch.bind(null, true), waitTime)
-    }
-    return
+  while (waitingQueue.length >= 2) {
+    // todo: sort by rank
+    // todo: watch for friends only
+    const matchPlayers = waitingQueue.slice(0, 4)
+    waitingQueue = waitingQueue.slice(4)
+    new Match(matchPlayers).Start()
   }
-
-  if (waitingForPlayersTimeout) clearTimeout(waitingForPlayersTimeout)
-  waitingForPlayersTimeout = undefined
-
-  new Match(waitingQueue).Start()
-  waitingQueue = []
 }
 
 function onGuessTime(player: Player, msg: any[]) {
