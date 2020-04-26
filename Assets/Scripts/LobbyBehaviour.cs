@@ -202,7 +202,7 @@ public class LobbyBehaviour : MonoBehaviour
 
     myCamera.SetActive(true);
     GetComponent<GraphicRaycaster>().enabled = true;
-    buttonPlayGameObject.GetComponent<Button>().interactable = true;
+    buttonPlayGameObject.GetComponentInChildren<Button>().interactable = true;
     buttonRanks.GetComponentInChildren<Button>().interactable = true;
 
     if (clearStatusText)
