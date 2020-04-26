@@ -7,11 +7,14 @@ using UnityEngine.Video;
 public class LobbyBehaviour : MonoBehaviour
 {
   public GameObject myCamera;
+  public GameObject lobbyButtonsObject;
   public GameObject buttonPlayGameObject;
   public GameObject buttonRanks;
   public GameObject statusGameObject;
+
   public GameObject lobbyObject;
   public GameObject matchResultObject;
+  public GameObject askForLoginObject;
 
   const string MATCH_SCENE = "MatchScene";
 
@@ -32,10 +35,19 @@ public class LobbyBehaviour : MonoBehaviour
     matchResultObject.GetComponent<MatchResultBehaviour>().OnFinished += MatchResult_OnFinished;
   }
 
-  private void OnLogged()
+  private void OnLogged(bool logged)
   {
-    statusGameObject.SetActive(true);
-    statusText.text = string.Format("Hola {0}", socialBehaviour.shortName);
+    if (askForLoginObject.activeSelf && logged) OnLobbyMenu();
+    if (logged)
+    {
+      statusGameObject.SetActive(true);
+      statusText.text = string.Format("Hola {0}", socialBehaviour.shortName);
+    }
+
+    if (!lobbyButtonsObject.activeSelf)
+    {
+      lobbyButtonsObject.SetActive(true);
+    }
   }
 
   public void OnExit()
@@ -43,9 +55,36 @@ public class LobbyBehaviour : MonoBehaviour
     Application.Quit();
   }
 
-  public void OnShowRanks()
+  public void OnUserWantsToLogin()
   {
     socialBehaviour.Login();
+  }
+
+  public void OnShowScores()
+  {
+    if (!TryLogin()) return;
+  }
+
+  private bool TryLogin()
+  {
+    if (socialBehaviour.userId != "") return true;
+
+    AskForLogin();
+    return false;
+  }
+
+  private void AskForLogin()
+  {
+    lobbyObject.SetActive(false);
+    matchResultObject.SetActive(false);
+    askForLoginObject.SetActive(true);
+  }
+
+  public void OnLobbyMenu()
+  {
+    lobbyObject.SetActive(true);
+    matchResultObject.SetActive(false);
+    askForLoginObject.SetActive(false);
   }
 
   public void OnPlay()
@@ -55,6 +94,11 @@ public class LobbyBehaviour : MonoBehaviour
     statusGameObject.SetActive(true);
 
     LoadMatch();
+  }
+
+  public void OnPlayWithFriends()
+  {
+    if (!TryLogin()) return;
   }
 
   private void LoadMatch()
