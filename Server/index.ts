@@ -26,6 +26,7 @@ enum Codes {
   matchOver = 18, // [(18)]
   newScores = 19, // [(19), ([votesPlayer1: number, scorePlayer1: number, diffScorePlayer1: number]), ...]
   joinAllQueue = 20, // [(20)]
+  joinFriendsQueue = 21, // [(21)]
 }
 
 const MAP_WIDTH = 190
