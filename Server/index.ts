@@ -2,6 +2,7 @@ import * as lodash from 'lodash'
 import * as net from 'net'
 import { PassThrough, Readable, Writable, pipeline, Transform, TransformCallback } from 'stream'
 
+import * as FbRepo from './FbRepo'
 import * as ScoresRepo from './ScoresRepo'
 import { multiElo, initialScore } from './Elo'
 
@@ -27,6 +28,10 @@ enum Codes {
   newScores = 19, // [(19), ([votesPlayer1: number, scorePlayer1: number, diffScorePlayer1: number]), ...]
   joinAllQueue = 20, // [(20)]
   joinFriendsQueue = 21, // [(21)]
+  getLeaderboardAll = 22, // [(22)]
+  getLeaderboardFriends = 23, // [(23)]
+  leaderboardAll = 24, // [(24), ...[name: string, score: number]]
+  leaderboardFriends = 25, // [(25)]
 }
 
 const MAP_WIDTH = 190
@@ -75,16 +80,8 @@ server.on('connection', async (socket) => {
           console.info(err + '\nmsg=' + obj.toString())
           return cb()
         }
-        const code = msg[0]
-        if (code === Codes.guessTime) {
-          onGuessTime(duplex, msg)
-          return cb()
-        } else if (code === Codes.joinAllQueue) {
-          waitingQueue.push(duplex)
-          return cb()
-        }
-
-        cb(null, msg)
+        if (tryHandleMsg(duplex, msg)) cb()
+        else cb(null, msg)
       },
     }),
     duplex.in,
@@ -143,6 +140,20 @@ function safeWaitForHello(socket: net.Socket) {
   })
 }
 
+const generalCodesMap: { [code in Codes]?: (player: PlayerWithSocket, msg: any[]) => void } = {
+  [Codes.guessTime]: onGuessTime,
+  [Codes.joinAllQueue]: (player) => waitingQueue.push(player),
+  [Codes.getLeaderboardAll]: sendFullLeaderboardToPlayer,
+}
+
+function tryHandleMsg(player: PlayerWithSocket, msg: any[]) {
+  const code = msg[0] as Codes
+  if (!(code in generalCodesMap)) return false
+
+  generalCodesMap[code]!(player, msg)
+  return true
+}
+
 function tryStartMatch() {
   clearBadSockets()
 
@@ -159,6 +170,25 @@ function onGuessTime(player: Player, msg: any[]) {
   const playerGuess = msg[1] as number
   const offset = Date.now() - playerGuess
   sendTo(player, [Codes.guessTime, offset])
+}
+
+async function sendFullLeaderboardToPlayer(player: Player) {
+  if (!player.fbId) return
+
+  const top3 = await ScoresRepo.getTop3()
+  const ids = top3.map((it) => it.fb_id)
+  const names = await FbRepo.getNamesFor(ids)
+
+  const leaderboard = top3
+    .map((it) => ({
+      name: names[it.fb_id].name,
+      score: it.score,
+    }))
+    .sort((a, b) => b.score - a.score)
+    .map((it) => [it.name, it.score])
+
+  const msg = [Codes.leaderboardAll, ...leaderboard]
+  sendTo(player, msg)
 }
 
 function socketClosed(player: PlayerWithSocket, err: any) {

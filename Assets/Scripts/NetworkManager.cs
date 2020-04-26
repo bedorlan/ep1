@@ -29,6 +29,11 @@ enum Codes
   matchOver = 18, // [(18)]
   newScores = 19, // [(19), ([votesPlayer1: number, scorePlayer1: number, diffScorePlayer1: number]), ...]
   joinAllQueue = 20, // [(20)]
+  joinFriendsQueue = 21, // [(21)]
+  getLeaderboardAll = 22, // [(22)]
+  getLeaderboardFriends = 23, // [(23)]
+  leaderboardAll = 24, // [(24), ...[name: string, score: number]]
+  leaderboardFriends = 25, // [(25)]
 }
 
 public class NetworkManager : MonoBehaviour
@@ -45,7 +50,15 @@ public class NetworkManager : MonoBehaviour
   public GameObject projectileButtons;
   public List<GameObject> votesCounters;
 
-  private int playerNumber;
+  internal event Action<bool> OnConnection;
+  internal event Action OnMatchReady;
+  internal event Action OnMatchQuit;
+  internal event Action OnMatchEnd;
+  internal event Action<MatchResult> OnMatchResult;
+  internal event Action<GameObject> OnProjectileSelected;
+  internal event Action<Leaderboard> OnLeaderboardAllLoaded;
+
+  private Telepathy.Client client;
   private Common.Parties playerParty;
   private bool matchQuit = false;
   private bool matchOver = false;
@@ -54,10 +67,10 @@ public class NetworkManager : MonoBehaviour
   private Dictionary<int, GameObject> projectilesMap;
   private GameObject defaultProjectile;
 
+  private int playerNumber;
   private PlayerBehaviour localPlayer;
   private List<GameObject> players = new List<GameObject>();
   private List<string> playersNames = new List<string>();
-
 
   void Awake()
   {
@@ -88,6 +101,7 @@ public class NetworkManager : MonoBehaviour
         { Codes.introduce, OnIntroduce },
         { Codes.matchOver, OnMatchOver },
         { Codes.newScores, OnNewScores },
+        { Codes.leaderboardAll, OnLeaderboardAll },
     };
 
     projectilesMap = new Dictionary<int, GameObject>();
@@ -107,13 +121,6 @@ public class NetworkManager : MonoBehaviour
         myCamera.SetActive(false);
 #endif
   }
-
-  private Telepathy.Client client;
-  internal event Action<bool> OnConnection;
-  internal event Action OnMatchReady;
-  internal event Action OnMatchQuit;
-  internal event Action OnMatchEnd;
-  internal event Action<MatchResult> OnMatchResult;
 
   internal void TryConnect()
   {
@@ -461,6 +468,23 @@ public class NetworkManager : MonoBehaviour
     OnMatchResult?.Invoke(matchResult);
   }
 
+  private void OnLeaderboardAll(JSONNode data)
+  {
+    var msg = data.AsArray;
+    msg.Remove(0);
+
+    var leaderboardItems = msg.Linq.Select(
+      (it) => new LeaderboardItem()
+      {
+        name = (string)it.Value[0],
+        score = it.Value[1].AsInt,
+      })
+      .ToList();
+    leaderboardItems.Sort((a, b) => b.score - a.score);
+    var leaderboard = new Leaderboard() { items = leaderboardItems };
+    OnLeaderboardAllLoaded?.Invoke(leaderboard);
+  }
+
   private void OnDisconnected()
   {
     if (matchOver) return;
@@ -593,7 +617,6 @@ public class NetworkManager : MonoBehaviour
     SendNetworkMsg(msg);
   }
 
-  internal event Action<GameObject> OnProjectileSelected;
   internal void ProjectileSelected(GameObject projectile)
   {
     localPlayer.ChangeProjectile(projectile);
@@ -644,6 +667,13 @@ public class NetworkManager : MonoBehaviour
   public void OnHideMenu()
   {
     Index.singleton.menuObject.SetActive(false);
+  }
+
+  internal void getLeaderboardAll()
+  {
+    var msg = new JSONArray();
+    msg.Add((int)Codes.getLeaderboardAll);
+    SendNetworkMsg(msg.ToString());
   }
 
   public void OnExitMatch()

@@ -6,18 +6,18 @@
     "node": "12.x"
   },
   "dependencies": {
-    "@types/lodash": "^4.14.150",
-    "@types/node": "13.13.2",
     "aws-sdk": "^2.662.0",
     "lodash": "^4.17.15",
-    "pm2": "^4.4.0",
-    "typescript": "^3.8.3"
+    "pm2": "^4.4.0"
   },
   "devDependencies": {
-    "ts-node-dev": "^1.0.0-pre.44"
+    "@types/lodash": "^4.14.150",
+    "@types/node": "13.13.2",
+    "ts-node-dev": "^1.0.0-pre.44",
+    "typescript": "^3.8.3"
   },
   "scripts": {
-    "build": "yarn tsc && zip dist.zip *.js && rm *.js",
+    "build": "yarn tsc && zip dist.zip *.js",
     "start": "node index.js"
   }
 }

@@ -32,11 +32,11 @@ public class LobbyBehaviour : MonoBehaviour
     audioPlayer = GetComponentInChildren<AudioSource>();
     videoPlayer = GetComponentInChildren<VideoPlayer>();
 
-    socialBehaviour.OnLogged += OnLogged;
+    socialBehaviour.OnLogged += SocialBehaviour_OnLogged;
     matchResultObject.GetComponent<MatchResultBehaviour>().OnFinished += MatchResult_OnFinished;
   }
 
-  private void OnLogged(bool logged)
+  private void SocialBehaviour_OnLogged(bool logged)
   {
     if (askForLoginObject.activeSelf && logged) OnLobbyMenu();
     if (logged)
@@ -64,6 +64,7 @@ public class LobbyBehaviour : MonoBehaviour
   public void OnShowScores()
   {
     if (!TryLogin()) return;
+    NetworkManager.singleton.getLeaderboardAll();
   }
 
   private bool TryLogin()
@@ -127,8 +128,14 @@ public class LobbyBehaviour : MonoBehaviour
     NetworkManager.singleton.OnMatchQuit += NetworkManager_OnMatchQuit;
     NetworkManager.singleton.OnMatchEnd += NetworkManager_OnMatchEnd;
     NetworkManager.singleton.OnMatchResult += NetworkManager_OnMatchResults;
+    NetworkManager.singleton.OnLeaderboardAllLoaded += NetworkManager_OnLeaderboardAllLoaded;
 
     NetworkManager.singleton.TryConnect();
+  }
+
+  private void NetworkManager_OnLeaderboardAllLoaded(Leaderboard leaderboard)
+  {
+    Debug.Log(string.Join(",", leaderboard.items));
   }
 
   private void NetworkManager_OnMatchQuit()
