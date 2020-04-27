@@ -36,12 +36,17 @@ public class LobbyBehaviour : MonoBehaviour
     matchResultObject.GetComponent<MatchResultBehaviour>().OnFinished += MatchResult_OnFinished;
   }
 
+  private void Start()
+  {
+    LoadMatch();
+  }
+
   private void SocialBehaviour_OnLogged(bool logged)
   {
     if (askForLoginObject.activeSelf && logged) OnLobbyMenu();
     if (logged)
     {
-      statusGameObject.SetActive(true);
+      NetworkManager.singleton.Introduce();
       statusText.text = string.Format("Hola {0}", socialBehaviour.shortName);
     }
 
@@ -93,7 +98,6 @@ public class LobbyBehaviour : MonoBehaviour
   {
     buttonPlayGameObject.GetComponentInChildren<Button>().interactable = false;
     buttonRanks.GetComponentInChildren<Button>().interactable = false;
-    statusGameObject.SetActive(true);
 
     LoadMatch();
   }
@@ -152,7 +156,7 @@ public class LobbyBehaviour : MonoBehaviour
       return;
     }
 
-    statusText.text = "Buscando una partida. Por favor espera.";
+    statusText.text = "Conectado";
   }
 
   private void NetworkManager_OnMatchReady()
@@ -215,7 +219,6 @@ public class LobbyBehaviour : MonoBehaviour
     if (clearStatusText)
     {
       statusText.text = "";
-      statusGameObject.SetActive(false);
     }
   }
 }

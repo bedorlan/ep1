@@ -67,7 +67,7 @@ public class NetworkManager : MonoBehaviour
   private Dictionary<int, GameObject> projectilesMap;
   private GameObject defaultProjectile;
 
-  private int playerNumber;
+  private int playerNumber = -1;
   private PlayerBehaviour localPlayer;
   private List<GameObject> players = new List<GameObject>();
   private List<string> playersNames = new List<string>();
@@ -116,9 +116,10 @@ public class NetworkManager : MonoBehaviour
     }
 
     defaultProjectile = projectilesMap[0].GetComponentInChildren<ButtonProjectileBehaviour>().projectilePrefab;
+    myCamera.SetActive(false);
+
 #if !UNITY_EDITOR
         projectileButtons.transform.root.GetComponentInChildren<ScrollRect>().enabled = false;
-        myCamera.SetActive(false);
 #endif
   }
 
@@ -184,7 +185,7 @@ public class NetworkManager : MonoBehaviour
 
     SocialBehaviour.singleton.OnError += SendSocialErrors;
     SendSocialErrors();
-    JoinAllQueue();
+    Introduce();
   }
 
   private void SendSocialErrors()
@@ -209,7 +210,7 @@ public class NetworkManager : MonoBehaviour
     SendNetworkMsg(msg);
   }
 
-  private void JoinAllQueue()
+  internal void JoinAllQueue()
   {
     var msg = new JSONArray();
     msg.Add((int)Codes.joinAllQueue);
@@ -265,7 +266,7 @@ public class NetworkManager : MonoBehaviour
     Introduce();
   }
 
-  private void Introduce()
+  internal void Introduce()
   {
     var msg = new JSONArray();
     msg.Add((int)Codes.introduce);

@@ -140,18 +140,18 @@ function safeWaitForHello(socket: net.Socket) {
   })
 }
 
-const generalCodesMap: { [code in Codes]?: (player: PlayerWithSocket, msg: any[]) => void } = {
+const generalCodesMap: { [code in Codes]?: (player: PlayerWithSocket, msg: any[]) => boolean } = {
   [Codes.guessTime]: onGuessTime,
-  [Codes.joinAllQueue]: (player) => waitingQueue.push(player),
-  [Codes.getLeaderboardAll]: sendFullLeaderboardToPlayer,
+  [Codes.introduce]: onIntroduce,
+  [Codes.joinAllQueue]: (player) => (waitingQueue.push(player), true),
+  [Codes.getLeaderboardAll]: (player) => (sendFullLeaderboardToPlayer(player), true),
 }
 
 function tryHandleMsg(player: PlayerWithSocket, msg: any[]) {
   const code = msg[0] as Codes
   if (!(code in generalCodesMap)) return false
 
-  generalCodesMap[code]!(player, msg)
-  return true
+  return generalCodesMap[code]!(player, msg)
 }
 
 function tryStartMatch() {
@@ -170,6 +170,13 @@ function onGuessTime(player: Player, msg: any[]) {
   const playerGuess = msg[1] as number
   const offset = Date.now() - playerGuess
   sendTo(player, [Codes.guessTime, offset])
+  return true
+}
+
+function onIntroduce(player: Player, msg: any[]) {
+  const [code, playerNumber, playerName, fbId] = msg
+  player.fbId = fbId as string
+  return false
 }
 
 async function sendFullLeaderboardToPlayer(player: Player) {
@@ -181,7 +188,7 @@ async function sendFullLeaderboardToPlayer(player: Player) {
 
   const leaderboard = top3
     .map((it) => ({
-      name: names[it.fb_id].name,
+      name: names[it.fb_id].short_name,
       score: it.score,
     }))
     .sort((a, b) => b.score - a.score)
@@ -249,10 +256,7 @@ class Match {
       [Codes.log]: this.logReceived,
       [Codes.newAlly]: this.resendToOthers,
       [Codes.destroyProjectile]: this.resendToOthers,
-      [Codes.introduce]: (player, msg) => {
-        this.onIntroduce(player, msg)
-        this.resendToOthers(player, msg)
-      },
+      [Codes.introduce]: this.resendToOthers,
     } as { [code in Codes]: (player: number, msg: any[]) => void }
 
     this.players.forEach((player, index) => {
@@ -281,11 +285,6 @@ class Match {
 
     ++matchesRunning
     console.info({ matchesRunning })
-  }
-
-  private readonly onIntroduce = (player: number, msg: any[]) => {
-    const [code, playerNumber, playerName, fbId] = msg
-    if (fbId) this.players[player].fbId = fbId
   }
 
   private readonly resendToOthers = (player: number, msg: any[]) => {
