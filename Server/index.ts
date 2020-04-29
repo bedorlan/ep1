@@ -194,6 +194,7 @@ async function sendFullLeaderboardToPlayer(player: Player) {
     .sort((a, b) => b.score - a.score)
     .map((it) => [it.name, it.score])
 
+  // todo: include top 5?
   const msg = [Codes.leaderboardAll, ...leaderboard]
   sendTo(player, msg)
 }

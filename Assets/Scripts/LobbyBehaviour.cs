@@ -16,6 +16,7 @@ public class LobbyBehaviour : MonoBehaviour
   public GameObject lobbyObject;
   public GameObject matchResultObject;
   public GameObject askForLoginObject;
+  public GameObject scoresObject;
 
   const string MATCH_SCENE = "MatchScene";
 
@@ -24,6 +25,7 @@ public class LobbyBehaviour : MonoBehaviour
   private Text statusText;
   private AudioSource audioPlayer;
   private VideoPlayer videoPlayer;
+  private Leaderboard leaderboardAll;
 
   private void Awake()
   {
@@ -69,7 +71,18 @@ public class LobbyBehaviour : MonoBehaviour
   public void OnShowScores()
   {
     if (!TryLogin()) return;
-    NetworkManager.singleton.getLeaderboardAll();
+
+    HideAllPanels();
+    scoresObject.SetActive(true);
+    scoresObject.GetComponent<ScoresBehaviour>().ShowLoading();
+    if (leaderboardAll == null) NetworkManager.singleton.getLeaderboardAll();
+    else NetworkManager_OnLeaderboardAllLoaded(leaderboardAll);
+  }
+
+  private void NetworkManager_OnLeaderboardAllLoaded(Leaderboard leaderboard)
+  {
+    leaderboardAll = leaderboard;
+    scoresObject.GetComponent<ScoresBehaviour>().ShowLeaderboardAll(leaderboard);
   }
 
   private bool TryLogin()
@@ -80,18 +93,24 @@ public class LobbyBehaviour : MonoBehaviour
     return false;
   }
 
-  private void AskForLogin()
+  private void HideAllPanels()
   {
     lobbyObject.SetActive(false);
     matchResultObject.SetActive(false);
+    askForLoginObject.SetActive(false);
+    scoresObject.SetActive(false);
+  }
+
+  private void AskForLogin()
+  {
+    HideAllPanels();
     askForLoginObject.SetActive(true);
   }
 
   public void OnLobbyMenu()
   {
+    HideAllPanels();
     lobbyObject.SetActive(true);
-    matchResultObject.SetActive(false);
-    askForLoginObject.SetActive(false);
   }
 
   public void OnPlay()
@@ -137,11 +156,6 @@ public class LobbyBehaviour : MonoBehaviour
     NetworkManager.singleton.TryConnect();
   }
 
-  private void NetworkManager_OnLeaderboardAllLoaded(Leaderboard leaderboard)
-  {
-    Debug.Log(string.Join(",", leaderboard.items));
-  }
-
   private void NetworkManager_OnMatchQuit()
   {
     Restart();
@@ -169,7 +183,6 @@ public class LobbyBehaviour : MonoBehaviour
 
   private void NetworkManager_OnMatchEnd()
   {
-    lobbyObject.SetActive(false);
     myCamera.SetActive(true);
     GetComponent<GraphicRaycaster>().enabled = true;
 
@@ -180,6 +193,7 @@ public class LobbyBehaviour : MonoBehaviour
     }
 
     matchResultObject.GetComponent<MatchResultBehaviour>().ShowWaitingForMatchResult();
+    HideAllPanels();
     matchResultObject.SetActive(true);
   }
 
@@ -197,8 +211,8 @@ public class LobbyBehaviour : MonoBehaviour
   private void Restart(bool clearStatusText = true)
   {
     if (matchScene.isLoaded) SceneManager.UnloadSceneAsync(matchScene);
+    HideAllPanels();
     lobbyObject.SetActive(true);
-    matchResultObject.SetActive(false);
 
     if (!audioPlayer.isPlaying)
     {
@@ -220,5 +234,7 @@ public class LobbyBehaviour : MonoBehaviour
     {
       statusText.text = "";
     }
+
+    leaderboardAll = null;
   }
 }
