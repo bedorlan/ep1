@@ -25,7 +25,7 @@ public class LobbyBehaviour : MonoBehaviour
   private Text statusText;
   private AudioSource audioPlayer;
   private VideoPlayer videoPlayer;
-  private Leaderboard leaderboardAll;
+  private (Leaderboard, Leaderboard) allLeaderboards;
 
   private void Awake()
   {
@@ -75,14 +75,14 @@ public class LobbyBehaviour : MonoBehaviour
     HideAllPanels();
     scoresObject.SetActive(true);
     scoresObject.GetComponent<ScoresBehaviour>().ShowLoading();
-    if (leaderboardAll == null) NetworkManager.singleton.getLeaderboardAll();
-    else NetworkManager_OnLeaderboardAllLoaded(leaderboardAll);
+    if (allLeaderboards.Item1 == null) NetworkManager.singleton.getAllLeaderboards();
+    else NetworkManager_OnLeaderboardAllLoaded(allLeaderboards);
   }
 
-  private void NetworkManager_OnLeaderboardAllLoaded(Leaderboard leaderboard)
+  private void NetworkManager_OnLeaderboardAllLoaded((Leaderboard, Leaderboard) leaderboards)
   {
-    leaderboardAll = leaderboard;
-    scoresObject.GetComponent<ScoresBehaviour>().ShowLeaderboardAll(leaderboard);
+    allLeaderboards = leaderboards;
+    scoresObject.GetComponent<ScoresBehaviour>().ShowLeaderboardAll(leaderboards);
   }
 
   private bool TryLogin()
@@ -235,6 +235,7 @@ public class LobbyBehaviour : MonoBehaviour
       statusText.text = "";
     }
 
-    leaderboardAll = null;
+    allLeaderboards.Item1 = null;
+    allLeaderboards.Item2 = null;
   }
 }

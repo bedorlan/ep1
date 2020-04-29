@@ -31,9 +31,7 @@ enum Codes
   joinAllQueue = 20, // [(20)]
   joinFriendsQueue = 21, // [(21)]
   getLeaderboardAll = 22, // [(22)]
-  getLeaderboardFriends = 23, // [(23)]
-  leaderboardAll = 24, // [(24), ...[name: string, score: number]]
-  leaderboardFriends = 25, // [(25)]
+  leaderboardAll = 24, // [(24), [all: ...[name: string, score: number]], [friends: ...[name: string, score: number]]]
 }
 
 public class NetworkManager : MonoBehaviour
@@ -56,7 +54,7 @@ public class NetworkManager : MonoBehaviour
   internal event Action OnMatchEnd;
   internal event Action<MatchResult> OnMatchResult;
   internal event Action<GameObject> OnProjectileSelected;
-  internal event Action<Leaderboard> OnLeaderboardAllLoaded;
+  internal event Action<(Leaderboard, Leaderboard)> OnLeaderboardAllLoaded;
 
   private Telepathy.Client client;
   private Common.Parties playerParty;
@@ -472,9 +470,17 @@ public class NetworkManager : MonoBehaviour
   private void OnLeaderboardAll(JSONNode data)
   {
     var msg = data.AsArray;
-    msg.Remove(0);
+    var scoresTop = msg[1].AsArray;
+    var scoresFriends = msg[2].AsArray;
+    var leaderboardTop = scoresArray2Leaderboard(scoresTop);
+    var leaderboardFriends = scoresArray2Leaderboard(scoresFriends);
 
-    var leaderboardItems = msg.Linq.Select(
+    OnLeaderboardAllLoaded?.Invoke((leaderboardTop, leaderboardFriends));
+  }
+
+  private Leaderboard scoresArray2Leaderboard(JSONArray scores)
+  {
+    var leaderboardItems = scores.Linq.Select(
       (it) => new LeaderboardItem()
       {
         name = (string)it.Value[0],
@@ -482,8 +488,7 @@ public class NetworkManager : MonoBehaviour
       })
       .ToList();
     leaderboardItems.Sort((a, b) => b.score - a.score);
-    var leaderboard = new Leaderboard() { items = leaderboardItems };
-    OnLeaderboardAllLoaded?.Invoke(leaderboard);
+    return new Leaderboard() { items = leaderboardItems };
   }
 
   private void OnDisconnected()
@@ -670,7 +675,7 @@ public class NetworkManager : MonoBehaviour
     Index.singleton.menuObject.SetActive(false);
   }
 
-  internal void getLeaderboardAll()
+  internal void getAllLeaderboards()
   {
     var msg = new JSONArray();
     msg.Add((int)Codes.getLeaderboardAll);

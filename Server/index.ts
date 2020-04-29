@@ -29,9 +29,7 @@ enum Codes {
   joinAllQueue = 20, // [(20)]
   joinFriendsQueue = 21, // [(21)]
   getLeaderboardAll = 22, // [(22)]
-  getLeaderboardFriends = 23, // [(23)]
-  leaderboardAll = 24, // [(24), ...[name: string, score: number]]
-  leaderboardFriends = 25, // [(25)]
+  leaderboardAll = 24, // [(24), [all: ...[name: string, score: number]], [friends: ...[name: string, score: number]]]
 }
 
 const MAP_WIDTH = 190
@@ -182,6 +180,15 @@ function onIntroduce(player: Player, msg: any[]) {
 async function sendFullLeaderboardToPlayer(player: Player) {
   if (!player.fbId) return
 
+  const leaderboards = await Promise.all([getTopLeaderboard(), getFriendsLeaderboard(player.fbId)] as const)
+
+  const msg = [Codes.leaderboardAll, ...leaderboards]
+  sendTo(player, msg)
+}
+
+type LeaderboardItem = [string, number]
+
+async function getTopLeaderboard() {
   const top3 = await ScoresRepo.getTop3()
   const ids = top3.map((it) => it.fb_id)
   const names = await FbRepo.getNamesFor(ids)
@@ -192,11 +199,24 @@ async function sendFullLeaderboardToPlayer(player: Player) {
       score: it.score,
     }))
     .sort((a, b) => b.score - a.score)
-    .map((it) => [it.name, it.score])
+    .map((it) => [it.name, it.score] as LeaderboardItem)
 
   // todo: include top 5?
-  const msg = [Codes.leaderboardAll, ...leaderboard]
-  sendTo(player, msg)
+  return leaderboard
+}
+
+async function getFriendsLeaderboard(fbId: string) {
+  const [myInfo, friends] = await Promise.all([FbRepo.getNamesFor([fbId]), FbRepo.getFriendsOf(fbId)])
+  const myName = myInfo[fbId].short_name
+  const me = { id: fbId, short_name: myName }
+  friends.push(me)
+
+  const ids = friends.map((it) => it.id)
+  const scores = await ScoresRepo.batchGetScore(ids)
+  const namesMap = Object.fromEntries(friends.map((it) => [it.id, it.short_name]))
+  const response = scores.map((it) => [namesMap[it.fb_id], it.score] as LeaderboardItem)
+  response.sort((a, b) => b[1] - a[1])
+  return response
 }
 
 function socketClosed(player: PlayerWithSocket, err: any) {

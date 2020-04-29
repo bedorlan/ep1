@@ -48,6 +48,18 @@ export function getScore(fb_id: string): Promise<IScore | null> {
   })
 }
 
+export function batchGetScore(fb_ids: string[]): Promise<IScore[]> {
+  const Keys = fb_ids.map((it) => ({ fb_id: { S: it } }))
+  return new Promise((resolve, reject) => {
+    db.batchGetItem({ RequestItems: { [TableName]: { Keys } } }, (err, data) => {
+      if (err) return reject(err)
+      if (!data?.Responses?.scores) return resolve([])
+      const scores = data.Responses.scores.map(itemToScore)
+      resolve(scores)
+    })
+  })
+}
+
 export function getTop3() {
   return new Promise<IScore[]>((resolve, reject) => {
     db.query(

@@ -9,6 +9,7 @@ internal class LeaderboardItem
 {
   internal string name;
   internal int score;
+  internal bool me = false;
 
   override public string ToString()
   {

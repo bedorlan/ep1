@@ -11,31 +11,39 @@ public class ScoresBehaviour : MonoBehaviour
 
   internal void ShowLoading()
   {
-    for (var i = 0; i < allScoresPanel.transform.childCount; ++i)
-    {
-      allScoresPanel.transform.GetChild(i).gameObject.SetActive(false);
-    }
-    for (var i = 0; i < friendsScoresPanel.transform.childCount; ++i)
-    {
-      friendsScoresPanel.transform.GetChild(i).gameObject.SetActive(false);
-    }
+    ClearPanel(allScoresPanel);
+    ClearPanel(friendsScoresPanel);
 
     titleObject.GetComponent<Text>().text = "<b>Cargando ...</b>";
   }
 
-  internal void ShowLeaderboardAll(Leaderboard leaderboard)
+  private void ClearPanel(GameObject panel)
+  {
+    for (var i = 0; i < panel.transform.childCount; ++i)
+    {
+      panel.transform.GetChild(i).gameObject.SetActive(false);
+    }
+  }
+
+  internal void ShowLeaderboardAll((Leaderboard, Leaderboard) leaderboards)
   {
     titleObject.GetComponent<Text>().text = "<b>Puntajes</b>";
 
+    FillLeaderboard(allScoresPanel, leaderboards.Item1);
+    FillLeaderboard(friendsScoresPanel, leaderboards.Item2);
+  }
+
+  private void FillLeaderboard(GameObject panel, Leaderboard leaderboard)
+  {
     var items = leaderboard.items;
-    var rowsMissing = items.Count - allScoresPanel.transform.childCount / 2;
-    CreateMissingRows(rowsMissing);
+    var rowsMissing = items.Count - panel.transform.childCount / 2;
+    CreateMissingRows(panel, rowsMissing);
 
     for (var i = 0; i < items.Count; ++i)
     {
       var item = items[i];
-      var nameObject = allScoresPanel.transform.GetChild(i * 2).gameObject;
-      var scoreObject = allScoresPanel.transform.GetChild(i * 2 + 1).gameObject;
+      var nameObject = panel.transform.GetChild(i * 2).gameObject;
+      var scoreObject = panel.transform.GetChild(i * 2 + 1).gameObject;
       nameObject.GetComponent<Text>().text = item.name;
       scoreObject.GetComponent<Text>().text = item.score.ToString();
       nameObject.SetActive(true);
@@ -43,14 +51,14 @@ public class ScoresBehaviour : MonoBehaviour
     }
   }
 
-  private void CreateMissingRows(int rowsMissing)
+  private void CreateMissingRows(GameObject panel, int rowsMissing)
   {
-    var playerNamePrefab = allScoresPanel.transform.GetChild(0);
-    var scorePrefab = allScoresPanel.transform.GetChild(1);
+    var playerNamePrefab = panel.transform.GetChild(0);
+    var scorePrefab = panel.transform.GetChild(1);
     while (rowsMissing > 0)
     {
-      Instantiate(playerNamePrefab, allScoresPanel.transform);
-      Instantiate(scorePrefab, allScoresPanel.transform);
+      Instantiate(playerNamePrefab, panel.transform);
+      Instantiate(scorePrefab, panel.transform);
       --rowsMissing;
     }
   }
