@@ -159,7 +159,6 @@ function tryStartMatch() {
     // todo: sort by rank
     // todo: watch for friends only
     // todo: divide better when 6 or 5 players
-    // todo: i am playing with myself :S
     const matchPlayers = waitingQueue.slice(0, 4)
     waitingQueue = waitingQueue.slice(4)
     new Match(matchPlayers).Start()

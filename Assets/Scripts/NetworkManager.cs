@@ -152,6 +152,12 @@ public class NetworkManager : MonoBehaviour
     }
   }
 
+  void OnDestroy()
+  {
+    matchQuit = true;
+    client.Disconnect();
+  }
+
   private void sayHello()
   {
     var msg = string.Format("[{0}]", (int)Codes.hello);
@@ -493,7 +499,7 @@ public class NetworkManager : MonoBehaviour
 
   private void OnDisconnected()
   {
-    if (matchOver) return;
+    if (matchOver || matchQuit) return;
     OnConnection?.Invoke(false);
   }
 
