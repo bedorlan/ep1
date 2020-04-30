@@ -38,7 +38,6 @@ public class LobbyBehaviour : MonoBehaviour
 
     lobbyController.GetBehaviour<GenericTransitionStateBehaviour>().OnEnterState += lobbyController_OnEnterState;
     socialBehaviour.OnLogged += SocialBehaviour_OnLogged;
-    matchResultObject.GetComponent<MatchResultBehaviour>().OnFinished += MatchResult_OnFinished;
   }
 
   private void lobbyController_OnEnterState(string newState)
@@ -50,6 +49,9 @@ public class LobbyBehaviour : MonoBehaviour
         lobbyButtonsObject.SetActive(false);
         break;
       case "waitingNetwork":
+        lobbyController.ResetTrigger("menu");
+        lobbyController.ResetTrigger("cancel");
+        myCamera.SetActive(true);
         lobbyButtonsObject.SetActive(false);
         cancelButton.SetActive(false);
         Restart();
@@ -61,6 +63,11 @@ public class LobbyBehaviour : MonoBehaviour
         lobbyButtonsObject.SetActive(true);
         SetLobbyButtonsInteractable(true);
         cancelButton.SetActive(false);
+        if (lobbyController.GetBool("logged"))
+        {
+          NetworkManager.singleton.Introduce();
+          statusText.text = string.Format("Hola {0}", socialBehaviour.shortName);
+        }
         break;
       case "askingForLogin":
         lobbyController.ResetTrigger("showScores");
@@ -85,6 +92,18 @@ public class LobbyBehaviour : MonoBehaviour
         myCamera.SetActive(false);
         GetComponent<GraphicRaycaster>().enabled = false;
         break;
+      case "showMatchResults":
+        lobbyController.ResetTrigger("matchEnded");
+        ShowOnlyThisPanel(matchResultObject);
+        myCamera.SetActive(true);
+        GetComponent<GraphicRaycaster>().enabled = true;
+        if (!videoPlayer.isPlaying)
+        {
+          videoPlayer.time = 0;
+          videoPlayer.Play();
+        }
+        matchResultObject.GetComponent<MatchResultBehaviour>().ShowWaitingForMatchResult();
+        break;
     }
   }
 
@@ -92,12 +111,6 @@ public class LobbyBehaviour : MonoBehaviour
   {
     lobbyController.SetBool("logged", logged);
     lobbyController.SetBool("socialReady", true);
-    if (logged)
-    {
-      NetworkManager.singleton.Introduce();
-      statusText.text = string.Format("Hola {0}", socialBehaviour.shortName);
-    }
-
   }
 
   public void OnExit()
@@ -124,14 +137,6 @@ public class LobbyBehaviour : MonoBehaviour
     scoresObject.GetComponent<ScoresBehaviour>().ShowLeaderboardAll(leaderboards);
   }
 
-  private bool TryLogin()
-  {
-    if (socialBehaviour.userId != "") return true;
-
-    AskForLogin();
-    return false;
-  }
-
   private void ShowOnlyThisPanel(GameObject panel)
   {
     lobbyObject.SetActive(lobbyObject == panel);
@@ -147,7 +152,7 @@ public class LobbyBehaviour : MonoBehaviour
 
   public void OnPlayWithFriends()
   {
-    if (!TryLogin()) return;
+    // if (!TryLogin()) return;
 
     statusText.text = "Buscando partida con amigos ...";
     // NetworkManager.singleton.JoinFriendsQueue();
@@ -173,7 +178,7 @@ public class LobbyBehaviour : MonoBehaviour
       NetworkManager.singleton.OnConnection += NetworkManager_OnConnection;
       NetworkManager.singleton.OnMatchReady += () => lobbyController.SetBool("playing", true);
       NetworkManager.singleton.OnMatchQuit += NetworkManager_OnMatchQuit;
-      NetworkManager.singleton.OnMatchEnd += NetworkManager_OnMatchEnd;
+      NetworkManager.singleton.OnMatchEnd += () => lobbyController.SetTrigger("matchEnded");
       NetworkManager.singleton.OnMatchResult += NetworkManager_OnMatchResults;
       NetworkManager.singleton.OnLeaderboardAllLoaded += NetworkManager_OnLeaderboardAllLoaded;
       NetworkManager.singleton.TryConnect();
@@ -197,36 +202,15 @@ public class LobbyBehaviour : MonoBehaviour
     lobbyController.SetBool("networkReady", true);
   }
 
-  private void NetworkManager_OnMatchEnd()
-  {
-    myCamera.SetActive(true);
-    GetComponent<GraphicRaycaster>().enabled = true;
-
-    if (!videoPlayer.isPlaying)
-    {
-      videoPlayer.time = 0;
-      videoPlayer.Play();
-    }
-
-    matchResultObject.GetComponent<MatchResultBehaviour>().ShowWaitingForMatchResult();
-    ShowOnlyThisPanel(matchResultObject);
-  }
-
   private void NetworkManager_OnMatchResults(MatchResult matchResult)
   {
     SceneManager.UnloadSceneAsync(matchScene);
     matchResultObject.GetComponent<MatchResultBehaviour>().ShowMatchResult(matchResult);
   }
 
-  private void MatchResult_OnFinished()
-  {
-    Restart();
-  }
-
   private void Restart(bool clearStatusText = true)
   {
     if (matchScene.isLoaded) SceneManager.UnloadSceneAsync(matchScene);
-    ShowOnlyThisPanel(lobbyObject);
 
     if (!audioPlayer.isPlaying)
     {

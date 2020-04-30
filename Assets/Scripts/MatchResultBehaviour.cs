@@ -10,7 +10,6 @@ internal class MatchResultBehaviour : MonoBehaviour
   public GameObject resultsObject;
   public GameObject continueButton;
 
-  internal event Action OnFinished;
   private bool stop;
 
   internal void ShowWaitingForMatchResult()
@@ -98,9 +97,8 @@ internal class MatchResultBehaviour : MonoBehaviour
     continueButton.SetActive(true);
   }
 
-  public void OnContine()
+  void OnDisable()
   {
     this.stop = true;
-    OnFinished?.Invoke();
   }
 }
