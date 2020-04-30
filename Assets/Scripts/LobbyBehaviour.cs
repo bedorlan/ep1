@@ -20,6 +20,7 @@ public class LobbyBehaviour : MonoBehaviour
 
   const string MATCH_SCENE = "MatchScene";
 
+  private Animator lobbyController;
   private SocialBehaviour socialBehaviour;
   private Scene matchScene;
   private Text statusText;
@@ -27,23 +28,52 @@ public class LobbyBehaviour : MonoBehaviour
   private VideoPlayer videoPlayer;
   private (Leaderboard, Leaderboard) allLeaderboards;
 
-  private bool socialReady = false;
-  private bool networkReady = false;
-
   private void Awake()
   {
+    lobbyController = GetComponent<Animator>();
     socialBehaviour = GetComponent<SocialBehaviour>();
     statusText = statusGameObject.GetComponentInChildren<Text>();
     audioPlayer = GetComponentInChildren<AudioSource>();
     videoPlayer = GetComponentInChildren<VideoPlayer>();
 
+    lobbyController.GetBehaviour<GenericTransitionStateBehaviour>().OnEnterState += lobbyController_OnEnterState;
     socialBehaviour.OnLogged += SocialBehaviour_OnLogged;
     matchResultObject.GetComponent<MatchResultBehaviour>().OnFinished += MatchResult_OnFinished;
   }
 
-  private void Start()
+  private void lobbyController_OnEnterState(string newState)
   {
-    LoadMatchSceneAndConnect();
+    Debug.Log("newState=" + newState);
+    switch (newState)
+    {
+      case "waitingSocial":
+        lobbyButtonsObject.SetActive(false);
+        break;
+      case "waitingNetwork":
+        lobbyButtonsObject.SetActive(false);
+        cancelButton.SetActive(false);
+        Restart();
+        break;
+      case "ready":
+        lobbyController.ResetTrigger("cancel");
+        lobbyButtonsObject.SetActive(true);
+        SetLobbyButtonsInteractable(true);
+        cancelButton.SetActive(false);
+        break;
+      case "playWithAll":
+        lobbyController.ResetTrigger("playWithAll");
+        NetworkManager.singleton.JoinAllQueue();
+        statusText.text = "Buscando partida con cualquiera ...";
+        SetLobbyButtonsInteractable(false);
+        cancelButton.SetActive(true);
+        break;
+      case "playing":
+        audioPlayer.Stop();
+        videoPlayer.Stop();
+        myCamera.SetActive(false);
+        GetComponent<GraphicRaycaster>().enabled = false;
+        break;
+    }
   }
 
   private void SocialBehaviour_OnLogged(bool logged)
@@ -55,26 +85,20 @@ public class LobbyBehaviour : MonoBehaviour
       statusText.text = string.Format("Hola {0}", socialBehaviour.shortName);
     }
 
-    socialReady = true;
-    TryEnableLobbyButtons();
-  }
-
-  private void TryEnableLobbyButtons()
-  {
-    lobbyButtonsObject.SetActive(everythingIsReady);
-  }
-
-  private bool everythingIsReady
-  {
-    get
-    {
-      return socialReady && matchScene.IsValid() && matchScene.isLoaded && networkReady;
-    }
+    lobbyController.SetBool("socialReady", true);
   }
 
   public void OnExit()
   {
     Application.Quit();
+  }
+
+  private void SetLobbyButtonsInteractable(bool interactable)
+  {
+    foreach (var button in lobbyButtonsObject.GetComponentsInChildren<Button>())
+    {
+      button.interactable = interactable;
+    }
   }
 
   public void OnUserWantsToLogin()
@@ -127,29 +151,12 @@ public class LobbyBehaviour : MonoBehaviour
     lobbyObject.SetActive(true);
   }
 
-  public void OnPlay()
-  {
-    statusText.text = "Buscando partida con cualquiera ...";
-    setBusyMode(true);
-    NetworkManager.singleton.JoinAllQueue();
-  }
-
   public void OnPlayWithFriends()
   {
     if (!TryLogin()) return;
 
     statusText.text = "Buscando partida con amigos ...";
-    setBusyMode(true);
     // NetworkManager.singleton.JoinFriendsQueue();
-  }
-
-  private void setBusyMode(bool busy)
-  {
-    cancelButton.SetActive(busy);
-    foreach (var button in lobbyButtonsObject.GetComponentsInChildren<Button>())
-    {
-      button.interactable = !busy;
-    }
   }
 
   public void OnCancel()
@@ -170,7 +177,7 @@ public class LobbyBehaviour : MonoBehaviour
       SceneManager.SetActiveScene(matchScene);
 
       NetworkManager.singleton.OnConnection += NetworkManager_OnConnection;
-      NetworkManager.singleton.OnMatchReady += NetworkManager_OnMatchReady;
+      NetworkManager.singleton.OnMatchReady += () => lobbyController.SetBool("playing", true);
       NetworkManager.singleton.OnMatchQuit += NetworkManager_OnMatchQuit;
       NetworkManager.singleton.OnMatchEnd += NetworkManager_OnMatchEnd;
       NetworkManager.singleton.OnMatchResult += NetworkManager_OnMatchResults;
@@ -188,23 +195,12 @@ public class LobbyBehaviour : MonoBehaviour
   {
     if (!success)
     {
-      networkReady = false;
-      TryEnableLobbyButtons();
       Restart(false);
       return;
     }
 
     statusText.text = "Conectado";
-    networkReady = true;
-    TryEnableLobbyButtons();
-  }
-
-  private void NetworkManager_OnMatchReady()
-  {
-    audioPlayer.Stop();
-    videoPlayer.Stop();
-    myCamera.SetActive(false);
-    GetComponent<GraphicRaycaster>().enabled = false;
+    lobbyController.SetBool("networkReady", true);
   }
 
   private void NetworkManager_OnMatchEnd()
@@ -226,8 +222,6 @@ public class LobbyBehaviour : MonoBehaviour
   private void NetworkManager_OnMatchResults(MatchResult matchResult)
   {
     SceneManager.UnloadSceneAsync(matchScene);
-    networkReady = false;
-    TryEnableLobbyButtons();
     matchResultObject.GetComponent<MatchResultBehaviour>().ShowMatchResult(matchResult);
   }
 
@@ -255,7 +249,6 @@ public class LobbyBehaviour : MonoBehaviour
 
     myCamera.SetActive(true);
     GetComponent<GraphicRaycaster>().enabled = true;
-    setBusyMode(false);
 
     if (clearStatusText)
     {

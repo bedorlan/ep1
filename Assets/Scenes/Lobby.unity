@@ -469,6 +469,7 @@ GameObject:
   - component: {fileID: 145866247}
   - component: {fileID: 145866251}
   - component: {fileID: 145866252}
+  - component: {fileID: 145866253}
   m_Layer: 5
   m_Name: Lobby
   m_TagString: Untagged
@@ -592,6 +593,25 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: e9c319e5324cc4f75b3a526d697b560f, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+--- !u!95 &145866253
+Animator:
+  serializedVersion: 3
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 145866246}
+  m_Enabled: 1
+  m_Avatar: {fileID: 0}
+  m_Controller: {fileID: 9100000, guid: ae259ef0f579c4c41bd26ce32570bff3, type: 2}
+  m_CullingMode: 0
+  m_UpdateMode: 0
+  m_ApplyRootMotion: 0
+  m_LinearVelocityBlending: 0
+  m_WarningMessage: 
+  m_HasTransformHierarchy: 1
+  m_AllowConstantClipSamplingOptimization: 1
+  m_KeepAnimatorControllerStateOnDisable: 0
 --- !u!1 &166858857
 GameObject:
   m_ObjectHideFlags: 0
@@ -2720,15 +2740,15 @@ MonoBehaviour:
   m_OnClick:
     m_PersistentCalls:
       m_Calls:
-      - m_Target: {fileID: 145866251}
-        m_MethodName: OnPlay
-        m_Mode: 1
+      - m_Target: {fileID: 145866253}
+        m_MethodName: SetTrigger
+        m_Mode: 5
         m_Arguments:
           m_ObjectArgument: {fileID: 0}
           m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
           m_IntArgument: 0
           m_FloatArgument: 0
-          m_StringArgument: 
+          m_StringArgument: playWithAll
           m_BoolArgument: 0
         m_CallState: 2
 --- !u!114 &922360770
@@ -3816,15 +3836,15 @@ MonoBehaviour:
   m_OnClick:
     m_PersistentCalls:
       m_Calls:
-      - m_Target: {fileID: 145866251}
-        m_MethodName: OnCancel
-        m_Mode: 1
+      - m_Target: {fileID: 145866253}
+        m_MethodName: SetTrigger
+        m_Mode: 5
         m_Arguments:
           m_ObjectArgument: {fileID: 0}
           m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
           m_IntArgument: 0
           m_FloatArgument: 0
-          m_StringArgument: 
+          m_StringArgument: cancel
           m_BoolArgument: 0
         m_CallState: 2
 --- !u!114 &1179486131
