@@ -7,12 +7,17 @@ public class GenericTransitionStateBehaviour : StateMachineBehaviour
 {
   internal event Action<string> OnEnterState;
   private Dictionary<int, string> nameMap;
+  private string currentState;
 
   override public void OnStateEnter(Animator animator, AnimatorStateInfo stateInfo, int layerIndex)
   {
     if (nameMap == null) InitializeNameMap(animator);
+
     var newStateName = nameMap[stateInfo.shortNameHash];
-    OnEnterState?.Invoke(newStateName);
+    if (currentState == newStateName) return;
+
+    currentState = newStateName;
+    OnEnterState?.Invoke(currentState);
   }
 
   private void InitializeNameMap(Animator animator)

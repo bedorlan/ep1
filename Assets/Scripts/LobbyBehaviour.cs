@@ -55,10 +55,22 @@ public class LobbyBehaviour : MonoBehaviour
         Restart();
         break;
       case "ready":
+        lobbyController.ResetTrigger("menu");
         lobbyController.ResetTrigger("cancel");
+        ShowOnlyThisPanel(lobbyObject);
         lobbyButtonsObject.SetActive(true);
         SetLobbyButtonsInteractable(true);
         cancelButton.SetActive(false);
+        break;
+      case "askingForLogin":
+        lobbyController.ResetTrigger("showScores");
+        AskForLogin();
+        break;
+      case "showScores":
+        ShowOnlyThisPanel(scoresObject);
+        scoresObject.GetComponent<ScoresBehaviour>().ShowLoading();
+        if (allLeaderboards.Item1 == null) NetworkManager.singleton.getAllLeaderboards();
+        else NetworkManager_OnLeaderboardAllLoaded(allLeaderboards);
         break;
       case "playWithAll":
         lobbyController.ResetTrigger("playWithAll");
@@ -78,14 +90,14 @@ public class LobbyBehaviour : MonoBehaviour
 
   private void SocialBehaviour_OnLogged(bool logged)
   {
-    if (askForLoginObject.activeSelf && logged) OnLobbyMenu();
+    lobbyController.SetBool("logged", logged);
+    lobbyController.SetBool("socialReady", true);
     if (logged)
     {
       NetworkManager.singleton.Introduce();
       statusText.text = string.Format("Hola {0}", socialBehaviour.shortName);
     }
 
-    lobbyController.SetBool("socialReady", true);
   }
 
   public void OnExit()
@@ -106,17 +118,6 @@ public class LobbyBehaviour : MonoBehaviour
     socialBehaviour.Login();
   }
 
-  public void OnShowScores()
-  {
-    if (!TryLogin()) return;
-
-    HideAllPanels();
-    scoresObject.SetActive(true);
-    scoresObject.GetComponent<ScoresBehaviour>().ShowLoading();
-    if (allLeaderboards.Item1 == null) NetworkManager.singleton.getAllLeaderboards();
-    else NetworkManager_OnLeaderboardAllLoaded(allLeaderboards);
-  }
-
   private void NetworkManager_OnLeaderboardAllLoaded((Leaderboard, Leaderboard) leaderboards)
   {
     allLeaderboards = leaderboards;
@@ -131,24 +132,17 @@ public class LobbyBehaviour : MonoBehaviour
     return false;
   }
 
-  private void HideAllPanels()
+  private void ShowOnlyThisPanel(GameObject panel)
   {
-    lobbyObject.SetActive(false);
-    matchResultObject.SetActive(false);
-    askForLoginObject.SetActive(false);
-    scoresObject.SetActive(false);
+    lobbyObject.SetActive(lobbyObject == panel);
+    matchResultObject.SetActive(matchResultObject == panel);
+    askForLoginObject.SetActive(askForLoginObject == panel);
+    scoresObject.SetActive(scoresObject == panel);
   }
 
   private void AskForLogin()
   {
-    HideAllPanels();
-    askForLoginObject.SetActive(true);
-  }
-
-  public void OnLobbyMenu()
-  {
-    HideAllPanels();
-    lobbyObject.SetActive(true);
+    ShowOnlyThisPanel(askForLoginObject);
   }
 
   public void OnPlayWithFriends()
@@ -215,8 +209,7 @@ public class LobbyBehaviour : MonoBehaviour
     }
 
     matchResultObject.GetComponent<MatchResultBehaviour>().ShowWaitingForMatchResult();
-    HideAllPanels();
-    matchResultObject.SetActive(true);
+    ShowOnlyThisPanel(matchResultObject);
   }
 
   private void NetworkManager_OnMatchResults(MatchResult matchResult)
@@ -233,8 +226,7 @@ public class LobbyBehaviour : MonoBehaviour
   private void Restart(bool clearStatusText = true)
   {
     if (matchScene.isLoaded) SceneManager.UnloadSceneAsync(matchScene);
-    HideAllPanels();
-    lobbyObject.SetActive(true);
+    ShowOnlyThisPanel(lobbyObject);
 
     if (!audioPlayer.isPlaying)
     {
