@@ -1,6 +1,6 @@
 {
   "name": "ep1_server",
-  "version": "423.1",
+  "version": "501.1",
   "private": true,
   "engines": {
     "node": "12.x"
@@ -18,7 +18,7 @@
     "typescript": "^3.8.3"
   },
   "scripts": {
-    "build": "yarn tsc && zip dist.zip *.js",
+    "build": "yarn tsc && zip dist.zip *.js && rm *.js",
     "start": "node index.js"
   }
 }
