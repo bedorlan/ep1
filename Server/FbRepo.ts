@@ -10,11 +10,15 @@ export async function getNamesFor(ids: string[]): Promise<{ [id: string]: { shor
   return await response.json()
 }
 
+export interface IFriend {
+  short_name: string
+  id: string
+}
+
 export async function getFriendsOf(fbId: string) {
   const url = `${fbUrl}/${fbId}/friends?fields=short_name&${getAcessTokenParam()}`
   const response = await fetch(url)
   // todo: check paging
-  type IFriend = { short_name: string; id: string }
   const { data, paging }: { data: IFriend[]; paging: unknown } = await response.json()
   return data
 }

@@ -38,13 +38,17 @@ const MATCH_TIME = Number.parseFloat(process.env.MATCH_TIME || '4') * 60 * 1000
 const server = net.createServer()
 
 type Player = {
+  socket: net.Socket
   inactive?: boolean
   in: Readable
   out: Writable
   fbId?: string
   playWithFriends?: boolean
+  friends?: FbRepo.IFriend[]
+  name?: string
+  score?: number
 }
-type PlayerWithSocket = Player & { socket: net.Socket }
+type PlayerWithSocket = Player
 let waitingQueue: PlayerWithSocket[] = []
 let matchesRunning = 0
 
@@ -140,8 +144,9 @@ function safeWaitForHello(socket: net.Socket) {
 
 const generalCodesMap: { [code in Codes]?: (player: PlayerWithSocket, msg: any[]) => boolean } = {
   [Codes.guessTime]: onGuessTime,
-  [Codes.introduce]: onIntroduce,
-  [Codes.joinAllQueue]: (player) => (waitingQueue.push(player), true),
+  [Codes.introduce]: (player, msg) => (onIntroduce(player, msg), false),
+  [Codes.joinAllQueue]: (player) => ((player.playWithFriends = false), waitingQueue.push(player), true),
+  [Codes.joinFriendsQueue]: (player) => ((player.playWithFriends = true), waitingQueue.push(player), true),
   [Codes.getLeaderboardAll]: (player) => (sendFullLeaderboardToPlayer(player), true),
 }
 
@@ -153,16 +158,41 @@ function tryHandleMsg(player: PlayerWithSocket, msg: any[]) {
 }
 
 function tryStartMatch() {
-  clearBadSockets()
+  clearDisconnectedPlayers()
 
-  while (waitingQueue.length >= 2) {
-    // todo: sort by rank
-    // todo: watch for friends only
-    // todo: divide better when 6 or 5 players
-    const matchPlayers = waitingQueue.slice(0, 4)
-    waitingQueue = waitingQueue.slice(4)
-    new Match(matchPlayers).Start()
+  waitingQueue.sort((a, b) => (a.score ?? initialScore) - (b.score ?? initialScore))
+
+  for (let matchCreated = true; matchCreated; ) {
+    const playingWithFriends = waitingQueue.filter((it) => it.playWithFriends)
+    matchCreated = playingWithFriends.some((player) => {
+      const myFriends = player.friends?.map((it) => it.id)
+      const myOnlineFriends = waitingQueue
+        .filter((it) => it !== player)
+        .filter((it) => it.fbId && myFriends?.includes(it.fbId))
+
+      const newMatch = [player, ...myOnlineFriends].slice(0, 4)
+      const playersPlaying = createMatches(newMatch)
+      lodash.pull(waitingQueue, ...playersPlaying)
+      return playersPlaying.length > 0
+    })
   }
+
+  const playingWithAll = waitingQueue.filter((it) => !it.playWithFriends)
+  const playersPlaying = createMatches(playingWithAll)
+  lodash.pull(waitingQueue, ...playersPlaying)
+}
+
+function createMatches(players: Player[]) {
+  players = players.slice()
+  const playersPlaying: Player[] = []
+  while (players.length >= 2) {
+    // todo: divide better when 6 or 5 players
+    const matchPlayers = players.slice(0, 4)
+    players = players.slice(4)
+    new Match(matchPlayers).Start()
+    playersPlaying.push(...matchPlayers)
+  }
+  return playersPlaying
 }
 
 function onGuessTime(player: Player, msg: any[]) {
@@ -175,13 +205,17 @@ function onGuessTime(player: Player, msg: any[]) {
 function onIntroduce(player: Player, msg: any[]) {
   const [code, playerNumber, playerName, fbId] = msg
   player.fbId = fbId as string
-  return false
+  if (!player.fbId) return
+
+  FbRepo.getNamesFor([player.fbId]).then((names) => (player.name = names[player.fbId!]?.short_name))
+  ScoresRepo.getScore(player.fbId).then((score) => (player.score = score?.score))
+  FbRepo.getFriendsOf(player.fbId).then((friends) => (player.friends = friends))
 }
 
 async function sendFullLeaderboardToPlayer(player: Player) {
   if (!player.fbId) return
 
-  const leaderboards = await Promise.all([getTopLeaderboard(), getFriendsLeaderboard(player.fbId)] as const)
+  const leaderboards = await Promise.all([getTopLeaderboard(), getFriendsLeaderboard(player)] as const)
 
   const msg = [Codes.leaderboardAll, ...leaderboards]
   sendTo(player, msg)
@@ -206,10 +240,11 @@ async function getTopLeaderboard() {
   return leaderboard
 }
 
-async function getFriendsLeaderboard(fbId: string) {
-  const [myInfo, friends] = await Promise.all([FbRepo.getNamesFor([fbId]), FbRepo.getFriendsOf(fbId)])
-  const myName = myInfo[fbId].short_name
-  const me = { id: fbId, short_name: myName }
+async function getFriendsLeaderboard(player: Player) {
+  if (!(player.fbId && player.friends)) return []
+
+  const friends = player.friends.slice()
+  const me = { id: player.fbId, short_name: player.name ?? 'sin nombre' }
   friends.push(me)
 
   const ids = friends.map((it) => it.id)
@@ -228,10 +263,10 @@ function socketClosed(player: PlayerWithSocket, err: any) {
     if (!player.socket.destroyed) player.socket.destroy()
   }
 
-  clearBadSockets()
+  clearDisconnectedPlayers()
 }
 
-function clearBadSockets() {
+function clearDisconnectedPlayers() {
   waitingQueue = waitingQueue.filter((it) => {
     const isGood = !it.socket.destroyed && it.socket.readable && it.socket.writable
     if (isGood) return true
@@ -306,7 +341,7 @@ class Match {
     this.matchTimer = setTimeout(this.TryEndMatch, MATCH_TIME)
 
     ++matchesRunning
-    console.info({ matchesRunning })
+    console.info('new match:', { matchesRunning, players: this.players.map((it) => it.name) })
   }
 
   private readonly resendToOthers = (player: number, msg: any[]) => {
@@ -379,17 +414,6 @@ class Match {
     console.info({ matchesRunning })
   }
 
-  private getPlayersScores() {
-    return Promise.all(
-      this.players.map(async (p) => {
-        if (!p.fbId) return initialScore
-        const score = await ScoresRepo.getScore(p.fbId)
-        if (!score) return initialScore
-        return score.score
-      }),
-    )
-  }
-
   private savePlayersScores(scores: ScoresRepo.IScore[]) {
     return Promise.all(
       scores.map((it) => {
@@ -402,7 +426,7 @@ class Match {
 
   private async CalcEloScores() {
     const results = this.votersCentral.getVotesResults()
-    const playerPrevScores = await this.getPlayersScores()
+    const playerPrevScores = this.players.map((it) => it.score ?? initialScore)
 
     const eloInputs = this.players.map((_, index) => ({
       id: index,

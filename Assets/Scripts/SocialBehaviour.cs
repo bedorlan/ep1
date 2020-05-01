@@ -52,7 +52,7 @@ public class SocialBehaviour : MonoBehaviour
 
   void LoginCallback()
   {
-    if (FB.IsLoggedIn)
+    if (FB.IsLoggedIn && HasGrantedAllPermissions())
     {
       userId = AccessToken.CurrentAccessToken.UserId;
       GetUserData();
@@ -126,25 +126,6 @@ public class SocialBehaviour : MonoBehaviour
         shortName = result.ResultDictionary["short_name"].ToString();
         OnLogged?.Invoke(true);
       });
-    }
-
-    if (PermissionUserFriends)
-    {
-      FB.API("/me/friends", HttpMethod.GET, (result) =>
-      {
-        if (result.Error != null)
-        {
-          errors.Enqueue(result.Error);
-          OnError?.Invoke();
-          return;
-        }
-        Debug.Log(result.RawResult);
-        var data = JSON.Parse(result.RawResult)["data"].AsArray;
-      });
-    }
-    else
-    {
-      Debug.Log("no friends permission.");
     }
   }
 }

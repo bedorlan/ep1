@@ -221,6 +221,13 @@ public class NetworkManager : MonoBehaviour
     SendNetworkMsg(msg.ToString());
   }
 
+  internal void JoinFriendsQueue()
+  {
+    var msg = new JSONArray();
+    msg.Add((int)Codes.joinFriendsQueue);
+    SendNetworkMsg(msg.ToString());
+  }
+
   private void StartGame(JSONNode data)
   {
     playerNumber = data[1].AsInt;

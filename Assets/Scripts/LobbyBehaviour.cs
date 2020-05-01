@@ -121,7 +121,7 @@ public class LobbyBehaviour : MonoBehaviour
         break;
       case "playWithFriends":
         lobbyController.ResetTrigger("playWithFriends");
-        NetworkManager.singleton.JoinAllQueue(); // todo: with friends!
+        NetworkManager.singleton.JoinFriendsQueue();
         statusText.text = "Buscando partida con amigos ...";
         SetLobbyButtonsInteractable(false);
         cancelButton.SetActive(true);
@@ -171,14 +171,6 @@ public class LobbyBehaviour : MonoBehaviour
     matchResultObject.SetActive(matchResultObject == panel);
     askForLoginObject.SetActive(askForLoginObject == panel);
     scoresObject.SetActive(scoresObject == panel);
-  }
-
-  public void OnPlayWithFriends()
-  {
-    // if (!TryLogin()) return;
-
-    statusText.text = "Buscando partida con amigos ...";
-    // NetworkManager.singleton.JoinFriendsQueue();
   }
 
   private void LoadMatchSceneAndConnect()
