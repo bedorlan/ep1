@@ -219,7 +219,6 @@ async function sendFullLeaderboardToPlayer(player: Player) {
   if (!player.fbId) return
 
   const leaderboards = await Promise.all([getTopLeaderboard(), getFriendsLeaderboard(player)] as const)
-
   const msg = [Codes.leaderboardAll, ...leaderboards]
   sendTo(player, msg)
 }
