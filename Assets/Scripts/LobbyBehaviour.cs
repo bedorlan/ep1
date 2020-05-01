@@ -12,6 +12,7 @@ public class LobbyBehaviour : MonoBehaviour
   public GameObject statusGameObject;
   public GameObject lobbyButtonsObject;
   public GameObject cancelButton;
+  public GameObject retryButton;
 
   public GameObject lobbyObject;
   public GameObject matchResultObject;
@@ -37,12 +38,15 @@ public class LobbyBehaviour : MonoBehaviour
     videoPlayer = GetComponentInChildren<VideoPlayer>();
 
     lobbyController.GetBehaviour<GenericTransitionStateBehaviour>().OnEnterState += lobbyController_OnEnterState;
-    socialBehaviour.OnLogged += SocialBehaviour_OnLogged;
+    socialBehaviour.OnLogged += (logged) =>
+    {
+      lobbyController.SetBool("logged", logged);
+      lobbyController.SetBool("socialReady", true);
+    };
   }
 
   private void lobbyController_OnEnterState(string newState)
   {
-    Debug.Log("newState=" + newState);
     switch (newState)
     {
       case "waitingSocial":
@@ -51,10 +55,37 @@ public class LobbyBehaviour : MonoBehaviour
       case "waitingNetwork":
         lobbyController.ResetTrigger("menu");
         lobbyController.ResetTrigger("cancel");
+        lobbyController.ResetTrigger("matchQuit");
+        statusText.text = "Conectando al servidor ...";
         myCamera.SetActive(true);
+        GetComponent<GraphicRaycaster>().enabled = true;
         lobbyButtonsObject.SetActive(false);
         cancelButton.SetActive(false);
-        Restart();
+        retryButton.SetActive(false);
+        if (matchScene.isLoaded) SceneManager.UnloadSceneAsync(matchScene);
+        if (!audioPlayer.isPlaying)
+        {
+          audioPlayer.time = 0;
+          audioPlayer.Play();
+        }
+        if (!videoPlayer.isPlaying)
+        {
+          videoPlayer.time = 0;
+          videoPlayer.Play();
+        }
+        allLeaderboards.Item1 = null;
+        allLeaderboards.Item2 = null;
+        LoadMatchSceneAndConnect();
+        break;
+      case "connectionFailed":
+        lobbyController.ResetTrigger("connectionFailed");
+        statusText.text = "No se pudo conectar al servidor. Revisa tu conexion a internet";
+        myCamera.SetActive(true);
+        GetComponent<GraphicRaycaster>().enabled = true;
+        ShowOnlyThisPanel(lobbyObject);
+        lobbyButtonsObject.SetActive(false);
+        cancelButton.SetActive(false);
+        retryButton.SetActive(true);
         break;
       case "ready":
         lobbyController.ResetTrigger("menu");
@@ -68,10 +99,12 @@ public class LobbyBehaviour : MonoBehaviour
           NetworkManager.singleton.Introduce();
           statusText.text = string.Format("Hola {0}", socialBehaviour.shortName);
         }
+        else statusText.text = "";
         break;
       case "askingForLogin":
         lobbyController.ResetTrigger("showScores");
-        AskForLogin();
+        lobbyController.ResetTrigger("playWithFriends");
+        ShowOnlyThisPanel(askForLoginObject);
         break;
       case "showScores":
         ShowOnlyThisPanel(scoresObject);
@@ -107,12 +140,6 @@ public class LobbyBehaviour : MonoBehaviour
     }
   }
 
-  private void SocialBehaviour_OnLogged(bool logged)
-  {
-    lobbyController.SetBool("logged", logged);
-    lobbyController.SetBool("socialReady", true);
-  }
-
   public void OnExit()
   {
     Application.Quit();
@@ -131,23 +158,12 @@ public class LobbyBehaviour : MonoBehaviour
     socialBehaviour.Login();
   }
 
-  private void NetworkManager_OnLeaderboardAllLoaded((Leaderboard, Leaderboard) leaderboards)
-  {
-    allLeaderboards = leaderboards;
-    scoresObject.GetComponent<ScoresBehaviour>().ShowLeaderboardAll(leaderboards);
-  }
-
   private void ShowOnlyThisPanel(GameObject panel)
   {
     lobbyObject.SetActive(lobbyObject == panel);
     matchResultObject.SetActive(matchResultObject == panel);
     askForLoginObject.SetActive(askForLoginObject == panel);
     scoresObject.SetActive(scoresObject == panel);
-  }
-
-  private void AskForLogin()
-  {
-    ShowOnlyThisPanel(askForLoginObject);
   }
 
   public void OnPlayWithFriends()
@@ -158,82 +174,50 @@ public class LobbyBehaviour : MonoBehaviour
     // NetworkManager.singleton.JoinFriendsQueue();
   }
 
-  public void OnCancel()
-  {
-    Debug.Log("OnCancel");
-    // todo
-  }
-
   private void LoadMatchSceneAndConnect()
   {
     if (matchScene.IsValid() && matchScene.isLoaded) return;
 
-    statusText.text = "Conectando al servidor ...";
     var asyncLoadScene = SceneManager.LoadSceneAsync(MATCH_SCENE, LoadSceneMode.Additive);
     asyncLoadScene.completed += (AsyncOperation operation) =>
     {
       matchScene = SceneManager.GetSceneByName(MATCH_SCENE);
       SceneManager.SetActiveScene(matchScene);
 
-      NetworkManager.singleton.OnConnection += NetworkManager_OnConnection;
       NetworkManager.singleton.OnMatchReady += () => lobbyController.SetBool("playing", true);
-      NetworkManager.singleton.OnMatchQuit += NetworkManager_OnMatchQuit;
-      NetworkManager.singleton.OnMatchEnd += () => lobbyController.SetTrigger("matchEnded");
-      NetworkManager.singleton.OnMatchResult += NetworkManager_OnMatchResults;
+      NetworkManager.singleton.OnMatchQuit += () =>
+      {
+        lobbyController.SetTrigger("matchQuit");
+        lobbyController.SetBool("playing", false);
+      };
+      NetworkManager.singleton.OnMatchEnd += () =>
+      {
+        lobbyController.SetTrigger("matchEnded");
+        lobbyController.SetBool("playing", false);
+      };
       NetworkManager.singleton.OnLeaderboardAllLoaded += NetworkManager_OnLeaderboardAllLoaded;
+      NetworkManager.singleton.OnConnection += (success) =>
+      {
+        if (!success)
+        {
+          lobbyController.SetTrigger("connectionFailed");
+          lobbyController.SetBool("playing", false);
+        }
+        lobbyController.SetBool("networkReady", success);
+      };
+      NetworkManager.singleton.OnMatchResult += (matchResult) =>
+      {
+        SceneManager.UnloadSceneAsync(matchScene);
+        matchResultObject.GetComponent<MatchResultBehaviour>().ShowMatchResult(matchResult);
+      };
+
       NetworkManager.singleton.TryConnect();
     };
   }
 
-  private void NetworkManager_OnMatchQuit()
+  private void NetworkManager_OnLeaderboardAllLoaded((Leaderboard, Leaderboard) leaderboards)
   {
-    Restart();
-  }
-
-  private void NetworkManager_OnConnection(bool success)
-  {
-    if (!success)
-    {
-      Restart(false);
-      return;
-    }
-
-    statusText.text = "Conectado";
-    lobbyController.SetBool("networkReady", true);
-  }
-
-  private void NetworkManager_OnMatchResults(MatchResult matchResult)
-  {
-    SceneManager.UnloadSceneAsync(matchScene);
-    matchResultObject.GetComponent<MatchResultBehaviour>().ShowMatchResult(matchResult);
-  }
-
-  private void Restart(bool clearStatusText = true)
-  {
-    if (matchScene.isLoaded) SceneManager.UnloadSceneAsync(matchScene);
-
-    if (!audioPlayer.isPlaying)
-    {
-      audioPlayer.time = 0;
-      audioPlayer.Play();
-    }
-    if (!videoPlayer.isPlaying)
-    {
-      videoPlayer.time = 0;
-      videoPlayer.Play();
-    }
-
-    myCamera.SetActive(true);
-    GetComponent<GraphicRaycaster>().enabled = true;
-
-    if (clearStatusText)
-    {
-      statusText.text = "";
-    }
-
-    allLeaderboards.Item1 = null;
-    allLeaderboards.Item2 = null;
-
-    LoadMatchSceneAndConnect();
+    allLeaderboards = leaderboards;
+    scoresObject.GetComponent<ScoresBehaviour>().ShowLeaderboardAll(leaderboards);
   }
 }
