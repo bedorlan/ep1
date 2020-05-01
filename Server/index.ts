@@ -187,9 +187,9 @@ function createMatches(players: Player[]) {
   players = players.slice()
   const playersPlaying: Player[] = []
   while (players.length >= 2) {
-    // todo: divide better when 6 or 5 players
-    const matchPlayers = players.slice(0, 4)
-    players = players.slice(4)
+    const matchSize = [5, 6].includes(players.length) ? 3 : 4
+    const matchPlayers = players.slice(0, matchSize)
+    players = players.slice(matchSize)
     new Match(matchPlayers).Start()
     playersPlaying.push(...matchPlayers)
   }
