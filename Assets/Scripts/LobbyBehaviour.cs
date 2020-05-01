@@ -1,5 +1,5 @@
 ﻿using System;
-using UnityEditor.Animations;
+using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using UnityEngine.UI;
@@ -22,6 +22,7 @@ public class LobbyBehaviour : MonoBehaviour
   const string MATCH_SCENE = "MatchScene";
 
   private Animator lobbyController;
+  private Dictionary<int, Action> stateHandlers;
   private SocialBehaviour socialBehaviour;
   private Scene matchScene;
   private Text statusText;
@@ -43,108 +44,139 @@ public class LobbyBehaviour : MonoBehaviour
       lobbyController.SetBool("logged", logged);
       lobbyController.SetBool("socialReady", true);
     };
+
+    stateHandlers = new Dictionary<int, Action>() {
+      {
+        Animator.StringToHash("waitingSocial"), () =>
+        {
+          lobbyButtonsObject.SetActive(false);
+        }
+      },
+      {
+        Animator.StringToHash("waitingNetwork"), () =>
+        {
+          lobbyController.ResetTrigger("menu");
+          lobbyController.ResetTrigger("cancel");
+          lobbyController.ResetTrigger("matchQuit");
+          statusText.text = "Conectando al servidor ...";
+          myCamera.SetActive(true);
+          GetComponent<GraphicRaycaster>().enabled = true;
+          lobbyButtonsObject.SetActive(false);
+          cancelButton.SetActive(false);
+          retryButton.SetActive(false);
+          if (matchScene.isLoaded) SceneManager.UnloadSceneAsync(matchScene);
+          if (!audioPlayer.isPlaying)
+          {
+            audioPlayer.time = 0;
+            audioPlayer.Play();
+          }
+          if (!videoPlayer.isPlaying)
+          {
+            videoPlayer.time = 0;
+            videoPlayer.Play();
+          }
+          allLeaderboards.Item1 = null;
+          allLeaderboards.Item2 = null;
+          LoadMatchSceneAndConnect();
+        }
+      },
+      {
+        Animator.StringToHash("connectionFailed"), () =>
+        {
+          lobbyController.ResetTrigger("connectionFailed");
+          statusText.text = "No se pudo conectar al servidor. Revisa tu conexion a internet";
+          myCamera.SetActive(true);
+          GetComponent<GraphicRaycaster>().enabled = true;
+          ShowOnlyThisPanel(lobbyObject);
+          lobbyButtonsObject.SetActive(false);
+          cancelButton.SetActive(false);
+          retryButton.SetActive(true);
+        }
+      },
+      {
+        Animator.StringToHash("ready"), () =>
+        {
+          lobbyController.ResetTrigger("menu");
+          lobbyController.ResetTrigger("cancel");
+          ShowOnlyThisPanel(lobbyObject);
+          lobbyButtonsObject.SetActive(true);
+          SetLobbyButtonsInteractable(true);
+          cancelButton.SetActive(false);
+          if (lobbyController.GetBool("logged"))
+          {
+            NetworkManager.singleton.Introduce();
+            statusText.text = string.Format("Hola {0}", socialBehaviour.shortName);
+          }
+          else statusText.text = "";
+        }
+      },
+      {
+        Animator.StringToHash("askingForLogin"), () =>
+        {
+          lobbyController.ResetTrigger("showScores");
+          lobbyController.ResetTrigger("playWithFriends");
+          ShowOnlyThisPanel(askForLoginObject);
+        }
+      },
+      {
+        Animator.StringToHash("showScores"), () =>
+        {
+          ShowOnlyThisPanel(scoresObject);
+          scoresObject.GetComponent<ScoresBehaviour>().ShowLoading();
+          if (allLeaderboards.Item1 == null) NetworkManager.singleton.getAllLeaderboards();
+          else NetworkManager_OnLeaderboardAllLoaded(allLeaderboards);
+        }
+      },
+      {
+        Animator.StringToHash("playWithAll"), () =>
+        {
+          lobbyController.ResetTrigger("playWithAll");
+          NetworkManager.singleton.JoinAllQueue();
+          statusText.text = "Buscando partida con cualquiera ...";
+          SetLobbyButtonsInteractable(false);
+          cancelButton.SetActive(true);
+        }
+      },
+      {
+        Animator.StringToHash("playWithFriends"), () =>
+        {
+          lobbyController.ResetTrigger("playWithFriends");
+          NetworkManager.singleton.JoinFriendsQueue();
+          statusText.text = "Buscando partida con amigos ...";
+          SetLobbyButtonsInteractable(false);
+          cancelButton.SetActive(true);
+        }
+      },
+      {
+        Animator.StringToHash("playing"), () =>
+        {
+          audioPlayer.Stop();
+          videoPlayer.Stop();
+          myCamera.SetActive(false);
+          GetComponent<GraphicRaycaster>().enabled = false;
+        }
+      },
+      {
+        Animator.StringToHash("showMatchResults"), () =>
+        {
+          lobbyController.ResetTrigger("matchEnded");
+          ShowOnlyThisPanel(matchResultObject);
+          myCamera.SetActive(true);
+          GetComponent<GraphicRaycaster>().enabled = true;
+          if (!videoPlayer.isPlaying)
+          {
+            videoPlayer.time = 0;
+            videoPlayer.Play();
+          }
+          matchResultObject.GetComponent<MatchResultBehaviour>().ShowWaitingForMatchResult();
+        }
+      },
+    };
   }
 
-  private void lobbyController_OnEnterState(string newState)
+  private void lobbyController_OnEnterState(int newState)
   {
-    switch (newState)
-    {
-      case "waitingSocial":
-        lobbyButtonsObject.SetActive(false);
-        break;
-      case "waitingNetwork":
-        lobbyController.ResetTrigger("menu");
-        lobbyController.ResetTrigger("cancel");
-        lobbyController.ResetTrigger("matchQuit");
-        statusText.text = "Conectando al servidor ...";
-        myCamera.SetActive(true);
-        GetComponent<GraphicRaycaster>().enabled = true;
-        lobbyButtonsObject.SetActive(false);
-        cancelButton.SetActive(false);
-        retryButton.SetActive(false);
-        if (matchScene.isLoaded) SceneManager.UnloadSceneAsync(matchScene);
-        if (!audioPlayer.isPlaying)
-        {
-          audioPlayer.time = 0;
-          audioPlayer.Play();
-        }
-        if (!videoPlayer.isPlaying)
-        {
-          videoPlayer.time = 0;
-          videoPlayer.Play();
-        }
-        allLeaderboards.Item1 = null;
-        allLeaderboards.Item2 = null;
-        LoadMatchSceneAndConnect();
-        break;
-      case "connectionFailed":
-        lobbyController.ResetTrigger("connectionFailed");
-        statusText.text = "No se pudo conectar al servidor. Revisa tu conexion a internet";
-        myCamera.SetActive(true);
-        GetComponent<GraphicRaycaster>().enabled = true;
-        ShowOnlyThisPanel(lobbyObject);
-        lobbyButtonsObject.SetActive(false);
-        cancelButton.SetActive(false);
-        retryButton.SetActive(true);
-        break;
-      case "ready":
-        lobbyController.ResetTrigger("menu");
-        lobbyController.ResetTrigger("cancel");
-        ShowOnlyThisPanel(lobbyObject);
-        lobbyButtonsObject.SetActive(true);
-        SetLobbyButtonsInteractable(true);
-        cancelButton.SetActive(false);
-        if (lobbyController.GetBool("logged"))
-        {
-          NetworkManager.singleton.Introduce();
-          statusText.text = string.Format("Hola {0}", socialBehaviour.shortName);
-        }
-        else statusText.text = "";
-        break;
-      case "askingForLogin":
-        lobbyController.ResetTrigger("showScores");
-        lobbyController.ResetTrigger("playWithFriends");
-        ShowOnlyThisPanel(askForLoginObject);
-        break;
-      case "showScores":
-        ShowOnlyThisPanel(scoresObject);
-        scoresObject.GetComponent<ScoresBehaviour>().ShowLoading();
-        if (allLeaderboards.Item1 == null) NetworkManager.singleton.getAllLeaderboards();
-        else NetworkManager_OnLeaderboardAllLoaded(allLeaderboards);
-        break;
-      case "playWithAll":
-        lobbyController.ResetTrigger("playWithAll");
-        NetworkManager.singleton.JoinAllQueue();
-        statusText.text = "Buscando partida con cualquiera ...";
-        SetLobbyButtonsInteractable(false);
-        cancelButton.SetActive(true);
-        break;
-      case "playWithFriends":
-        lobbyController.ResetTrigger("playWithFriends");
-        NetworkManager.singleton.JoinFriendsQueue();
-        statusText.text = "Buscando partida con amigos ...";
-        SetLobbyButtonsInteractable(false);
-        cancelButton.SetActive(true);
-        break;
-      case "playing":
-        audioPlayer.Stop();
-        videoPlayer.Stop();
-        myCamera.SetActive(false);
-        GetComponent<GraphicRaycaster>().enabled = false;
-        break;
-      case "showMatchResults":
-        lobbyController.ResetTrigger("matchEnded");
-        ShowOnlyThisPanel(matchResultObject);
-        myCamera.SetActive(true);
-        GetComponent<GraphicRaycaster>().enabled = true;
-        if (!videoPlayer.isPlaying)
-        {
-          videoPlayer.time = 0;
-          videoPlayer.Play();
-        }
-        matchResultObject.GetComponent<MatchResultBehaviour>().ShowWaitingForMatchResult();
-        break;
-    }
+    stateHandlers[newState]();
   }
 
   public void OnExit()
