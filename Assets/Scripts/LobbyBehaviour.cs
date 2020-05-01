@@ -119,6 +119,13 @@ public class LobbyBehaviour : MonoBehaviour
         SetLobbyButtonsInteractable(false);
         cancelButton.SetActive(true);
         break;
+      case "playWithFriends":
+        lobbyController.ResetTrigger("playWithFriends");
+        NetworkManager.singleton.JoinAllQueue(); // todo: with friends!
+        statusText.text = "Buscando partida con amigos ...";
+        SetLobbyButtonsInteractable(false);
+        cancelButton.SetActive(true);
+        break;
       case "playing":
         audioPlayer.Stop();
         videoPlayer.Stop();
