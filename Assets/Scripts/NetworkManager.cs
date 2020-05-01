@@ -114,11 +114,16 @@ public class NetworkManager : MonoBehaviour
     }
 
     defaultProjectile = projectilesMap[0].GetComponentInChildren<ButtonProjectileBehaviour>().projectilePrefab;
-    myCamera.SetActive(false);
 
 #if !UNITY_EDITOR
         projectileButtons.transform.root.GetComponentInChildren<ScrollRect>().enabled = false;
 #endif
+  }
+
+  void Start()
+  {
+    myCamera.SetActive(false);
+    Index.singleton.uiObject.GetComponent<GraphicRaycaster>().enabled = false;
   }
 
   internal void TryConnect()
@@ -272,8 +277,9 @@ public class NetworkManager : MonoBehaviour
 
     OnMatchReady?.Invoke();
     myCamera.SetActive(true);
-    TimerBehaviour.singleton.StartTimer();
+    Index.singleton.uiObject.GetComponent<GraphicRaycaster>().enabled = true;
 
+    TimerBehaviour.singleton.StartTimer();
     Introduce();
   }
 
@@ -638,11 +644,6 @@ public class NetworkManager : MonoBehaviour
 
   internal void ProjectileSelected(GameObject projectile)
   {
-    // todo: delete those logs
-    if (localPlayer == null) Debug.Log("null localPlayer");
-    if (projectile == null) Debug.Log("null projectile");
-    if (OnProjectileSelected == null) Debug.Log("null OnProjectileSelected");
-
     localPlayer.ChangeProjectile(projectile);
     OnProjectileSelected?.Invoke(projectile);
   }
@@ -711,6 +712,7 @@ public class NetworkManager : MonoBehaviour
   {
     matchOver = true;
     myCamera.SetActive(false);
+    Index.singleton.uiObject.GetComponent<GraphicRaycaster>().enabled = false;
     OnMatchEnd?.Invoke();
   }
 

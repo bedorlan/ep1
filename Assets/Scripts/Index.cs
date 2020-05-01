@@ -4,16 +4,17 @@ using UnityEngine;
 
 public class Index : MonoBehaviour
 {
-    public GameObject magicFlamePrefab;
-    public GameObject menuObject;
-    public GameObject votesChangesIndicatorPrefab;
-    public ObjectPool voterPool;
-    public ObjectPool votesChangesIndicatorPool;
+  public GameObject uiObject;
+  public GameObject magicFlamePrefab;
+  public GameObject menuObject;
+  public GameObject votesChangesIndicatorPrefab;
+  public ObjectPool voterPool;
+  public ObjectPool votesChangesIndicatorPool;
 
-    internal static Index singleton { get; private set; }
+  internal static Index singleton { get; private set; }
 
-    private void Start()
-    {
-        singleton = this;
-    }
+  private void Awake()
+  {
+    singleton = this;
+  }
 }

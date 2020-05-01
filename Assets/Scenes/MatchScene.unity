@@ -3926,6 +3926,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 82b977625c984402b9424090cc3e82c8, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  uiObject: {fileID: 559587599}
   magicFlamePrefab: {fileID: 1454184544696679872, guid: fb89ca2cca604417db7a574f92096052,
     type: 3}
   menuObject: {fileID: 183676921}
