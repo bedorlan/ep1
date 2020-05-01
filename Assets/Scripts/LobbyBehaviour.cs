@@ -168,7 +168,6 @@ public class LobbyBehaviour : MonoBehaviour
             videoPlayer.time = 0;
             videoPlayer.Play();
           }
-          matchResultObject.GetComponent<MatchResultBehaviour>().ShowWaitingForMatchResult();
         }
       },
     };

@@ -145,7 +145,7 @@ function safeWaitForHello(socket: net.Socket) {
 
 const generalCodesMap: { [code in Codes]?: (player: PlayerWithSocket, msg: any[]) => boolean } = {
   [Codes.guessTime]: onGuessTime,
-  [Codes.introduce]: (player, msg) => (onIntroduce(player, msg), false),
+  [Codes.introduce]: onIntroduce,
   [Codes.joinAllQueue]: (player) => ((player.playWithFriends = false), waitingQueue.push(player), true),
   [Codes.joinFriendsQueue]: (player) => ((player.playWithFriends = true), waitingQueue.push(player), true),
   [Codes.getLeaderboardAll]: (player) => (sendFullLeaderboardToPlayer(player), true),
@@ -206,11 +206,13 @@ function onGuessTime(player: Player, msg: any[]) {
 function onIntroduce(player: Player, msg: any[]) {
   const [code, playerNumber, playerName, fbId] = msg
   player.fbId = fbId as string
-  if (!player.fbId) return
+  if (player.fbId) {
+    FbRepo.getNamesFor([player.fbId]).then((names) => (player.name = names[player.fbId!]?.short_name))
+    ScoresRepo.getScore(player.fbId).then((score) => (player.score = score?.score))
+    FbRepo.getFriendsOf(player.fbId).then((friends) => (player.friends = friends))
+  }
 
-  FbRepo.getNamesFor([player.fbId]).then((names) => (player.name = names[player.fbId!]?.short_name))
-  ScoresRepo.getScore(player.fbId).then((score) => (player.score = score?.score))
-  FbRepo.getFriendsOf(player.fbId).then((friends) => (player.friends = friends))
+  return playerNumber === -1
 }
 
 async function sendFullLeaderboardToPlayer(player: Player) {

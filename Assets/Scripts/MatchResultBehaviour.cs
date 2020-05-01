@@ -12,19 +12,6 @@ internal class MatchResultBehaviour : MonoBehaviour
 
   private bool stop;
 
-  internal void ShowWaitingForMatchResult()
-  {
-    continueButton.SetActive(false);
-
-    for (var i = 0; i < Common.MAX_PLAYERS_NUMBER; ++i)
-    {
-      resultsObject.transform.GetChild(i * 2).gameObject.SetActive(false);
-      resultsObject.transform.GetChild(i * 2 + 1).gameObject.SetActive(false);
-    }
-
-    // todo: loading perhaps?
-  }
-
   internal void ShowMatchResult(MatchResult matchResult)
   {
     stop = false;
@@ -100,5 +87,11 @@ internal class MatchResultBehaviour : MonoBehaviour
   void OnDisable()
   {
     this.stop = true;
+    continueButton.SetActive(false);
+    for (var i = 0; i < Common.MAX_PLAYERS_NUMBER; ++i)
+    {
+      resultsObject.transform.GetChild(i * 2).gameObject.SetActive(false);
+      resultsObject.transform.GetChild(i * 2 + 1).gameObject.SetActive(false);
+    }
   }
 }
