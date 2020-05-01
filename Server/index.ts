@@ -361,7 +361,7 @@ class Match {
   private readonly StopPlayer = (playerNumber: number, err: any) => {
     const player = this.players[playerNumber]
     if (err) {
-      console.info(err)
+      if (err.code !== 'ERR_STREAM_PREMATURE_CLOSE') console.info(err)
       player.in.destroy()
       player.out.destroy()
     }
@@ -408,12 +408,11 @@ class Match {
       .map((it) => [it.votes, it.newScore, it.scoreDiff])
 
     const msg = [Codes.newScores, ...matchResult]
-    this.players.forEach((it) => {
-      it.out.end(msg)
-    })
+    this.resendToOthers(-1, msg)
+    this.players.forEach((it) => it.out.end())
 
     --matchesRunning
-    console.info({ matchesRunning })
+    console.info('match ended', { matchesRunning })
   }
 
   private savePlayersScores(scores: ScoresRepo.IScore[]) {
@@ -478,7 +477,7 @@ class VotersCentral {
   }
 
   private readonly PeriodicTasks = () => {
-    if (this.matchEnded) return this.Stop()
+    if (this.matchEnded) return
 
     this.SendVotersPack()
     this.SendVotersToCentrals()

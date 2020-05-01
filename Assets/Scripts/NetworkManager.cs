@@ -332,8 +332,8 @@ public class NetworkManager : MonoBehaviour
         },
         { Common.Parties.CompromisoCiudadano, new Common.Projectiles[][] {
                 new Common.Projectiles[] { Common.Projectiles.Book, Common.Projectiles.Lechona },
-                new Common.Projectiles[] { Common.Projectiles.Abstention, Common.Projectiles.Billboard },
-                new Common.Projectiles[] { Common.Projectiles.Transparency },
+                new Common.Projectiles[] { Common.Projectiles.Transparency, Common.Projectiles.Billboard },
+                new Common.Projectiles[] { Common.Projectiles.Abstention },
             }
         },
     };
@@ -638,6 +638,11 @@ public class NetworkManager : MonoBehaviour
 
   internal void ProjectileSelected(GameObject projectile)
   {
+    // todo: delete those logs
+    if (localPlayer == null) Debug.Log("null localPlayer");
+    if (projectile == null) Debug.Log("null projectile");
+    if (OnProjectileSelected == null) Debug.Log("null OnProjectileSelected");
+
     localPlayer.ChangeProjectile(projectile);
     OnProjectileSelected?.Invoke(projectile);
   }
