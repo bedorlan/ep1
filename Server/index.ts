@@ -262,7 +262,7 @@ function socketClosed(player: PlayerWithSocket, err: any) {
   if (player.inactive) return
 
   if (err) {
-    console.info({ err })
+    if (err.code !== 'ERR_STREAM_PREMATURE_CLOSE') console.info({ err })
     if (!player.socket.destroyed) player.socket.destroy()
   }
 
