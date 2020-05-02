@@ -108,6 +108,12 @@ public class LobbyBehaviour : MonoBehaviour
             statusText.text = string.Format("Hola {0}", socialBehaviour.shortName);
           }
           else statusText.text = "";
+          Debug.Log("before UNITY_ANDROID");
+#if UNITY_ANDROID
+          Debug.Log("inside UNITY_ANDROID");
+          AttestationHelper.Attest(); // todo
+#endif
+          Debug.Log("after UNITY_ANDROID");
         }
       },
       {

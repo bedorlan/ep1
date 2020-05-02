@@ -145,6 +145,7 @@ function safeWaitForHello(socket: net.Socket) {
 
 const generalCodesMap: { [code in Codes]?: (player: PlayerWithSocket, msg: any[]) => boolean } = {
   [Codes.guessTime]: onGuessTime,
+  [Codes.log]: logReceived,
   [Codes.introduce]: onIntroduce,
   [Codes.joinAllQueue]: (player) => ((player.playWithFriends = false), waitingQueue.push(player), true),
   [Codes.joinFriendsQueue]: (player) => ((player.playWithFriends = true), waitingQueue.push(player), true),
@@ -279,6 +280,11 @@ function clearDisconnectedPlayers() {
   })
 }
 
+function logReceived(player: Player, msg: any[]) {
+  console.info({ msg })
+  return true
+}
+
 const PORT = process.env.PORT ? Number.parseInt(process.env.PORT) : 7777
 
 server.on('listening', () => {
@@ -312,7 +318,6 @@ class Match {
       [Codes.tryConvertVoter]: this.votersCentral.TryConvertVoter,
       [Codes.tryClaimVoter]: this.votersCentral.TryClaimVoter,
       [Codes.tryAddVotes]: this.votersCentral.TryAddVotes,
-      [Codes.log]: this.logReceived,
       [Codes.newAlly]: this.resendToOthers,
       [Codes.destroyProjectile]: this.resendToOthers,
       [Codes.introduce]: this.resendToOthers,
@@ -352,10 +357,6 @@ class Match {
       .forEach((other) => {
         sendTo(other, msg)
       })
-  }
-
-  private readonly logReceived = (player: number, msg: any[]) => {
-    console.info({ player, msg })
   }
 
   private readonly StopPlayer = (playerNumber: number, err: any) => {
