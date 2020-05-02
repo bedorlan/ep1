@@ -1,36 +1,44 @@
+using System;
 using UnityEngine;
 
 internal class AttestationHelper
 {
-  static internal void Attest()
+  static internal string response { get; private set; }
+  static internal volatile bool done = true;
+
+  static internal void Attest(string nonce)
   {
-    Debug.Log("Attest");
+    done = false;
+
     using (AndroidJavaObject Lilium = new AndroidJavaObject("com.nekolaboratory.Lilium.Lilium"))
     {
-      Debug.Log("Lilium.Call");
+      var listener = new AttestationListener();
+      listener.OnResponse += listener_OnResponse;
       Lilium.Call(
         "attest",
-        "com.bedorlan.ep1.user",
+        "me",
         "AIzaSyAV-pxZlkYP_7GW7tDUrikQtYnA1hTfNwo",
-        "1234567890123456",
-        new AttestationListener()
+        nonce,
+        listener
       );
     }
+  }
+
+  private static void listener_OnResponse(string response)
+  {
+    AttestationHelper.response = response;
+    done = true;
   }
 }
 
 public class AttestationListener : AndroidJavaProxy
 {
-  public AttestationListener() : base("com.nekolaboratory.Lilium.DefaultAttestCallback")
-  {
-    Debug.Log("new AttestationHelper");
-  }
+  internal event Action<string> OnResponse;
 
-  //todo: Using the callback function in Unity Android Plugin means that the main thread ID is changed after the event fires.
-  //Please consider how to return to the main thread.
+  public AttestationListener() : base("com.nekolaboratory.Lilium.DefaultAttestCallback") { }
+
   public void onResult(string response)
   {
-    Debug.Log("onResult");
-    Debug.Log(response);
+    OnResponse?.Invoke(response);
   }
 }

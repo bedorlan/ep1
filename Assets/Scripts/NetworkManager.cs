@@ -19,7 +19,7 @@ enum Codes
   voterConverted = 8, // [(8), (voterId: int), (player: int)]
   tryClaimVoter = 9, // [(9), (voterId: int)]
   voterClaimed = 10, // [(10), (voterId: int), (player: int)]
-  hello = 11, // [(11)]
+  hello = 11, // [(11), fromServer:(nonce: string)]
   tryAddVotes = 12, // [(12), (playerNumber: int), (votes: int)]
   votesAdded = 13, // [(13), (playerNumber: int), (votes: int)]
   log = 14, // [(14), (condition: string), (stackTrace: string), (type: string)]
@@ -32,6 +32,8 @@ enum Codes
   joinFriendsQueue = 21, // [(21)]
   getLeaderboardAll = 22, // [(22)]
   leaderboardAll = 24, // [(24), [all: ...[name: string, score: number]], [friends: ...[name: string, score: number]]]
+  attestation = 25, // [(25), (jsonJwt: string)]
+  attested = 26, // [(26)]
 }
 
 public class NetworkManager : MonoBehaviour
@@ -55,6 +57,9 @@ public class NetworkManager : MonoBehaviour
   internal event Action<MatchResult> OnMatchResult;
   internal event Action<GameObject> OnProjectileSelected;
   internal event Action<(Leaderboard, Leaderboard)> OnLeaderboardAllLoaded;
+  internal event Action OnAttestationResult;
+
+  internal string nonce { get; private set; }
 
   private Telepathy.Client client;
   private Common.Parties playerParty;
@@ -100,6 +105,7 @@ public class NetworkManager : MonoBehaviour
         { Codes.matchOver, OnMatchOver },
         { Codes.newScores, OnNewScores },
         { Codes.leaderboardAll, OnLeaderboardAll },
+        { Codes.attested, OnAttested },
     };
 
     projectilesMap = new Dictionary<int, GameObject>();
@@ -187,14 +193,16 @@ public class NetworkManager : MonoBehaviour
   {
 #if !UNITY_EDITOR
         Application.logMessageReceived += Application_logMessageReceived;
+        // Application.logMessageReceivedThreaded += Application_logMessageReceived;
 #endif
+
+    nonce = (string)data.AsArray[1];
 
     OnConnection?.Invoke(true);
     guessServerTime();
 
     SocialBehaviour.singleton.OnError += SendSocialErrors;
     SendSocialErrors();
-    Introduce();
   }
 
   private void SendSocialErrors()
@@ -217,6 +225,20 @@ public class NetworkManager : MonoBehaviour
 
     var msg = array.ToString();
     SendNetworkMsg(msg);
+  }
+
+  internal void Attest(string jstJson)
+  {
+    var msg = new JSONArray();
+    msg.Add((int)Codes.attestation);
+    msg.Add(jstJson);
+    SendNetworkMsg(msg.ToString());
+  }
+
+  private void OnAttested(JSONNode data)
+  {
+    OnAttestationResult?.Invoke();
+    Introduce();
   }
 
   internal void JoinAllQueue()

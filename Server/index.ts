@@ -2,6 +2,7 @@ import * as lodash from 'lodash'
 import * as net from 'net'
 import { PassThrough, Readable, Writable, pipeline, Transform } from 'stream'
 
+import * as Attestation from './Attestation'
 import * as FbRepo from './FbRepo'
 import * as ScoresRepo from './ScoresRepo'
 import { multiElo, initialScore } from './Elo'
@@ -18,7 +19,7 @@ enum Codes {
   voterConverted = 8, // [(8), (voterId: int), (player: int)]
   tryClaimVoter = 9, // [(9), (voterId: int)]
   voterClaimed = 10, // [(10), (voterId: int), (player: int)]
-  hello = 11, // [(11)]
+  hello = 11, // [(11), fromServer:(nonce: string)]
   tryAddVotes = 12, // [(12), (playerNumber: int), (votes: int)]
   votesAdded = 13, // [(13), (playerNumber: int), (votes: int)]
   log = 14, // [(14), (condition: string), (stackTrace: string), (type: string)]
@@ -31,6 +32,8 @@ enum Codes {
   joinFriendsQueue = 21, // [(21)]
   getLeaderboardAll = 22, // [(22)]
   leaderboardAll = 24, // [(24), [all: ...[name: string, score: number]], [friends: ...[name: string, score: number]]]
+  attestation = 25, // [(25), (jsonJwt: string)]
+  attested = 26, // [(26)]
 }
 
 const MAP_WIDTH = 190
@@ -40,6 +43,8 @@ const server = net.createServer()
 
 type Player = {
   socket: net.Socket
+  nonce: string
+  attested: boolean
   inactive?: boolean
   in: Readable
   out: Writable
@@ -68,6 +73,8 @@ server.on('connection', async (socket) => {
     socket,
     in: new PassThrough({ objectMode: true }),
     out: new PassThrough({ objectMode: true }),
+    nonce: Attestation.getNonce(),
+    attested: Boolean(process.env.NO_ATTEST),
   }
 
   pipeline(
@@ -112,7 +119,7 @@ server.on('connection', async (socket) => {
     socketClosed.bind(null, duplex),
   )
 
-  sendTo(duplex, [Codes.hello])
+  sendTo(duplex, [Codes.hello, duplex.nonce])
 })
 
 function safeWaitForHello(socket: net.Socket) {
@@ -154,8 +161,23 @@ const generalCodesMap: { [code in Codes]?: (player: PlayerWithSocket, msg: any[]
 
 function tryHandleMsg(player: PlayerWithSocket, msg: any[]) {
   const code = msg[0] as Codes
-  if (!(code in generalCodesMap)) return false
 
+  if (!player.attested) {
+    if ([Codes.guessTime, Codes.log].includes(code)) {
+      // pass
+    } else if (code === Codes.attestation) {
+      const jsonJwt = msg[1] as string
+      Attestation.verifyJwt(player.nonce, jsonJwt).then((result) => {
+        // todo: send a message to player explaining
+        if (!result) return player.socket.destroy()
+        player.attested = true
+        sendTo(player, [Codes.attested])
+      })
+      return true
+    } else return player.socket.destroy(new Error('weird message while attesting: ' + JSON.stringify(msg)))
+  }
+
+  if (!(code in generalCodesMap)) return false
   return generalCodesMap[code]!(player, msg)
 }
 

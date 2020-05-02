@@ -1,5 +1,7 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
+using SimpleJSON;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using UnityEngine.UI;
@@ -58,6 +60,8 @@ public class LobbyBehaviour : MonoBehaviour
           lobbyController.ResetTrigger("menu");
           lobbyController.ResetTrigger("cancel");
           lobbyController.ResetTrigger("matchQuit");
+          lobbyController.SetBool("networkReady", false);
+          lobbyController.SetBool("attested", false);
           statusText.text = "Conectando al servidor ...";
           myCamera.SetActive(true);
           GetComponent<GraphicRaycaster>().enabled = true;
@@ -78,6 +82,12 @@ public class LobbyBehaviour : MonoBehaviour
           allLeaderboards.Item1 = null;
           allLeaderboards.Item2 = null;
           LoadMatchSceneAndConnect();
+        }
+      },
+      {
+        Animator.StringToHash("waitingAttest"), () =>
+        {
+          StartCoroutine(DoAttest());
         }
       },
       {
@@ -108,12 +118,6 @@ public class LobbyBehaviour : MonoBehaviour
             statusText.text = string.Format("Hola {0}", socialBehaviour.shortName);
           }
           else statusText.text = "";
-          Debug.Log("before UNITY_ANDROID");
-#if UNITY_ANDROID
-          Debug.Log("inside UNITY_ANDROID");
-          AttestationHelper.Attest(); // todo
-#endif
-          Debug.Log("after UNITY_ANDROID");
         }
       },
       {
@@ -241,6 +245,7 @@ public class LobbyBehaviour : MonoBehaviour
         }
         lobbyController.SetBool("networkReady", success);
       };
+      NetworkManager.singleton.OnAttestationResult += () => lobbyController.SetBool("attested", true);
       NetworkManager.singleton.OnMatchResult += (matchResult) =>
       {
         SceneManager.UnloadSceneAsync(matchScene);
@@ -249,6 +254,23 @@ public class LobbyBehaviour : MonoBehaviour
 
       NetworkManager.singleton.TryConnect();
     };
+  }
+
+  private IEnumerator DoAttest()
+  {
+#if !UNITY_EDITOR && UNITY_ANDROID
+    var nonce = NetworkManager.singleton.nonce;
+    AttestationHelper.Attest(nonce);
+    yield return new WaitUntil(() => AttestationHelper.done);
+
+    var attestResponse = AttestationHelper.response;
+    NetworkManager.singleton.Attest(attestResponse);
+
+#else
+    lobbyController.SetBool("attested", true);
+    yield break;
+
+#endif
   }
 
   private void NetworkManager_OnLeaderboardAllLoaded((Leaderboard, Leaderboard) leaderboards)
