@@ -17,7 +17,7 @@ internal class MatchResultBehaviour : MonoBehaviour
   {
     this.matchResult = matchResult;
     newData = true;
-    if (this.enabled) StartMyCoroutines();
+    if (this.isActiveAndEnabled) StartMyCoroutines();
   }
 
   void OnEnable()
