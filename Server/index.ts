@@ -352,6 +352,8 @@ class Match {
       player.in.on('error', stopPlayer)
 
       player.in.on('data', (msg) => {
+        if (this.matchEnded) return
+
         const code = msg[0] as Codes
         if (!(code in codesMap)) {
           console.info('unmapped code', code)
@@ -431,7 +433,7 @@ class Match {
       .map((it) => [it.votes, it.newScore, it.scoreDiff])
 
     const msg = [Codes.newScores, ...matchResult]
-    this.players.forEach((it) => it.out.end(msg))
+    this.resendToOthers(-1, msg)
 
     --matchesRunning
     console.info('match ended', { matchesRunning })

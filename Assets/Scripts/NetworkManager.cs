@@ -506,6 +506,7 @@ public class NetworkManager : MonoBehaviour
     playerResults.Sort((a, b) => b.votes - a.votes);
     var matchResult = new MatchResult() { playerResultsOrdered = playerResults };
     OnMatchResult?.Invoke(matchResult);
+    client.Disconnect();
   }
 
   private void OnLeaderboardAll(JSONNode data)
