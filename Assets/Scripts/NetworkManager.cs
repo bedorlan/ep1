@@ -578,8 +578,6 @@ public class NetworkManager : MonoBehaviour
       minServerLatency = newLatency;
     }
 
-    if (minServerLatency <= 40) yield break;
-
     yield return new WaitForSeconds(1f);
     guessServerTime();
   }
