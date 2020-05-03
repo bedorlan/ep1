@@ -1,6 +1,6 @@
 import * as lodashFp from 'lodash/fp'
 import * as net from 'net'
-import { toTelepathyMsg } from './Telepathy'
+import { toTelepathyMsg } from '../Telepathy'
 
 const socket = net.connect(7777)
 socket.on('connect', () => {
