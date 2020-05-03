@@ -119,7 +119,7 @@ PlayerSettings:
     16:10: 1
     16:9: 1
     Others: 1
-  bundleVersion: 502.1
+  bundleVersion: 502.2
   preloadedAssets: []
   metroInputSource: 0
   wsaTransparentSwapchain: 0
@@ -160,7 +160,7 @@ PlayerSettings:
     Android: com.bedorlan.ep1
     Standalone: com.Company.ProductName
   buildNumber: {}
-  AndroidBundleVersionCode: 5021
+  AndroidBundleVersionCode: 5022
   AndroidMinSdkVersion: 16
   AndroidTargetSdkVersion: 0
   AndroidPreferredInstallLocation: 1
