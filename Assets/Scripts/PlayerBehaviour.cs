@@ -239,6 +239,8 @@ public class PlayerBehaviour : MonoBehaviour
 
   private void stopWhenArrivedToDestinationOrKeepChasing()
   {
+    if (movingDestination == 0f) return;
+
     var distanceToDestination = movingDestination - transform.position.x;
     var direction = Mathf.Sign(myRigidbody.velocity.x);
     var arrived = direction > 0 && distanceToDestination <= 0
