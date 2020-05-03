@@ -57,9 +57,6 @@ public class LobbyBehaviour : MonoBehaviour
       {
         Animator.StringToHash("waitingNetwork"), () =>
         {
-          lobbyController.ResetTrigger("menu");
-          lobbyController.ResetTrigger("cancel");
-          lobbyController.ResetTrigger("matchQuit");
           lobbyController.SetBool("networkReady", false);
           lobbyController.SetBool("attested", false);
           statusText.text = "Conectando al servidor ...";
@@ -82,6 +79,9 @@ public class LobbyBehaviour : MonoBehaviour
           allLeaderboards.Item1 = null;
           allLeaderboards.Item2 = null;
           LoadMatchSceneAndConnect();
+          lobbyController.ResetTrigger("menu");
+          lobbyController.ResetTrigger("cancel");
+          lobbyController.ResetTrigger("matchQuit");
         }
       },
       {
@@ -93,7 +93,6 @@ public class LobbyBehaviour : MonoBehaviour
       {
         Animator.StringToHash("connectionFailed"), () =>
         {
-          lobbyController.ResetTrigger("connectionFailed");
           statusText.text = "No se pudo conectar al servidor. Revisa tu conexion a internet";
           myCamera.SetActive(true);
           GetComponent<GraphicRaycaster>().enabled = true;
@@ -101,13 +100,12 @@ public class LobbyBehaviour : MonoBehaviour
           lobbyButtonsObject.SetActive(false);
           cancelButton.SetActive(false);
           retryButton.SetActive(true);
+          lobbyController.ResetTrigger("connectionFailed");
         }
       },
       {
         Animator.StringToHash("ready"), () =>
         {
-          lobbyController.ResetTrigger("menu");
-          lobbyController.ResetTrigger("cancel");
           ShowOnlyThisPanel(lobbyObject);
           lobbyButtonsObject.SetActive(true);
           SetLobbyButtonsInteractable(true);
@@ -118,14 +116,16 @@ public class LobbyBehaviour : MonoBehaviour
             statusText.text = string.Format("Hola {0}", socialBehaviour.shortName);
           }
           else statusText.text = "";
+          lobbyController.ResetTrigger("menu");
+          lobbyController.ResetTrigger("cancel");
         }
       },
       {
         Animator.StringToHash("askingForLogin"), () =>
         {
+          ShowOnlyThisPanel(askForLoginObject);
           lobbyController.ResetTrigger("showScores");
           lobbyController.ResetTrigger("playWithFriends");
-          ShowOnlyThisPanel(askForLoginObject);
         }
       },
       {
@@ -140,21 +140,21 @@ public class LobbyBehaviour : MonoBehaviour
       {
         Animator.StringToHash("playWithAll"), () =>
         {
-          lobbyController.ResetTrigger("playWithAll");
           NetworkManager.singleton.JoinAllQueue();
           statusText.text = "Buscando partida con cualquiera ...";
           SetLobbyButtonsInteractable(false);
           cancelButton.SetActive(true);
+          lobbyController.ResetTrigger("playWithAll");
         }
       },
       {
         Animator.StringToHash("playWithFriends"), () =>
         {
-          lobbyController.ResetTrigger("playWithFriends");
           NetworkManager.singleton.JoinFriendsQueue();
           statusText.text = "Buscando partida con amigos ...";
           SetLobbyButtonsInteractable(false);
           cancelButton.SetActive(true);
+          lobbyController.ResetTrigger("playWithFriends");
         }
       },
       {
@@ -169,7 +169,6 @@ public class LobbyBehaviour : MonoBehaviour
       {
         Animator.StringToHash("showMatchResults"), () =>
         {
-          lobbyController.ResetTrigger("matchEnded");
           ShowOnlyThisPanel(matchResultObject);
           myCamera.SetActive(true);
           GetComponent<GraphicRaycaster>().enabled = true;
@@ -178,6 +177,7 @@ public class LobbyBehaviour : MonoBehaviour
             videoPlayer.time = 0;
             videoPlayer.Play();
           }
+          lobbyController.ResetTrigger("matchEnded");
         }
       },
     };

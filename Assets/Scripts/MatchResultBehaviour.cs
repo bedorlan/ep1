@@ -1,5 +1,4 @@
-﻿using System;
-using System.Collections;
+﻿using System.Collections;
 using System.Collections.Generic;
 using TMPro;
 using UnityEngine;
@@ -10,11 +9,26 @@ internal class MatchResultBehaviour : MonoBehaviour
   public GameObject resultsObject;
   public GameObject continueButton;
 
+  private MatchResult matchResult;
+  private bool newData = false;
   private bool stop;
 
   internal void ShowMatchResult(MatchResult matchResult)
   {
+    this.matchResult = matchResult;
+    newData = true;
+    if (this.enabled) StartMyCoroutines();
+  }
+
+  void OnEnable()
+  {
+    if (newData) StartMyCoroutines();
+  }
+
+  private void StartMyCoroutines()
+  {
     stop = false;
+    newData = false;
     StartCoroutine(EnableContinue());
     StartCoroutine(ShowMatchResultRoutine(matchResult));
   }
@@ -86,7 +100,7 @@ internal class MatchResultBehaviour : MonoBehaviour
 
   void OnDisable()
   {
-    this.stop = true;
+    stop = true;
     continueButton.SetActive(false);
     for (var i = 0; i < Common.MAX_PLAYERS_NUMBER; ++i)
     {

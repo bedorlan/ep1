@@ -1,4 +1,3 @@
-los resultados no se ven
 reintentar, salir
 puntajes amigos vacio?
 que se oculten los tiempos y votos
