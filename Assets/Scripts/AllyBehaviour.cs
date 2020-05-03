@@ -5,10 +5,10 @@ using UnityEngine;
 
 public class AllyBehaviour : MonoBehaviour, IPartySupporter, ICollectable
 {
-    private int playerNumber;
-    private Common.Projectiles projectileType;
-    private bool converted = false;
-    Dictionary<Common.Projectiles, char> mapProjectileIcon = new Dictionary<Common.Projectiles, char>() {
+  private int playerNumber;
+  private Common.Projectiles projectileType;
+  private bool converted = false;
+  Dictionary<Common.Projectiles, char> mapProjectileIcon = new Dictionary<Common.Projectiles, char>() {
         { Common.Projectiles.Orange, Common.ARTIST_CODE },
         { Common.Projectiles.Twitter, Common.MAN_DISTRACTED_WITH_PHONE_CODE },
         { Common.Projectiles.Book, Common.MAN_READING_BOOK_CODE },
@@ -22,55 +22,57 @@ public class AllyBehaviour : MonoBehaviour, IPartySupporter, ICollectable
         { Common.Projectiles.Transparency, Common.MONK_CODE },
     };
 
-    private void Start()
-    {
-        GetComponent<Renderer>().sortingLayerName = "Allies";
-    }
+  private void Start()
+  {
+    GetComponent<Renderer>().sortingLayerName = "Allies";
+  }
 
-    internal void Initialize(int playerNumber, Common.Projectiles projectileType)
-    {
-        this.playerNumber = playerNumber;
-        this.projectileType = projectileType;
+  internal void Initialize(int playerNumber, Common.Projectiles projectileType)
+  {
+    this.playerNumber = playerNumber;
+    this.projectileType = projectileType;
 
-        var icon = mapProjectileIcon[projectileType];
-        GetComponent<TextMeshPro>().text = icon.ToString();
+    var icon = mapProjectileIcon[projectileType];
+    GetComponent<TextMeshPro>().text = icon.ToString();
 
-        var positionX = (Random.value - 0.5f) * Common.MAP_WIDTH;
-        var position = transform.position;
-        position.x = positionX;
-        transform.position = position;
-    }
+    var positionX = (Random.value - 0.5f) * Common.MAP_WIDTH;
+    var position = transform.position;
+    position.x = positionX;
+    transform.position = position;
+  }
 
-    private void OnMouseDown()
-    {
-        if (Common.IsPointerOverUIObject()) return;
-        NetworkManager.singleton.ObjectiveClicked(gameObject);
-    }
+  private void OnMouseDown()
+  {
+    if (Common.IsPointerOverUIObject()) return;
+    NetworkManager.singleton.ObjectiveClicked(gameObject);
+  }
 
-    public bool TryConvertTo(int playerOwner, bool isLocal)
-    {
-        if (playerOwner != playerNumber) return false;
+  public bool TryConvertTo(int playerOwner, bool isLocal)
+  {
+    if (transform.root.gameObject == null) return false;
+    if (playerOwner != playerNumber) return false;
 
-        GetComponent<TextMeshPro>().color = Common.playerColors[playerOwner];
-        converted = true;
-        return true;
-    }
+    GetComponent<TextMeshPro>().color = Common.playerColors[playerOwner];
+    converted = true;
+    return true;
+  }
 
-    public void TryClaim(int playerNumber, bool force)
-    {
-        if (!(converted || force)) return;
+  public void TryClaim(int playerNumber, bool force)
+  {
+    if (!(converted || force)) return;
+    if (playerNumber != this.playerNumber) return;
 
-        NetworkManager.singleton.NewAlly(projectileType);
-        GetComponent<AudioSource>().Play();
+    NetworkManager.singleton.NewAlly(projectileType);
+    GetComponent<AudioSource>().Play();
 
-        GetComponent<Collider2D>().enabled = false;
-        GetComponent<Renderer>().enabled = false;
+    GetComponent<Collider2D>().enabled = false;
+    GetComponent<Renderer>().enabled = false;
 
-        Destroy(gameObject, Common.NEW_ALLY_CLIP_DURATION);
-    }
+    Destroy(gameObject, Common.NEW_ALLY_CLIP_DURATION);
+  }
 
-    public void TryConvertAndConvertOthers(int playerOwner, bool isLocal)
-    {
-        TryConvertTo(playerOwner, isLocal);
-    }
+  public void TryConvertAndConvertOthers(int playerOwner, bool isLocal)
+  {
+    TryConvertTo(playerOwner, isLocal);
+  }
 }
