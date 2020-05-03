@@ -1,0 +1,49 @@
+{
+  "AttributeDefinitions": [
+    {
+      "AttributeName": "active",
+      "AttributeType": "N"
+    },
+    {
+      "AttributeName": "fb_id",
+      "AttributeType": "S"
+    },
+    {
+      "AttributeName": "score",
+      "AttributeType": "N"
+    }
+  ],
+  "TableName": "scores",
+  "KeySchema": [
+    {
+      "AttributeName": "fb_id",
+      "KeyType": "HASH"
+    }
+  ],
+  "GlobalSecondaryIndexes": [
+    {
+      "IndexName": "active-score-index",
+      "KeySchema": [
+        {
+          "AttributeName": "active",
+          "KeyType": "HASH"
+        },
+        {
+          "AttributeName": "score",
+          "KeyType": "RANGE"
+        }
+      ],
+      "Projection": {
+        "ProjectionType": "KEYS_ONLY"
+      },
+      "ProvisionedThroughput": {
+        "ReadCapacityUnits": 1,
+        "WriteCapacityUnits": 1
+      }
+    }
+  ],
+  "ProvisionedThroughput": {
+    "ReadCapacityUnits": 1,
+    "WriteCapacityUnits": 1
+  }
+}
