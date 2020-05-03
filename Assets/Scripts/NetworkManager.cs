@@ -578,7 +578,7 @@ public class NetworkManager : MonoBehaviour
       minServerLatency = newLatency;
     }
 
-    yield return new WaitForSeconds(1f);
+    yield return new WaitForSeconds(2f);
     guessServerTime();
   }
 
