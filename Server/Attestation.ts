@@ -1,10 +1,11 @@
 import 'isomorphic-fetch'
 import { decode } from 'jsonwebtoken'
+import * as uuid from 'uuid'
 
 const API_KEY = 'AIzaSyBCeh6wA3IQfB6BUFYEc_QIrUK3nv9aUqs'
 
 export function getNonce() {
-  return `ep1${Date.now()}`
+  return uuid.v4().replace('-', '')
 }
 
 type JsonJwt = {

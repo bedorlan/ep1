@@ -431,8 +431,7 @@ class Match {
       .map((it) => [it.votes, it.newScore, it.scoreDiff])
 
     const msg = [Codes.newScores, ...matchResult]
-    this.resendToOthers(-1, msg)
-    this.players.forEach((it) => it.out.end())
+    this.players.forEach((it) => it.out.end(msg))
 
     --matchesRunning
     console.info('match ended', { matchesRunning })
