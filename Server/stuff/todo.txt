@@ -1,3 +1,4 @@
 reintentar, salir
 puntajes amigos vacio?
 que se oculten los tiempos y votos
+para un nuevo jugador, no se calcula bien el puntaje?

@@ -1,3 +1,4 @@
+import * as crypto from 'crypto'
 import * as lodash from 'lodash'
 import * as net from 'net'
 import { PassThrough, Readable, Writable, pipeline, Transform } from 'stream'
@@ -77,9 +78,24 @@ server.on('connection', async (socket) => {
     attested: Boolean(process.env.NO_ATTEST),
   }
 
+  const key = Buffer.from('5d85f8859c8242af', 'utf-8')
+  const iv = Buffer.from(duplex.nonce.slice(0, 16), 'utf-8')
+
   pipeline(
     socket,
     new TelepathyInputTransformer(),
+    new Transform({
+      objectMode: true,
+      transform(obj, encoding, cb) {
+        try {
+          const decipher = crypto.createDecipheriv('aes-128-cbc', key, iv)
+          const result = Buffer.concat([decipher.update(obj), decipher.final()])
+          cb(null, result)
+        } catch (err) {
+          cb(err)
+        }
+      },
+    }),
     new Transform({
       objectMode: true,
       transform(obj, encoding, cb) {

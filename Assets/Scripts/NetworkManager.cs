@@ -2,6 +2,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
+using System.Security.Cryptography;
 using System.Text;
 using SimpleJSON;
 using UnityEngine;
@@ -62,6 +63,7 @@ public class NetworkManager : MonoBehaviour
   internal string nonce { get; private set; }
 
   private Telepathy.Client client;
+  private AesCryptoServiceProvider aesProvider;
   private Common.Parties playerParty;
   private bool matchQuit = false;
   private bool matchOver = false;
@@ -172,7 +174,7 @@ public class NetworkManager : MonoBehaviour
   private void sayHello()
   {
     var msg = string.Format("[{0}]", (int)Codes.hello);
-    SendNetworkMsg(msg);
+    SendNetworkMsg(msg, false);
   }
 
   #region remote events
@@ -191,12 +193,13 @@ public class NetworkManager : MonoBehaviour
 
   private void OnHello(JSONNode data)
   {
+    nonce = (string)data.AsArray[1];
+    CreateAesProvider(nonce);
+
 #if !UNITY_EDITOR
         Application.logMessageReceived += Application_logMessageReceived;
         // Application.logMessageReceivedThreaded += Application_logMessageReceived;
 #endif
-
-    nonce = (string)data.AsArray[1];
 
     OnConnection?.Invoke(true);
     guessServerTime();
@@ -750,10 +753,24 @@ public class NetworkManager : MonoBehaviour
     return (timeWhenReach - Common.unixMillis() - serverDelta) / 1000f;
   }
 
-  private void SendNetworkMsg(string msg)
+  private void SendNetworkMsg(string msg, bool encrypt = true)
   {
     var bytes = Encoding.ASCII.GetBytes(msg);
+    if (encrypt)
+      using (var encryptor = aesProvider.CreateEncryptor())
+        bytes = encryptor.TransformFinalBlock(bytes, 0, bytes.Length);
     client.Send(bytes);
+  }
+
+  private void CreateAesProvider(string nonce)
+  {
+    this.aesProvider = new AesCryptoServiceProvider();
+    aesProvider.BlockSize = 128;
+    aesProvider.KeySize = 128;
+    aesProvider.Key = UTF8Encoding.UTF8.GetBytes("5d85f8859c8242af");
+    aesProvider.IV = UTF8Encoding.UTF8.GetBytes(nonce.Substring(0, 16));
+    aesProvider.Mode = CipherMode.CBC;
+    aesProvider.Padding = PaddingMode.PKCS7;
   }
 
   void OnApplicationQuit()
