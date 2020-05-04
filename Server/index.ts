@@ -63,8 +63,11 @@ let matchesRunning = 0
 setInterval(tryStartMatch, Number.parseFloat(process.env.LOBBY_WAIT_TIME || '60') * 1000)
 
 server.on('connection', async (socket) => {
+  let aesKey: Buffer
+
   try {
     await safeWaitForHello(socket)
+    aesKey = await safeWaitForKey(socket)
   } catch (err) {
     console.info(err)
     socket.destroy()
@@ -79,7 +82,6 @@ server.on('connection', async (socket) => {
     attested: Boolean(process.env.NO_ATTEST),
   }
 
-  let aesKey: Buffer | undefined
   let aesIv = Buffer.from(duplex.nonce.slice(0, 16), 'utf-8')
 
   pipeline(
@@ -89,19 +91,6 @@ server.on('connection', async (socket) => {
       objectMode: true,
       transform(obj, encoding, cb) {
         try {
-          if (aesKey) return cb(null, obj)
-          aesKey = decryptRsa(Buffer.from(obj.toString('ascii'), 'base64'))
-          return cb()
-        } catch (err) {
-          cb(err)
-        }
-      },
-    }),
-    new Transform({
-      objectMode: true,
-      transform(obj, encoding, cb) {
-        try {
-          if (!aesKey) return cb(new Error('aesKey is null'))
           const decipher = crypto.createDecipheriv('aes-128-cbc', aesKey, aesIv)
           const result = Buffer.concat([decipher.update(obj), decipher.final()])
           aesIv = Buffer.concat([result, Buffer.from('................')], 16)
@@ -119,11 +108,6 @@ server.on('connection', async (socket) => {
           msg = JSON.parse(obj)
         } catch (err) {
           console.info(err + '\nmsg=' + obj.toString())
-          return cb()
-        }
-        if (Codes.aesKey === msg[0]) {
-          aesKey = decryptRsa(Buffer.from(msg[1], 'base64'))
-          console.log(aesKey.toString('base64'))
           return cb()
         }
         if (tryHandleMsg(duplex, msg)) cb()
@@ -159,7 +143,7 @@ server.on('connection', async (socket) => {
 })
 
 function safeWaitForHello(socket: net.Socket) {
-  const BYTES_TO_READ = 8 // Codes.hello: 0004[11]
+  const BYTES_TO_READ = 4 + 4 // Codes.hello: 0004[11]
   return new Promise((resolve, reject) => {
     socket.on('readable', () => {
       if (socket.readableLength < BYTES_TO_READ) return
@@ -175,6 +159,31 @@ function safeWaitForHello(socket: net.Socket) {
 
       socket.removeAllListeners()
       resolve()
+    })
+
+    socket.on('close', endSocket)
+    socket.on('error', endSocket)
+    function endSocket(err: any) {
+      socket.removeAllListeners()
+      reject(err)
+    }
+  })
+}
+
+function safeWaitForKey(socket: net.Socket): Promise<Buffer> {
+  const BYTES_TO_READ = 4 + 344
+  return new Promise((resolve, reject) => {
+    socket.on('readable', () => {
+      if (socket.readableLength < BYTES_TO_READ) return
+      try {
+        const data: Buffer = socket.read(BYTES_TO_READ).slice(4)
+        const aesKey = decryptRsa(Buffer.from(data.toString('ascii'), 'base64'))
+
+        socket.removeAllListeners()
+        resolve(aesKey)
+      } catch (err) {
+        return reject(err)
+      }
     })
 
     socket.on('close', endSocket)
