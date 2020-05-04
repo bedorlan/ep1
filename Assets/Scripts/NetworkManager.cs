@@ -194,7 +194,13 @@ public class NetworkManager : MonoBehaviour
   private void OnHello(JSONNode data)
   {
     nonce = (string)data.AsArray[1];
-    CreateAesProvider(nonce);
+    this.aesProvider = new AesCryptoServiceProvider();
+    aesProvider.BlockSize = 128;
+    aesProvider.KeySize = 128;
+    aesProvider.Key = UTF8Encoding.UTF8.GetBytes("5d85f8859c8242af");
+    aesProvider.Mode = CipherMode.CBC;
+    aesProvider.Padding = PaddingMode.PKCS7;
+    aesProvider.IV = UTF8Encoding.UTF8.GetBytes(nonce.Substring(0, 16));
 
 #if !UNITY_EDITOR
         Application.logMessageReceived += Application_logMessageReceived;
@@ -758,19 +764,13 @@ public class NetworkManager : MonoBehaviour
     var bytes = Encoding.ASCII.GetBytes(msg);
     if (encrypt)
       using (var encryptor = aesProvider.CreateEncryptor())
+      {
         bytes = encryptor.TransformFinalBlock(bytes, 0, bytes.Length);
+        var newIv = aesProvider.IV;
+        Array.Copy(bytes, newIv, 16);
+        aesProvider.IV = newIv;
+      }
     client.Send(bytes);
-  }
-
-  private void CreateAesProvider(string nonce)
-  {
-    this.aesProvider = new AesCryptoServiceProvider();
-    aesProvider.BlockSize = 128;
-    aesProvider.KeySize = 128;
-    aesProvider.Key = UTF8Encoding.UTF8.GetBytes("5d85f8859c8242af");
-    aesProvider.IV = UTF8Encoding.UTF8.GetBytes(nonce.Substring(0, 16));
-    aesProvider.Mode = CipherMode.CBC;
-    aesProvider.Padding = PaddingMode.PKCS7;
   }
 
   void OnApplicationQuit()

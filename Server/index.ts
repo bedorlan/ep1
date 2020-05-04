@@ -79,7 +79,7 @@ server.on('connection', async (socket) => {
   }
 
   const key = Buffer.from('5d85f8859c8242af', 'utf-8')
-  const iv = Buffer.from(duplex.nonce.slice(0, 16), 'utf-8')
+  let iv = Buffer.from(duplex.nonce.slice(0, 16), 'utf-8')
 
   pipeline(
     socket,
@@ -89,6 +89,7 @@ server.on('connection', async (socket) => {
       transform(obj, encoding, cb) {
         try {
           const decipher = crypto.createDecipheriv('aes-128-cbc', key, iv)
+          iv = obj.slice(0, 16)
           const result = Buffer.concat([decipher.update(obj), decipher.final()])
           cb(null, result)
         } catch (err) {
