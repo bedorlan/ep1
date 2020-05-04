@@ -15,6 +15,7 @@ public class LobbyBehaviour : MonoBehaviour
   public GameObject lobbyButtonsObject;
   public GameObject cancelButton;
   public GameObject retryButton;
+  public GameObject logoutButton;
 
   public GameObject lobbyObject;
   public GameObject matchResultObject;
@@ -110,7 +111,9 @@ public class LobbyBehaviour : MonoBehaviour
           lobbyButtonsObject.SetActive(true);
           SetLobbyButtonsInteractable(true);
           cancelButton.SetActive(false);
-          if (lobbyController.GetBool("logged"))
+          var logged = lobbyController.GetBool("logged");
+          logoutButton.SetActive(logged);
+          if (logged)
           {
             NetworkManager.singleton.Introduce();
             statusText.text = string.Format("Hola {0}", socialBehaviour.shortName);
@@ -126,6 +129,18 @@ public class LobbyBehaviour : MonoBehaviour
           ShowOnlyThisPanel(askForLoginObject);
           lobbyController.ResetTrigger("showScores");
           lobbyController.ResetTrigger("playWithFriends");
+        }
+      },
+      {
+        Animator.StringToHash("loggingOut"), () =>
+        {
+          SetLobbyButtonsInteractable(false);
+          socialBehaviour.Logout();
+          NetworkManager.singleton.Introduce();
+          allLeaderboards.Item1 = null;
+          allLeaderboards.Item2 = null;
+          lobbyController.SetBool("logged", false);
+          lobbyController.ResetTrigger("logout");
         }
       },
       {

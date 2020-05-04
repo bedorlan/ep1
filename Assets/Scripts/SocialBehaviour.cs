@@ -17,9 +17,13 @@ public class SocialBehaviour : MonoBehaviour
   internal event Action<bool> OnLogged;
   internal event Action OnError;
 
-  void Start()
+  void Awake()
   {
     singleton = this;
+  }
+
+  void Start()
+  {
     shortName = "";
     userId = "";
 
@@ -127,5 +131,12 @@ public class SocialBehaviour : MonoBehaviour
         OnLogged?.Invoke(true);
       });
     }
+  }
+
+  internal void Logout()
+  {
+    FB.LogOut();
+    shortName = "";
+    userId = "";
   }
 }

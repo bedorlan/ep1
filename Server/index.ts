@@ -278,6 +278,10 @@ function onIntroduce(player: Player, msg: any[]) {
     FbRepo.getNamesFor([player.fbId]).then((names) => (player.name = names[player.fbId!]?.short_name))
     ScoresRepo.getScore(player.fbId).then((score) => (player.score = score?.score))
     FbRepo.getFriendsOf(player.fbId).then((friends) => (player.friends = friends))
+  } else {
+    player.name = undefined
+    player.score = undefined
+    player.friends = undefined
   }
 
   return playerNumber === -1
