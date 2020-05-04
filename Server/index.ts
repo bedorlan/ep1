@@ -103,8 +103,8 @@ server.on('connection', async (socket) => {
         try {
           if (!aesKey) return cb(new Error('aesKey is null'))
           const decipher = crypto.createDecipheriv('aes-128-cbc', aesKey, aesIv)
-          aesIv = obj.slice(0, 16)
           const result = Buffer.concat([decipher.update(obj), decipher.final()])
+          aesIv = Buffer.concat([result, Buffer.from('................')], 16)
           cb(null, result)
         } catch (err) {
           cb(err)

@@ -783,7 +783,7 @@ public class NetworkManager : MonoBehaviour
       {
         bytes = encryptor.TransformFinalBlock(bytes, 0, bytes.Length);
         var newIv = aesProvider.IV;
-        Array.Copy(bytes, newIv, 16);
+        Array.Copy(Encoding.ASCII.GetBytes(msg.PadRight(16, '.')), newIv, 16);
         aesProvider.IV = newIv;
       }
     client.Send(bytes);
