@@ -4,17 +4,17 @@ using UnityEngine;
 
 public static class Config
 {
-    internal static string serverHost;
-    internal static int serverPort;
-    internal static int matchLength;
+  internal static string serverHost { get; private set; }
+  internal static int serverPort { get; private set; }
+  internal static int matchLength { get; private set; }
 
-    internal static void Load()
-    {
-        var textFile = Resources.Load<TextAsset>("config");
-        var json = JSON.Parse(textFile.text).AsObject;
+  internal static void Load()
+  {
+    var textFile = Resources.Load<TextAsset>("config");
+    var json = JSON.Parse(textFile.text).AsObject;
 
-        serverHost = json["serverHost"];
-        serverPort = json["serverPort"].AsInt;
-        matchLength = json["matchLength"].AsInt;
-    }
+    serverHost = json["serverHost"];
+    serverPort = json["serverPort"].AsInt;
+    matchLength = json["matchLength"].AsInt;
+  }
 }

@@ -126,6 +126,12 @@ public class NetworkManager : MonoBehaviour
 #if !UNITY_EDITOR
         projectileButtons.transform.root.GetComponentInChildren<ScrollRect>().enabled = false;
 #endif
+
+    this.aesProvider = new AesCryptoServiceProvider();
+    aesProvider.BlockSize = 128;
+    aesProvider.KeySize = 128;
+    aesProvider.Mode = CipherMode.CBC;
+    aesProvider.Padding = PaddingMode.PKCS7;
   }
 
   void Start()
@@ -173,8 +179,24 @@ public class NetworkManager : MonoBehaviour
 
   private void sayHello()
   {
-    var msg = string.Format("[{0}]", (int)Codes.hello);
-    SendNetworkMsg(msg, false);
+    var msg = new JSONArray();
+    msg.Add((int)Codes.hello);
+    SendNetworkMsg(msg.ToString(), false);
+
+    var encryptedKey = Convert.ToBase64String(generateKey());
+    SendNetworkMsg(encryptedKey, false);
+  }
+
+  private byte[] generateKey()
+  {
+    var key = new byte[16];
+    new RNGCryptoServiceProvider().GetBytes(key);
+    aesProvider.Key = key;
+
+    var pubKey = Resources.Load<TextAsset>("rsa.public").text;
+    var rsaProvider = new RSACryptoServiceProvider();
+    rsaProvider.FromXmlString(pubKey);
+    return rsaProvider.Encrypt(key, false);
   }
 
   #region remote events
@@ -194,12 +216,6 @@ public class NetworkManager : MonoBehaviour
   private void OnHello(JSONNode data)
   {
     nonce = (string)data.AsArray[1];
-    this.aesProvider = new AesCryptoServiceProvider();
-    aesProvider.BlockSize = 128;
-    aesProvider.KeySize = 128;
-    aesProvider.Key = UTF8Encoding.UTF8.GetBytes("5d85f8859c8242af");
-    aesProvider.Mode = CipherMode.CBC;
-    aesProvider.Padding = PaddingMode.PKCS7;
     aesProvider.IV = UTF8Encoding.UTF8.GetBytes(nonce.Substring(0, 16));
 
 #if !UNITY_EDITOR

@@ -8,6 +8,7 @@ import * as FbRepo from './FbRepo'
 import * as ScoresRepo from './ScoresRepo'
 import { multiElo, initialScore } from './Elo'
 import { TelepathyInputTransformer, toTelepathyMsg } from './Telepathy'
+import { decryptRsa } from './DecryptRsa'
 
 enum Codes {
   noop = 0, // [0]
@@ -78,8 +79,8 @@ server.on('connection', async (socket) => {
     attested: Boolean(process.env.NO_ATTEST),
   }
 
-  const key = Buffer.from('5d85f8859c8242af', 'utf-8')
-  let iv = Buffer.from(duplex.nonce.slice(0, 16), 'utf-8')
+  let aesKey: Buffer | undefined
+  let aesIv = Buffer.from(duplex.nonce.slice(0, 16), 'utf-8')
 
   pipeline(
     socket,
@@ -88,8 +89,21 @@ server.on('connection', async (socket) => {
       objectMode: true,
       transform(obj, encoding, cb) {
         try {
-          const decipher = crypto.createDecipheriv('aes-128-cbc', key, iv)
-          iv = obj.slice(0, 16)
+          if (aesKey) return cb(null, obj)
+          aesKey = decryptRsa(Buffer.from(obj.toString('ascii'), 'base64'))
+          return cb()
+        } catch (err) {
+          cb(err)
+        }
+      },
+    }),
+    new Transform({
+      objectMode: true,
+      transform(obj, encoding, cb) {
+        try {
+          if (!aesKey) return cb(new Error('aesKey is null'))
+          const decipher = crypto.createDecipheriv('aes-128-cbc', aesKey, aesIv)
+          aesIv = obj.slice(0, 16)
           const result = Buffer.concat([decipher.update(obj), decipher.final()])
           cb(null, result)
         } catch (err) {
@@ -105,6 +119,11 @@ server.on('connection', async (socket) => {
           msg = JSON.parse(obj)
         } catch (err) {
           console.info(err + '\nmsg=' + obj.toString())
+          return cb()
+        }
+        if (Codes.aesKey === msg[0]) {
+          aesKey = decryptRsa(Buffer.from(msg[1], 'base64'))
+          console.log(aesKey.toString('base64'))
           return cb()
         }
         if (tryHandleMsg(duplex, msg)) cb()
