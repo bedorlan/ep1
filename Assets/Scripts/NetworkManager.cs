@@ -50,6 +50,7 @@ public class NetworkManager : MonoBehaviour
   public GameObject background;
   public GameObject projectileButtons;
   public List<GameObject> votesCounters;
+  public GameObject timerUI;
 
   internal event Action<bool> OnConnection;
   internal event Action OnMatchReady;
@@ -64,7 +65,7 @@ public class NetworkManager : MonoBehaviour
 
   private Telepathy.Client client;
   private AesCryptoServiceProvider aesProvider;
-  private Common.Parties playerParty;
+  private Common.Parties playerParty = Common.Parties.Default;
   private bool matchQuit = false;
   private bool matchOver = false;
   private Dictionary<int, GameObject> votersMap = new Dictionary<int, GameObject>();
@@ -318,9 +319,9 @@ public class NetworkManager : MonoBehaviour
         {
             projectileButtons.transform.GetChild(i).gameObject.SetActive(false);
         }
-
-        StartCoroutine(ShowPartySelection());
 #endif
+
+    StartCoroutine(StartGamePlan());
 
     OnMatchReady?.Invoke();
     myCamera.SetActive(true);
@@ -345,29 +346,6 @@ public class NetworkManager : MonoBehaviour
     var remotePlayerNumber = data[1].AsInt;
     var remotePlayerName = (string)data[2];
     playersNames[remotePlayerNumber] = remotePlayerName;
-  }
-
-  private IEnumerator ShowPartySelection()
-  {
-    yield return new WaitForSecondsRealtime(20f);
-
-    projectileButtons.transform.GetChild((int)Common.Projectiles.CentroDemocraticoBase).gameObject.SetActive(true);
-    projectileButtons.transform.GetChild((int)Common.Projectiles.ColombiaHumanaBase).gameObject.SetActive(true);
-    projectileButtons.transform.GetChild((int)Common.Projectiles.CompromisoCiudadanoBase).gameObject.SetActive(true);
-  }
-
-  internal void PartyChose(int playerNumber, Common.Parties party)
-  {
-    var player = players[playerNumber];
-    player.GetComponent<PlayerBehaviour>().PartyChose(party);
-    if (playerNumber != this.playerNumber) return;
-
-    this.playerParty = party;
-    projectileButtons.transform.GetChild((int)Common.Projectiles.CentroDemocraticoBase).gameObject.SetActive(false);
-    projectileButtons.transform.GetChild((int)Common.Projectiles.ColombiaHumanaBase).gameObject.SetActive(false);
-    projectileButtons.transform.GetChild((int)Common.Projectiles.CompromisoCiudadanoBase).gameObject.SetActive(false);
-
-    StartCoroutine(StartGamePlan());
   }
 
   readonly Dictionary<Common.Parties, Common.Projectiles[][]> mapPartyToProjectiles = new Dictionary<Common.Parties, Common.Projectiles[][]>() {
@@ -400,11 +378,18 @@ public class NetworkManager : MonoBehaviour
     // 0:30 level 1
     // 1:15 level 2
     // 2:00 level 3
-    // 3:00 clocks off
-    // 3:00 debate?
+    // 3:30 clocks off & votes counters off
+    // 3:45 15 seconds warning
     // 4:00 end match
 
+    yield return new WaitForSecondsRealtime(20f);
+
+    projectileButtons.transform.GetChild((int)Common.Projectiles.CentroDemocraticoBase).gameObject.SetActive(true);
+    projectileButtons.transform.GetChild((int)Common.Projectiles.ColombiaHumanaBase).gameObject.SetActive(true);
+    projectileButtons.transform.GetChild((int)Common.Projectiles.CompromisoCiudadanoBase).gameObject.SetActive(true);
+
     yield return new WaitForSecondsRealtime(10f);
+    yield return new WaitUntil(() => playerParty != Common.Parties.Default);
 
     var projectileLevels = mapPartyToProjectiles[playerParty];
     for (var level = 0; level < 3; ++level)
@@ -422,6 +407,29 @@ public class NetworkManager : MonoBehaviour
 
       yield return new WaitForSecondsRealtime(45f);
     }
+
+    yield return new WaitForSecondsRealtime(45f);
+
+    timerUI.SetActive(false);
+    foreach (var votesCounter in votesCounters)
+    {
+      votesCounter.SetActive(false);
+    }
+
+    yield return new WaitForSecondsRealtime(15f);
+    localPlayer.tenSecondsWarning();
+  }
+
+  internal void PartyChose(int playerNumber, Common.Parties party)
+  {
+    var player = players[playerNumber];
+    player.GetComponent<PlayerBehaviour>().PartyChose(party);
+    if (playerNumber != this.playerNumber) return;
+
+    this.playerParty = party;
+    projectileButtons.transform.GetChild((int)Common.Projectiles.CentroDemocraticoBase).gameObject.SetActive(false);
+    projectileButtons.transform.GetChild((int)Common.Projectiles.ColombiaHumanaBase).gameObject.SetActive(false);
+    projectileButtons.transform.GetChild((int)Common.Projectiles.CompromisoCiudadanoBase).gameObject.SetActive(false);
   }
 
   private void OnRemoteNewDestination(JSONNode data)

@@ -492,4 +492,19 @@ public class PlayerBehaviour : MonoBehaviour
       child.color = color;
     }
   }
+
+  internal void tenSecondsWarning()
+  {
+    var prevPitch = audioSource.pitch;
+    var clip = Index.singleton.tenSecondsWarningClip;
+    audioSource.pitch = 1f;
+    audioSource.PlayOneShot(clip);
+    StartCoroutine(ResetAudioPitch(clip.length, prevPitch));
+  }
+
+  private IEnumerator ResetAudioPitch(float delay, float prevPitch)
+  {
+    yield return new WaitForSeconds(delay);
+    audioSource.pitch = prevPitch;
+  }
 }

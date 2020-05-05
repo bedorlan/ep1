@@ -30,7 +30,7 @@ public class TimerBehaviour : MonoBehaviour
   private IEnumerator Timer()
   {
     var timeWhenStarted = Common.unixMillis();
-    while (timeLeft > 0)
+    while (isActiveAndEnabled && timeLeft > 0)
     {
       yield return new WaitUntil(() => Common.unixMillis() - timeWhenStarted - (matchTime - timeLeft) * 1000 > 1000);
       --timeLeft;

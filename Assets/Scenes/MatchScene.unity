@@ -3932,6 +3932,8 @@ MonoBehaviour:
   menuObject: {fileID: 183676921}
   votesChangesIndicatorPrefab: {fileID: 4760397698154483531, guid: 4db95640b673541989f20e9b68764bf5,
     type: 3}
+  tenSecondsWarningClip: {fileID: 8300000, guid: f55f401d7282a443396c5ebc177106c4,
+    type: 3}
   voterPool: {fileID: 1440188187}
   votesChangesIndicatorPool: {fileID: 1440188186}
 --- !u!4 &1440188185
@@ -4407,6 +4409,7 @@ MonoBehaviour:
   - {fileID: 923667122}
   - {fileID: 1939704447}
   - {fileID: 1714665359}
+  timerUI: {fileID: 1694346228}
 --- !u!4 &1658275971
 Transform:
   m_ObjectHideFlags: 0

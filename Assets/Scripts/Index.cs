@@ -8,6 +8,7 @@ public class Index : MonoBehaviour
   public GameObject magicFlamePrefab;
   public GameObject menuObject;
   public GameObject votesChangesIndicatorPrefab;
+  public AudioClip tenSecondsWarningClip;
   public ObjectPool voterPool;
   public ObjectPool votesChangesIndicatorPool;
 
