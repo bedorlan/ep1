@@ -1,4 +1,6 @@
 using System;
+using System.Threading;
+using SimpleJSON;
 using UnityEngine;
 
 internal class AttestationHelper
@@ -6,7 +8,7 @@ internal class AttestationHelper
   static internal string response { get; private set; }
   static internal volatile bool done = true;
 
-  static internal void Attest(string nonce)
+  static internal void Attest(string nonce, int tries = 1)
   {
     done = false;
 
@@ -20,7 +22,7 @@ internal class AttestationHelper
         return;
       }
 
-      var listener = new AttestationListener();
+      var listener = new AttestationListener(nonce, tries);
       listener.OnResponse += listener_OnResponse;
       Lilium.Call(
         "attest",
@@ -43,10 +45,27 @@ public class AttestationListener : AndroidJavaProxy
 {
   internal event Action<string> OnResponse;
 
-  public AttestationListener() : base("com.nekolaboratory.Lilium.DefaultAttestCallback") { }
+  private string nonce;
+  private int tries;
+
+  public AttestationListener(string nonce, int tries) : base("com.nekolaboratory.Lilium.DefaultAttestCallback")
+  {
+    this.nonce = nonce;
+    this.tries = tries;
+  }
 
   public void onResult(string response)
   {
-    OnResponse?.Invoke(response);
+    var data = JSON.Parse(response).AsObject;
+    var atnError = (string)data["atn_error"];
+    if (tries < 3 && atnError == "ATTEST_API_ERROR_NETWORK_ERROR")
+    {
+      Thread.Sleep(2600);
+      AttestationHelper.Attest(nonce, tries + 1);
+      return;
+    }
+
+    data.Add("tries", tries);
+    OnResponse?.Invoke(data.ToString());
   }
 }
