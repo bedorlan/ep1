@@ -26,10 +26,10 @@ type SafetyNetPayload = {
 
 export async function verifyJwt(nonce: string, jsonJwtRaw: string) {
   try {
-    const jsonJwt: JsonJwt = JSON.parse(jsonJwtRaw)
+    if (Boolean(process.env.NO_ATTEST)) return true
 
-    const { atn, atn_error, atn_error_msg, no_attest_support } = jsonJwt
-    if (no_attest_support && Boolean(process.env.NO_ATTEST)) return true
+    const jsonJwt: JsonJwt = JSON.parse(jsonJwtRaw)
+    const { atn, atn_error, atn_error_msg } = jsonJwt
     if (atn_error || atn_error_msg || !atn) {
       console.info('error extracting atn', jsonJwt)
       return false

@@ -16,6 +16,7 @@ public class LobbyBehaviour : MonoBehaviour
   public GameObject cancelButton;
   public GameObject retryButton;
   public GameObject logoutButton;
+  public GameObject exitButton;
 
   public GameObject lobbyObject;
   public GameObject matchResultObject;
@@ -53,6 +54,7 @@ public class LobbyBehaviour : MonoBehaviour
         Animator.StringToHash("waitingSocial"), () =>
         {
           lobbyButtonsObject.SetActive(false);
+          exitButton.SetActive(false);
         }
       },
       {
@@ -66,6 +68,7 @@ public class LobbyBehaviour : MonoBehaviour
           lobbyButtonsObject.SetActive(false);
           cancelButton.SetActive(false);
           retryButton.SetActive(false);
+          exitButton.SetActive(false);
           if (matchScene.isLoaded) SceneManager.UnloadSceneAsync(matchScene);
           if (!audioPlayer.isPlaying)
           {
@@ -92,15 +95,31 @@ public class LobbyBehaviour : MonoBehaviour
         }
       },
       {
+        Animator.StringToHash("versionOutdated"), () =>
+        {
+          statusText.text = "Esta es una version vieja. Actualiza tu aplicacion";
+          myCamera.SetActive(true);
+          GetComponent<GraphicRaycaster>().enabled = true;
+          ShowOnlyThisPanel(lobbyObject);
+          SetLobbyButtonsInteractable(true);
+          lobbyButtonsObject.SetActive(false);
+          cancelButton.SetActive(false);
+          retryButton.SetActive(false);
+          exitButton.SetActive(true);
+        }
+      },
+      {
         Animator.StringToHash("connectionFailed"), () =>
         {
           statusText.text = "No se pudo conectar al servidor. Revisa tu conexion a internet";
           myCamera.SetActive(true);
           GetComponent<GraphicRaycaster>().enabled = true;
           ShowOnlyThisPanel(lobbyObject);
+          SetLobbyButtonsInteractable(true);
           lobbyButtonsObject.SetActive(false);
           cancelButton.SetActive(false);
           retryButton.SetActive(true);
+          exitButton.SetActive(true);
           lobbyController.ResetTrigger("connectionFailed");
         }
       },
@@ -111,6 +130,7 @@ public class LobbyBehaviour : MonoBehaviour
           lobbyButtonsObject.SetActive(true);
           SetLobbyButtonsInteractable(true);
           cancelButton.SetActive(false);
+          exitButton.SetActive(true);
           var logged = lobbyController.GetBool("logged");
           logoutButton.SetActive(logged);
           if (logged)
@@ -266,6 +286,7 @@ public class LobbyBehaviour : MonoBehaviour
         SceneManager.UnloadSceneAsync(matchScene);
         matchResultObject.GetComponent<MatchResultBehaviour>().ShowMatchResult(matchResult);
       };
+      NetworkManager.singleton.OnVersionOutdatedReceived += () => lobbyController.SetBool("versionOutdated", true);
 
       NetworkManager.singleton.TryConnect();
     };

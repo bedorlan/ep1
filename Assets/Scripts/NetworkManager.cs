@@ -35,6 +35,8 @@ enum Codes
   leaderboardAll = 24, // [(24), [all: ...[name: string, score: number]], [friends: ...[name: string, score: number]]]
   attestation = 25, // [(25), (jsonJwt: string)]
   attested = 26, // [(26)]
+  version = 27, // [(27), (version: string)]
+  versionOutdated = 28, // [(28)]
 }
 
 public class NetworkManager : MonoBehaviour
@@ -60,6 +62,7 @@ public class NetworkManager : MonoBehaviour
   internal event Action<GameObject> OnProjectileSelected;
   internal event Action<(Leaderboard, Leaderboard)> OnLeaderboardAllLoaded;
   internal event Action OnAttestationResult;
+  internal event Action OnVersionOutdatedReceived;
 
   internal string nonce { get; private set; }
 
@@ -109,6 +112,7 @@ public class NetworkManager : MonoBehaviour
         { Codes.newScores, OnNewScores },
         { Codes.leaderboardAll, OnLeaderboardAll },
         { Codes.attested, OnAttested },
+        { Codes.versionOutdated, OnVersionOutdated },
     };
 
     projectilesMap = new Dictionary<int, GameObject>();
@@ -339,6 +343,11 @@ public class NetworkManager : MonoBehaviour
     msg.Add(SocialBehaviour.singleton.shortName);
     msg.Add(SocialBehaviour.singleton.accessToken);
     SendNetworkMsg(msg.ToString());
+
+    msg = new JSONArray();
+    msg.Add((int)Codes.version);
+    msg.Add(Application.version);
+    SendNetworkMsg(msg.ToString());
   }
 
   private void OnIntroduce(JSONNode data)
@@ -564,6 +573,11 @@ public class NetworkManager : MonoBehaviour
       .ToList();
     leaderboardItems.Sort((a, b) => b.score - a.score);
     return new Leaderboard() { items = leaderboardItems };
+  }
+
+  private void OnVersionOutdated(JSONNode data)
+  {
+    OnVersionOutdatedReceived?.Invoke();
   }
 
   private void OnDisconnected()

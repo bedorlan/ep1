@@ -36,6 +36,8 @@ enum Codes {
   leaderboardAll = 24, // [(24), [all: ...[name: string, score: number]], [friends: ...[name: string, score: number]]]
   attestation = 25, // [(25), (jsonJwt: string)]
   attested = 26, // [(26)]
+  version = 27, // [(27), (version: string)]
+  versionOutdated = 28, // [(28)]
 }
 
 const MAP_WIDTH = 190
@@ -203,6 +205,7 @@ const generalCodesMap: { [code in Codes]?: (player: PlayerWithSocket, msg: any[]
   [Codes.joinAllQueue]: (player) => ((player.playWithFriends = false), waitingQueue.push(player), true),
   [Codes.joinFriendsQueue]: (player) => ((player.playWithFriends = true), waitingQueue.push(player), true),
   [Codes.getLeaderboardAll]: (player) => (sendFullLeaderboardToPlayer(player), true),
+  [Codes.version]: checkVersion,
 }
 
 function tryHandleMsg(player: PlayerWithSocket, msg: any[]) {
@@ -225,6 +228,17 @@ function tryHandleMsg(player: PlayerWithSocket, msg: any[]) {
 
   if (!(code in generalCodesMap)) return false
   return generalCodesMap[code]!(player, msg)
+}
+
+function checkVersion(player: PlayerWithSocket, msg: any[]) {
+  const [code, version] = msg
+  const numVersion = Number.parseFloat(version)
+  if (numVersion < 505.2) {
+    const msg = [Codes.versionOutdated]
+    sendTo(player, msg)
+    player.out.end()
+  }
+  return true
 }
 
 function tryStartMatch() {
