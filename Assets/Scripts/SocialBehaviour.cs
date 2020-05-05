@@ -11,7 +11,13 @@ public class SocialBehaviour : MonoBehaviour
   static internal SocialBehaviour singleton { get; private set; }
 
   internal string shortName { get; private set; }
-  internal string userId { get; private set; }
+  internal string accessToken
+  {
+    get
+    {
+      return AccessToken.CurrentAccessToken?.TokenString ?? "";
+    }
+  }
 
   readonly internal Queue<String> errors = new Queue<String>();
   internal event Action<bool> OnLogged;
@@ -25,7 +31,6 @@ public class SocialBehaviour : MonoBehaviour
   void Start()
   {
     shortName = "";
-    userId = "";
 
     if (!FB.IsInitialized)
     {
@@ -58,7 +63,6 @@ public class SocialBehaviour : MonoBehaviour
   {
     if (FB.IsLoggedIn && HasGrantedAllPermissions())
     {
-      userId = AccessToken.CurrentAccessToken.UserId;
       GetUserData();
     }
     else
@@ -137,6 +141,5 @@ public class SocialBehaviour : MonoBehaviour
   {
     FB.LogOut();
     shortName = "";
-    userId = "";
   }
 }

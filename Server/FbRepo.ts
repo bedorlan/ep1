@@ -23,6 +23,13 @@ export async function getFriendsOf(fbId: string) {
   return data
 }
 
+export async function debugToken(token: string) {
+  const url = `${fbUrl}/debug_token?input_token=${token}&${getAcessTokenParam()}`
+  const response = await fetch(url)
+  const data: { data: { is_valid: boolean; user_id: string } } = await response.json()
+  return data.data
+}
+
 function getAcessTokenParam() {
   return `access_token=${accessToken}`
 }

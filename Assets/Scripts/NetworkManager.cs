@@ -26,7 +26,7 @@ enum Codes
   log = 14, // [(14), (condition: string), (stackTrace: string), (type: string)]
   newAlly = 15, // [(15), (playerNumber: int), (projectileType: int)]
   destroyProjectile = 16, // [(16), (projectileId: string)]
-  introduce = 17, // [(17), (playerNumber: int), (playerName: string), (fbId?: string)]
+  introduce = 17, // [(17), (playerNumber: int), (playerName: string), (accessToken?: string)]
   matchOver = 18, // [(18)]
   newScores = 19, // [(19), ([votesPlayer1: number, scorePlayer1: number, diffScorePlayer1: number]), ...]
   joinAllQueue = 20, // [(20)]
@@ -336,7 +336,7 @@ public class NetworkManager : MonoBehaviour
     msg.Add((int)Codes.introduce);
     msg.Add(playerNumber);
     msg.Add(SocialBehaviour.singleton.shortName);
-    msg.Add(SocialBehaviour.singleton.userId);
+    msg.Add(SocialBehaviour.singleton.accessToken);
     SendNetworkMsg(msg.ToString());
   }
 

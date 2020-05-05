@@ -27,7 +27,7 @@ enum Codes {
   log = 14, // [(14), (condition: string), (stackTrace: string), (type: string)]
   newAlly = 15, // [(15), (playerNumber: int), (projectileType: int)]
   destroyProjectile = 16, // [(16), (projectileId: string)]
-  introduce = 17, // [(17), (playerNumber: int), (playerName: string), (fbId?: string)]
+  introduce = 17, // [(17), (playerNumber: int), (playerName: string), (accessToken?: string)]
   matchOver = 18, // [(18)]
   newScores = 19, // [(19), ([votesPlayer1: number, scorePlayer1: number, diffScorePlayer1: number]), ...]
   joinAllQueue = 20, // [(20)]
@@ -50,6 +50,7 @@ type Player = {
   inactive?: boolean
   in: Readable
   out: Writable
+  accessToken?: string
   fbId?: string
   playWithFriends?: boolean
   friends?: FbRepo.IFriend[]
@@ -272,13 +273,19 @@ function onGuessTime(player: Player, msg: any[]) {
 }
 
 function onIntroduce(player: Player, msg: any[]) {
-  const [code, playerNumber, playerName, fbId] = msg
-  player.fbId = fbId as string
-  if (player.fbId) {
-    FbRepo.getNamesFor([player.fbId]).then((names) => (player.name = names[player.fbId!]?.short_name))
-    ScoresRepo.getScore(player.fbId).then((score) => (player.score = score?.score))
-    FbRepo.getFriendsOf(player.fbId).then((friends) => (player.friends = friends))
+  const [code, playerNumber, playerName, accessToken] = msg
+  if (accessToken) {
+    FbRepo.debugToken(accessToken).then((data) => {
+      if (!data.is_valid || !data.user_id) return
+      player.accessToken = accessToken
+      player.fbId = data.user_id
+      FbRepo.getNamesFor([player.fbId]).then((names) => (player.name = names[player.fbId!]?.short_name))
+      ScoresRepo.getScore(player.fbId).then((score) => (player.score = score?.score))
+      FbRepo.getFriendsOf(player.fbId).then((friends) => (player.friends = friends))
+    })
   } else {
+    player.accessToken = undefined
+    player.fbId = undefined
     player.name = undefined
     player.score = undefined
     player.friends = undefined
@@ -391,7 +398,7 @@ class Match {
       [Codes.tryAddVotes]: this.votersCentral.TryAddVotes,
       [Codes.newAlly]: this.resendToOthers,
       [Codes.destroyProjectile]: this.resendToOthers,
-      [Codes.introduce]: this.resendToOthers,
+      [Codes.introduce]: (player, msg) => this.resendToOthers(player, msg.slice(0, 3)),
     } as { [code in Codes]: (player: number, msg: any[]) => void }
 
     this.players.forEach((player, index) => {
