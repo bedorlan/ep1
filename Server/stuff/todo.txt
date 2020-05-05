@@ -4,3 +4,4 @@ para un nuevo jugador, no se calcula bien el puntaje?
 you should upgrade your app
 cancel should only quit and no reconnect
 when logging out outside of the app, the app doesnt open
+add restriction to client attestation key

@@ -60,7 +60,7 @@ public class AttestationListener : AndroidJavaProxy
     var atnError = (string)data["atn_error"];
     if (tries < 3 && atnError == "ATTEST_API_ERROR_NETWORK_ERROR")
     {
-      Thread.Sleep(2600);
+      Thread.Sleep(2000);
       AttestationHelper.Attest(nonce, tries + 1);
       return;
     }
