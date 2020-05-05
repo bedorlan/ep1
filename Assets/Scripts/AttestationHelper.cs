@@ -12,6 +12,14 @@ internal class AttestationHelper
 
     using (AndroidJavaObject Lilium = new AndroidJavaObject("com.nekolaboratory.Lilium.Lilium"))
     {
+      var stringRep = Lilium.Call<string>("toString");
+      if (stringRep == null)
+      {
+        response = "{\"no_attest_support\": true}";
+        done = true;
+        return;
+      }
+
       var listener = new AttestationListener();
       listener.OnResponse += listener_OnResponse;
       Lilium.Call(

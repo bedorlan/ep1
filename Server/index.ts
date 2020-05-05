@@ -80,7 +80,7 @@ server.on('connection', async (socket) => {
     in: new PassThrough({ objectMode: true }),
     out: new PassThrough({ objectMode: true }),
     nonce: Attestation.getNonce(),
-    attested: Boolean(process.env.NO_ATTEST),
+    attested: false,
   }
 
   let aesIv = Buffer.from(duplex.nonce.slice(0, 16), 'utf-8')

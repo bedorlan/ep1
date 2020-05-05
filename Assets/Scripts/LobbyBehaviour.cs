@@ -273,19 +273,12 @@ public class LobbyBehaviour : MonoBehaviour
 
   private IEnumerator DoAttest()
   {
-#if !UNITY_EDITOR && UNITY_ANDROID
     var nonce = NetworkManager.singleton.nonce;
     AttestationHelper.Attest(nonce);
     yield return new WaitUntil(() => AttestationHelper.done);
 
     var attestResponse = AttestationHelper.response;
     NetworkManager.singleton.Attest(attestResponse);
-
-#else
-    lobbyController.SetBool("attested", true);
-    yield break;
-
-#endif
   }
 
   private void NetworkManager_OnLeaderboardAllLoaded((Leaderboard, Leaderboard) leaderboards)
