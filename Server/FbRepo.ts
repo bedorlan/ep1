@@ -18,7 +18,6 @@ export interface IFriend {
 export async function getFriendsOf(fbId: string) {
   const url = `${fbUrl}/${fbId}/friends?fields=short_name&${getAcessTokenParam()}`
   const response = await fetch(url)
-  // todo: check paging
   const { data, paging }: { data: IFriend[]; paging: unknown } = await response.json()
   return data
 }

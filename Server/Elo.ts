@@ -24,7 +24,6 @@ export function multiElo(scores: EloInput[]): EloResult[] {
     const [a, b] = tuple
     resultsMap[a.id].expectedResult += calcExpectedResult(a.prevScore, b.prevScore)
     resultsMap[b.id].expectedResult += calcExpectedResult(b.prevScore, a.prevScore)
-    // todo: test this
     resultsMap[a.id].actualResult += a.result === b.result ? 0.5 : 1
     resultsMap[b.id].actualResult += a.result === b.result ? 0.5 : 0
   })

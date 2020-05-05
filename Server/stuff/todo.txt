@@ -4,3 +4,7 @@ para un nuevo jugador, no se calcula bien el puntaje?
 cancel should only quit and no reconnect
 when logging out outside of the app, the app doesnt open
 add restriction to client attestation key
+when attestation failed, send a message to player explaining
+include top 5 on global
+send to others that some player disconnected
+getting facebook friends paging

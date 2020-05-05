@@ -217,7 +217,6 @@ function tryHandleMsg(player: PlayerWithSocket, msg: any[]) {
     } else if (code === Codes.attestation) {
       const jsonJwt = msg[1] as string
       Attestation.verifyJwt(player.nonce, jsonJwt).then((result) => {
-        // todo: send a message to player explaining
         if (!result) return player.socket.destroy()
         player.attested = true
         sendTo(player, [Codes.attested])
@@ -331,7 +330,6 @@ async function getTopLeaderboard() {
     .sort((a, b) => b.score - a.score)
     .map((it) => [it.name, it.score] as LeaderboardItem)
 
-  // todo: include top 5?
   return leaderboard
 }
 
@@ -464,7 +462,6 @@ class Match {
     player.inactive = true
     if (this.matchEnded) return
 
-    // todo: send to others that player disconnected perhaps?
     this.votersCentral.PunishPlayer(playerNumber)
     const playersPlaying = this.playersPlayingNumber()
     if (playersPlaying < 2) this.TryEndMatch()
