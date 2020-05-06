@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections;
 using UnityEngine;
 
 public class TutorialBehaviour : MonoBehaviour
@@ -26,6 +27,30 @@ public class TutorialBehaviour : MonoBehaviour
 
   public void ExitTutorial()
   {
+    OnTutorialEnded?.Invoke();
+  }
+
+  void Start()
+  {
+    StartCoroutine(TutorialRoutine());
+  }
+
+  private IEnumerator TutorialRoutine()
+  {
+    yield return new WaitForSeconds(2f);
+
+    for (var i = 0; i < transform.childCount; ++i)
+    {
+      var step = transform.GetChild(i).gameObject;
+      step.SetActive(true);
+
+      var stepEnded = false;
+      step.GetComponent<ITutorialStep>().OnStepEnded += () => stepEnded = true;
+      yield return new WaitUntil(() => stepEnded);
+
+      step.SetActive(false);
+    }
+
     OnTutorialEnded?.Invoke();
   }
 }

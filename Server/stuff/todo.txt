@@ -1,4 +1,3 @@
-reintentar, salir
 puntajes amigos vacio?
 para un nuevo jugador, no se calcula bien el puntaje?
 cancel should only quit and no reconnect
@@ -8,3 +7,11 @@ when attestation failed, send a message to player explaining
 include top 5 on global
 send to others that some player disconnected
 getting facebook friends paging
+
+================================
+
+Intro:
+Asi que quieres ser el proximo presidente de Colombia <size=40%>en el 2018</size>,
+Tendras que tener ganar muchos votos.
+
+Muevete hasta la vaca
