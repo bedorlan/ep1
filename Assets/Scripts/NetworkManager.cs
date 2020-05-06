@@ -59,7 +59,6 @@ public class NetworkManager : MonoBehaviour
   internal event Action OnMatchQuit;
   internal event Action OnMatchEnd;
   internal event Action<MatchResult> OnMatchResult;
-  internal event Action<GameObject> OnProjectileSelected;
   internal event Action<(Leaderboard, Leaderboard)> OnLeaderboardAllLoaded;
   internal event Action OnAttestationResult;
   internal event Action OnVersionOutdatedReceived;
@@ -73,8 +72,8 @@ public class NetworkManager : MonoBehaviour
   private bool matchOver = false;
   private Dictionary<int, GameObject> votersMap = new Dictionary<int, GameObject>();
   private Dictionary<Codes, Action<JSONNode>> codesMap;
+  private ProjectileButtonsScrollBehaviour projectileButtonsManager;
   private Dictionary<int, GameObject> projectilesMap;
-  private GameObject defaultProjectile;
 
   private int playerNumber = -1;
   private PlayerBehaviour localPlayer;
@@ -126,8 +125,8 @@ public class NetworkManager : MonoBehaviour
       projectilesMap.Add(typeId, projectilePrefab);
     }
 
-    defaultProjectile = projectilesMap[0].GetComponentInChildren<ButtonProjectileBehaviour>().projectilePrefab;
-
+    projectileButtonsManager = projectileButtons.transform.root.GetComponentInChildren<ProjectileButtonsScrollBehaviour>();
+    projectileButtonsManager.OnProjectileSelected += ProjectileSelected;
 #if !UNITY_EDITOR
         projectileButtons.transform.root.GetComponentInChildren<ScrollRect>().enabled = false;
 #endif
@@ -316,17 +315,15 @@ public class NetworkManager : MonoBehaviour
       votesCounters[i].SetActive(false);
     }
 
-    ProjectileSelected(defaultProjectile);
-
 #if !UNITY_EDITOR
-        for (var i = 1; i < projectileButtons.transform.childCount; ++i)
-        {
-            projectileButtons.transform.GetChild(i).gameObject.SetActive(false);
-        }
+    for (var i = 1; i < projectileButtons.transform.childCount; ++i)
+    {
+        projectileButtons.transform.GetChild(i).gameObject.SetActive(false);
+    }
 #endif
+    projectileButtonsManager.SelectDefaultProjectile();
 
     StartCoroutine(StartGamePlan());
-
     OnMatchReady?.Invoke();
     myCamera.SetActive(true);
     Index.singleton.uiObject.GetComponent<GraphicRaycaster>().enabled = true;
@@ -686,7 +683,6 @@ public class NetworkManager : MonoBehaviour
 
     var projectile = projectilesMap[projectileType];
     projectile.GetComponentInChildren<ButtonProjectileBehaviour>().OnYourProjectileFired();
-    ProjectileSelected(defaultProjectile);
   }
 
   public void TryConvertVoter(int playerOwner, int voterId)
@@ -713,7 +709,6 @@ public class NetworkManager : MonoBehaviour
   internal void ProjectileSelected(GameObject projectile)
   {
     localPlayer.ChangeProjectile(projectile);
-    OnProjectileSelected?.Invoke(projectile);
   }
 
   internal void AddVotes(int playerNumber, int votes)

@@ -24,6 +24,7 @@ public class LobbyBehaviour : MonoBehaviour
   public GameObject scoresObject;
 
   const string MATCH_SCENE = "MatchScene";
+  const string TUTORIAL_SCENE = "TutorialScene";
 
   private Animator lobbyController;
   private Dictionary<int, Action> stateHandlers;
@@ -55,6 +56,19 @@ public class LobbyBehaviour : MonoBehaviour
         {
           lobbyButtonsObject.SetActive(false);
           exitButton.SetActive(false);
+        }
+      },
+      {
+        Animator.StringToHash("tutorial"), () =>
+        {
+          // var asyncLoadScene = SceneManager.LoadSceneAsync(TUTORIAL_SCENE, LoadSceneMode.Additive);
+          // asyncLoadScene.completed += (asyncOperation) => {
+          //   myCamera.SetActive(false);
+          //   GetComponent<GraphicRaycaster>().enabled = false;
+          // };
+          lobbyController.ResetTrigger("requireTutorial");
+          // after a while ...
+          lobbyController.SetTrigger("menu");
         }
       },
       {
