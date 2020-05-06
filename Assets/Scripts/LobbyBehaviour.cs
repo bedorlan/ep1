@@ -61,14 +61,20 @@ public class LobbyBehaviour : MonoBehaviour
       {
         Animator.StringToHash("tutorial"), () =>
         {
-          // var asyncLoadScene = SceneManager.LoadSceneAsync(TUTORIAL_SCENE, LoadSceneMode.Additive);
-          // asyncLoadScene.completed += (asyncOperation) => {
-          //   myCamera.SetActive(false);
-          //   GetComponent<GraphicRaycaster>().enabled = false;
-          // };
+          var asyncLoadScene = SceneManager.LoadSceneAsync(TUTORIAL_SCENE, LoadSceneMode.Additive);
+          asyncLoadScene.completed += (asyncOperation) => {
+            audioPlayer.Stop();
+            videoPlayer.Stop();
+            myCamera.SetActive(false);
+            GetComponent<GraphicRaycaster>().enabled = false;
+
+            TutorialBehaviour.singleton.OnTutorialEnded += () => {
+              var tutorialScene = SceneManager.GetSceneByName(TUTORIAL_SCENE);
+              SceneManager.UnloadSceneAsync(tutorialScene);
+              lobbyController.SetTrigger("menu");
+            };
+          };
           lobbyController.ResetTrigger("requireTutorial");
-          // after a while ...
-          lobbyController.SetTrigger("menu");
         }
       },
       {
