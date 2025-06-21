@@ -1,7 +1,7 @@
 import 'isomorphic-fetch'
 
 const fbUrl = 'https://graph.facebook.com/v6.0/'
-const accessToken = '591967211411620%7C5SIbfmYv4ry7RF6E905sSnVunXc'
+const accessToken = ''
 
 export async function getNamesFor(ids: string[]): Promise<{ [id: string]: { short_name: string } }> {
   const idsParam = ids.join(',')

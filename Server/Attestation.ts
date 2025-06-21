@@ -2,7 +2,7 @@ import 'isomorphic-fetch'
 import { decode } from 'jsonwebtoken'
 import * as uuid from 'uuid'
 
-const API_KEY = 'AIzaSyBCeh6wA3IQfB6BUFYEc_QIrUK3nv9aUqs'
+const API_KEY = ''
 
 export function getNonce() {
   return uuid.v4().replace(/-/g, '')

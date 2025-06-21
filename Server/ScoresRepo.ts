@@ -8,8 +8,8 @@ if (process.env.DYNAMO_ENDPOINT) {
   Object.assign(dynamoConf, { endpoint: process.env.DYNAMO_ENDPOINT })
 } else {
   Object.assign(awsConf, {
-    accessKeyId: 'AKIAVQP6QK3UBHX5JVJ5',
-    secretAccessKey: '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',
+    accessKeyId: '',
+    secretAccessKey: '',
   })
 }
 
