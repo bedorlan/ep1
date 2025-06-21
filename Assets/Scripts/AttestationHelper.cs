@@ -27,7 +27,7 @@ internal class AttestationHelper
       Lilium.Call(
         "attest",
         "me",
-        "AIzaSyAV-pxZlkYP_7GW7tDUrikQtYnA1hTfNwo",
+        "",
         nonce,
         listener
       );
